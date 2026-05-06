@@ -1,5 +1,5 @@
 // Centralized API Configuration for Gyanteerth LMS
-export const API_BASE = 'http://api.gyanteerthlearning.online/gyantreeth/v1';
+export const API_BASE = 'https://api.gyanteerthlearning.online/gyantreeth/v1';
 
 // Detailed Service Endpoints
 export const ADMIN_API = `${API_BASE}/admin`;
