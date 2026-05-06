@@ -1,0 +1,419 @@
+@import "tailwindcss";
+
+:root {
+  /* Core Palette - Premium Navy, Emerald, and Orange */
+  --navy-950: #020617;
+  --navy-900: #0f172a;
+  --navy-800: #1e293b;
+  
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-400: #34d399;
+  
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+  
+  /* Semantic Variables - Light Mode Default */
+  --color-primary: var(--emerald-500);
+  --color-primary-dark: var(--emerald-600);
+  --color-primary-light: var(--emerald-400);
+  --color-primary-bg: #f0fdf4;
+  
+  --color-accent: var(--orange-500);
+  --color-accent-dark: var(--orange-600);
+  
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f5f9;
+  
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-light: #94a3b8;
+  
+  --color-border: #f1f5f9;
+  --color-border-strong: #e2e8f0;
+
+  --color-navy-sidebar: #f1f5f9;
+  --color-sidebar-text: var(--color-accent);
+  --color-sidebar-text-active: white;
+  
+  --hover-shadow: 0 20px 50px rgba(2, 6, 23, 0.12);
+  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.05), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+  --shadow-lg: 0 10px 25px -5px rgb(15 23 42 / 0.08), 0 8px 10px -6px rgb(15 23 42 / 0.08);
+  --shadow-xl: 0 20px 40px -10px rgb(15 23 42 / 0.12);
+  
+  /* Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2.5rem;
+  --radius-full: 9999px;
+  
+  /* Spacing - Compact Mode */
+  --space-xxs: 0.15rem;
+  --space-xs: 0.35rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.25rem;
+  --space-xl: 1.75rem;
+  --page-padding: clamp(1rem, 3vw, 2rem);
+
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  color-scheme: light;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode Overrides */
+.dark {
+  color-scheme: dark;
+  
+  --color-bg: #020617; /* Deep Navy */
+  --color-surface: #0f172a; /* Slate 900 */
+  --color-surface-muted: #1e293b; /* Slate 800 */
+  
+  --color-text: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-text-light: #64748b;
+  
+  --color-border: #1e293b;
+  --color-border-strong: #334155;
+
+  --color-primary-bg: rgba(16, 185, 129, 0.1);
+  --color-navy-sidebar: #000000;
+  --color-sidebar-text: var(--color-accent);
+  --color-sidebar-text-active: white;
+  
+  --hover-shadow: 0 0 30px rgba(255, 255, 255, 0.08);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+  --shadow-xl: 0 20px 40px -10px rgb(0 0 0 / 0.6);
+}
+
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+
+/* Fluid Typography - Compact Scales */
+h1 { font-size: clamp(1.25rem, 5vw, 2.25rem); letter-spacing: -0.03em; font-weight: 950; line-height: 1.1; }
+h2 { font-size: clamp(1.1rem, 4vw, 1.75rem); letter-spacing: -0.02em; font-weight: 900; line-height: 1.2; }
+h3 { font-size: clamp(0.9rem, 3vw, 1.25rem); letter-spacing: -0.01em; font-weight: 800; }
+
+p { color: var(--color-text-muted); line-height: 1.6; font-weight: 500; font-size: clamp(0.7rem, 2vw, 0.85rem); }
+
+/* Premium Utility Classes */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.premium-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  padding: var(--space-lg);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--hover-shadow);
+  border-color: var(--color-primary);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Compact Navigation & Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--navy-950);
+  color: white !important;
+  box-shadow: 0 10px 20px rgba(2, 6, 23, 0.2);
+}
+
+.dark .btn-primary {
+  background: var(--color-primary);
+  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(2, 6, 23, 0.3);
+  filter: brightness(1.1);
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  color: white !important;
+  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.2);
+}
+
+.btn-accent:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(249, 115, 22, 0.3);
+  filter: brightness(1.1);
+}
+
+/* Navigation Overrides */
+.sidebar-link {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.sidebar-link.active {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-light);
+}
+
+/* Responsive Grid */
+.max-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --page-padding: 1rem;
+    --radius-xl: 1.25rem;
+    --space-lg: 1rem;
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --page-padding: 0.75rem;
+  }
+}
+/* Premium "Inner Arcade" - Compact Editions */
+.arcade-container {
+  background: var(--color-surface-muted);
+  border-radius: 1.5rem;
+  box-shadow: inset 0 10px 40px rgba(0,0,0,0.06);
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.dark .arcade-container {
+  background: rgba(0,0,0,0.2);
+  box-shadow: inset 0 10px 50px rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.03);
+}
+
+.premium-glow-card {
+  background: var(--color-surface);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.premium-glow-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: var(--color-primary);
+  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.08);
+}
+
+.dark .premium-glow-card:hover {
+  box-shadow: 0 0 50px rgba(255, 255, 255, 0.1);
+  border-color: var(--color-primary);
+}
+
+.tech-badge {
+  font-size: 0.65rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.tech-divider {
+  height: 1px;
+  background: linear-gradient(to right, var(--color-border) 0%, transparent 100%);
+  margin: 1.5rem 0;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Dashboard Layout Core */
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-sidebar {
+  width: 260px;
+  background-color: var(--color-navy-sidebar);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10; /* Lowered from 20 to allow modal focus */
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dashboard-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  background-color: var(--color-bg);
+  /* z-index removed — let the stacking context be handled by modals with portal-level z-index */
+}
+
+.dashboard-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.dashboard-header-desktop {
+  height: 64px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 10;
+}
+
+.dashboard-header-mobile {
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  z-index: 50;
+}
+
+.mobile-overlay {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+  }
+  .dashboard-sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-xl);
+  }
+  .dashboard-header-desktop {
+    display: none !important;
+  }
+  .dashboard-header-mobile {
+    display: flex;
+  }
+  .mobile-overlay.active {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 90;
+  }
+}
+
+/* ===== GLOBAL MODAL OVERLAY SYSTEM =====
+   All modals use position: fixed so they escape overflow:hidden containers.
+   They must have a z-index higher than the sidebar (z-index: 100 on mobile).
+   Use z-index: 1000+ for modals to always cover everything including sidebar. */
+.modal-overlay,
+[style*="position: fixed"][style*="inset: 0"] {
+  z-index: 1100 !important;
+}
+
+/* Make tables scrollable smoothly on mobile */
+.table-scroll-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  min-width: max-content;
+}
