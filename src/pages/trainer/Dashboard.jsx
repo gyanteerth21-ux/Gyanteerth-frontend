@@ -239,7 +239,7 @@ const TrainerDashboard = () => {
                     <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.5rem' }}>You have not been assigned any courses yet.</p>
                   </div>
                 )}
-                {courses.slice(0, 4).map((course, idx) => (
+                {courses.map((course, idx) => (
                   <motion.div 
                     initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
                     key={course.course_id} 
@@ -296,7 +296,7 @@ const TrainerDashboard = () => {
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                         {liveSessions.slice(0, 3).map((session, i) => (
+                         {liveSessions.map((session, i) => (
                            <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} key={session.live_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', borderRadius: '1.25rem', padding: '1.25rem', border: '1px solid #f1f5f9' }}>
                               <div>
                                 <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.3rem' }}>{session.title || 'Live Broadcast'}</div>
@@ -327,7 +327,7 @@ const TrainerDashboard = () => {
                       {students.length === 0 ? (
                         <p style={{ color: '#64748b', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>Awaiting student enrollments...</p>
                       ) : (
-                        students.slice(0, 6).map((student, i) => (
+                        students.map((student, i) => (
                           <motion.div 
                             initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} 
                             transition={{ delay: i * 0.1 }} 
