@@ -120,7 +120,11 @@ const Dashboard = () => {
                 <button onClick={() => navigate('/student/browse')} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: 'none', background: '#059669', color: 'white', fontWeight: 800, cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#047857'} onMouseLeave={e => e.currentTarget.style.background = '#059669'}>Browse Courses</button>
               </div>
             ) : (
+<<<<<<< HEAD
+              enrolledWithProgress.map((course, index) => (
+=======
               enrolledWithProgress.slice(0, 3).map((course, index) => (
+>>>>>>> origin/main
                 <motion.div
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -175,7 +179,11 @@ const Dashboard = () => {
         <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
           {/* Live Session Tracker Section */}
+<<<<<<< HEAD
+          <LiveSessionTracker />
+=======
           <LiveSessionTracker limit={3} />
+>>>>>>> origin/main
 
           {/* Stunning Achievement Card */}
           <div style={{ 

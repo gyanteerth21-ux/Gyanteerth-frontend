@@ -86,7 +86,11 @@ const Certificates = () => {
           </button>
         </motion.div>
       ) : (
+<<<<<<< HEAD
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 min-[1800px]:grid-cols-4 min-[2200px]:grid-cols-5 gap-6 md:gap-8 pb-10">
+=======
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 pb-10">
+>>>>>>> origin/main
           {filteredCerts.map((cert, idx) => (
             <motion.div 
               key={cert.id}
@@ -94,7 +98,11 @@ const Certificates = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
               whileHover={{ y: -8 }}
+<<<<<<< HEAD
+              className="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col relative group"
+=======
               className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col relative group"
+>>>>>>> origin/main
             >
               {/* Badge Overlay */}
               <div className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-md w-11 h-11 rounded-2xl flex items-center justify-center border border-white shadow-lg">
@@ -107,7 +115,11 @@ const Certificates = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-5 left-5 right-5">
                   <div className="text-[9px] font-black text-white/70 uppercase tracking-widest mb-1">{cert.category} Certification</div>
+<<<<<<< HEAD
+                  <h2 className="text-lg md:text-xl font-black text-white leading-tight line-clamp-2">{cert.courseTitle}</h2>
+=======
                   <h2 className="text-base font-black text-white leading-tight line-clamp-1">{cert.courseTitle}</h2>
+>>>>>>> origin/main
                 </div>
               </div>
 
@@ -116,18 +128,30 @@ const Certificates = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Issued Date</span>
+<<<<<<< HEAD
+                    <span className="text-sm md:text-base font-black text-slate-900">{cert.earnedDate}</span>
+                  </div>
+                  <div className="flex flex-col gap-1 text-right">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">ID</span>
+                    <span className="text-sm md:text-base font-black text-slate-900 font-mono">{cert.id.split('-').pop()}</span>
+=======
                     <span className="text-xs md:text-sm font-black text-slate-900">{cert.earnedDate}</span>
                   </div>
                   <div className="flex flex-col gap-1 text-right">
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">ID</span>
                     <span className="text-xs md:text-sm font-black text-slate-900 font-mono">{cert.id.split('-').pop()}</span>
+>>>>>>> origin/main
                   </div>
                 </div>
 
                 <div className="space-y-4 mt-auto">
                   <button 
                     onClick={() => setSelectedCert(cert)}
+<<<<<<< HEAD
+                    className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-95"
+=======
                     className="w-full py-3.5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-xs md:text-[13px] flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-95"
+>>>>>>> origin/main
                   >
                     View & Download <Download size={16} />
                   </button>

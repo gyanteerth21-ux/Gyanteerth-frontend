@@ -130,6 +130,32 @@ const TrainerDashboard = () => {
       
       const finalStudents = allEnrollments.sort((a, b) => b.progress - a.progress);
 
+<<<<<<< HEAD
+      // 6. Aggregate ALL live sessions and filter/sort (Upcoming and Active only)
+      const now = new Date();
+      const allLive = coursesResult
+        .flatMap(c => c.liveSessions || [])
+        .map(ls => {
+          const sTime = new Date(ls.start_time);
+          const eTime = new Date(ls.end_time);
+          const forceEndThresh = new Date(eTime.getTime() + 2 * 60 * 60 * 1000); // 2h safety margin
+          
+          // Strict live check: Backend says live AND it's not way past, OR it's within scheduled time
+          const isActuallyLive = (ls.status === 'live' && now <= forceEndThresh) || (now >= sTime && now <= eTime);
+          
+          return { ...ls, isActuallyLive };
+        })
+        .filter(ls => {
+          // Keep if it's live now or starts in the future
+          return ls.isActuallyLive || new Date(ls.start_time) > now;
+        })
+        .sort((a, b) => {
+          // Sort order: 1. Live Now, 2. Upcoming (Soonest first)
+          if (a.isActuallyLive && !b.isActuallyLive) return -1;
+          if (!a.isActuallyLive && b.isActuallyLive) return 1;
+          
+          return new Date(a.start_time) - new Date(b.start_time);
+=======
       // 6. Aggregate ALL live sessions from course modules (Both Previous and Current)
       const allLive = coursesResult
         .flatMap(c => c.liveSessions || [])
@@ -151,6 +177,7 @@ const TrainerDashboard = () => {
           if (!isAUpcoming && !isBUpcoming) return bTime - aTime; // Newest past first
           
           return isAUpcoming ? -1 : 1; // Upcoming before past
+>>>>>>> origin/main
         });
 
       const payload = {
@@ -236,7 +263,11 @@ const TrainerDashboard = () => {
                     <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.5rem' }}>You have not been assigned any courses yet.</p>
                   </div>
                 )}
+<<<<<<< HEAD
+                {courses.map((course, idx) => (
+=======
                 {courses.slice(0, 4).map((course, idx) => (
+>>>>>>> origin/main
                   <motion.div 
                     initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
                     key={course.course_id} 
@@ -293,15 +324,26 @@ const TrainerDashboard = () => {
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+<<<<<<< HEAD
+                         {liveSessions.map((session, i) => (
+=======
                          {liveSessions.slice(0, 3).map((session, i) => (
+>>>>>>> origin/main
                            <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} key={session.live_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', borderRadius: '1.25rem', padding: '1.25rem', border: '1px solid #f1f5f9' }}>
                               <div>
                                 <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.3rem' }}>{session.title || 'Live Broadcast'}</div>
                                 <div style={{ fontSize: '0.75rem', color: '#4f46e5', fontWeight: 800 }}>
+<<<<<<< HEAD
+                                  {session.isActuallyLive ? '🟢 HAPPENING NOW' : new Date(session.start_time).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                              </div>
+                              <a href={session.meeting_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '10px', background: session.isActuallyLive ? '#ef4444' : '#4f46e5', color: 'white' }}>
+=======
                                   {session.status === 'live' ? '🟢 HAPPENING NOW' : new Date(session.start_time).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                 </div>
                               </div>
                               <a href={session.meeting_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '10px', background: session.status === 'live' ? '#ef4444' : '#4f46e5', color: 'white' }}>
+>>>>>>> origin/main
                                 <ExternalLink size={16} />
                               </a>
                            </motion.div>
@@ -324,7 +366,11 @@ const TrainerDashboard = () => {
                       {students.length === 0 ? (
                         <p style={{ color: '#64748b', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>Awaiting student enrollments...</p>
                       ) : (
+<<<<<<< HEAD
+                        students.map((student, i) => (
+=======
                         students.slice(0, 6).map((student, i) => (
+>>>>>>> origin/main
                           <motion.div 
                             initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} 
                             transition={{ delay: i * 0.1 }} 
