@@ -1,5 +1,9 @@
 // Centralized API Configuration for Gyanteerth LMS
+<<<<<<< HEAD
 export const API_BASE = 'https://lms-vert-alpha.vercel.app/gyantreeth/v1';
+=======
+export const API_BASE = 'https://api.gyanteerthlearning.online/gyantreeth/v1';
+>>>>>>> origin/main
 
 // Detailed Service Endpoints
 export const ADMIN_API = `${API_BASE}/admin`;

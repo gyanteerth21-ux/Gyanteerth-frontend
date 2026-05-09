@@ -73,7 +73,11 @@ const LiveSessions = () => {
       const startTime = new Date(s.start_time);
       const endTime = new Date(s.end_time);
       
+<<<<<<< HEAD
       const forceEndThresh = new Date(endTime.getTime() + 2 * 60 * 60 * 1000);
+=======
+      const forceEndThresh = new Date(endTime.getTime() + 4 * 60 * 60 * 1000);
+>>>>>>> origin/main
       const isLive = (s.status === 'live' && now <= forceEndThresh) || (now >= startTime && now <= endTime);
       const isUpcoming = !isLive && startTime > now;
       

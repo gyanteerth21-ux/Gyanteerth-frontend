@@ -103,6 +103,7 @@ const AdminDashboard = () => {
         let trainerCount = 0;
         let studentCount = 0;
         
+<<<<<<< HEAD
         let assessmentCount = 0;
         
         if (courseData) {
@@ -123,6 +124,11 @@ const AdminDashboard = () => {
               });
             }
           });
+=======
+        if (courseData) {
+          const { active, draft, inactive } = courseData.courses || {};
+          courseCount = [...(active || []), ...(draft || []), ...(inactive || [])].length;
+>>>>>>> origin/main
         }
         
         if (tData) {
@@ -133,7 +139,11 @@ const AdminDashboard = () => {
           studentCount = statData.data.reduce((sum, course) => sum + (course.enrolled_students || 0), 0);
         }
 
+<<<<<<< HEAD
         setStats({ courses: courseCount, trainers: trainerCount, students: studentCount, assessments: assessmentCount });
+=======
+        setStats({ courses: courseCount, trainers: trainerCount, students: studentCount, assessments: 12 }); // Hardcoded 12 for now or fetch
+>>>>>>> origin/main
       } catch (err) {
         console.error("Dashboard sync error", err);
       } finally {
@@ -166,7 +176,11 @@ const AdminDashboard = () => {
           }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
             <div style={{ fontSize: '0.75rem', fontWeight: 800 }}>LIVE INSTANCE</div>
+<<<<<<< HEAD
             <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontFamily: 'monospace' }}>ACTIVE_BUILD</div>
+=======
+            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontFamily: 'monospace' }}>V2.4.0_STABLE</div>
+>>>>>>> origin/main
           </div>
         </div>
       </div>
