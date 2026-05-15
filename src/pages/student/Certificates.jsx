@@ -45,10 +45,10 @@ const Certificates = () => {
           <div className="inline-flex items-center gap-2.5 bg-emerald-500/10 text-emerald-600 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest mb-4 border border-emerald-500/10">
             <Zap size={12} fill="currentColor" /> Academic Achievements
           </div>
-          <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight mb-2 tracking-tight">
+          <h1 className="text-3xl md:text-5xl font-black text-[color:var(--color-text)] leading-tight mb-2 tracking-tight">
             Verified <span className="text-emerald-600">Certificates</span>
           </h1>
-          <p className="text-slate-500 text-sm md:text-lg font-medium max-w-xl leading-relaxed">
+          <p className="text-[color:var(--color-text-muted)] text-sm md:text-lg font-medium max-w-xl leading-relaxed">
             Documents of excellence. You've mastered these domains through dedication and consistency.
           </p>
         </div>
@@ -56,13 +56,13 @@ const Certificates = () => {
         {/* Search Bar - Optimized for 320px */}
         {earnedCertificates.length > 0 && (
           <div className="relative w-full md:w-80">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--color-text-light)]" />
             <input 
               type="text" 
               placeholder="Search achievements..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-sm"
+              className="w-full pl-12 pr-4 py-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl text-sm font-bold outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-sm text-[color:var(--color-text)] placeholder:text-[color:var(--color-text-light)]"
             />
           </div>
         )}
@@ -72,13 +72,13 @@ const Certificates = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-12 md:p-24 bg-white rounded-[3rem] border-2 border-dashed border-slate-100 text-center shadow-sm"
+          className="p-12 md:p-24 bg-[var(--color-surface)] rounded-[3rem] border-2 border-dashed border-[var(--color-border)] text-center shadow-sm"
         >
-          <div className="w-20 h-20 md:w-28 md:h-28 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-slate-100">
-            <Award size={48} className="text-slate-300" strokeWidth={1.5} />
+          <div className="w-20 h-20 md:w-28 md:h-28 bg-[var(--color-surface-muted)] rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-[var(--color-border)]">
+            <Award size={48} className="text-[color:var(--color-text-light)]" strokeWidth={1.5} />
           </div>
-          <h3 className="text-2xl md:text-3xl font-black text-slate-900 mb-4">No Certificates Earned Yet</h3>
-          <p className="text-slate-500 text-sm md:text-lg max-w-md mx-auto mb-10 leading-relaxed">
+          <h3 className="text-2xl md:text-3xl font-black text-[color:var(--color-text)] mb-4">No Certificates Earned Yet</h3>
+          <p className="text-[color:var(--color-text-muted)] text-sm md:text-lg max-w-md mx-auto mb-10 leading-relaxed">
             Finish a course to 100% completion to unlock your professional certification.
           </p>
           <button className="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl transition-all shadow-xl shadow-emerald-600/20 active:scale-95">
@@ -86,11 +86,7 @@ const Certificates = () => {
           </button>
         </motion.div>
       ) : (
-<<<<<<< HEAD
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 min-[1800px]:grid-cols-4 min-[2200px]:grid-cols-5 gap-6 md:gap-8 pb-10">
-=======
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 pb-10">
->>>>>>> origin/main
           {filteredCerts.map((cert, idx) => (
             <motion.div 
               key={cert.id}
@@ -98,14 +94,10 @@ const Certificates = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
               whileHover={{ y: -8 }}
-<<<<<<< HEAD
-              className="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col relative group"
-=======
-              className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col relative group"
->>>>>>> origin/main
+              className="bg-[var(--color-surface)] rounded-[2.5rem] overflow-hidden border border-[var(--color-border)] shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col relative group"
             >
               {/* Badge Overlay */}
-              <div className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-md w-11 h-11 rounded-2xl flex items-center justify-center border border-white shadow-lg">
+              <div className="absolute top-4 right-4 z-10 bg-[var(--color-surface)]/90 backdrop-blur-md w-11 h-11 rounded-2xl flex items-center justify-center border border-[var(--color-border)] shadow-lg">
                 <ShieldCheck size={24} className="text-emerald-600" />
               </div>
               
@@ -115,11 +107,7 @@ const Certificates = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-5 left-5 right-5">
                   <div className="text-[9px] font-black text-white/70 uppercase tracking-widest mb-1">{cert.category} Certification</div>
-<<<<<<< HEAD
-                  <h2 className="text-lg md:text-xl font-black text-white leading-tight line-clamp-2">{cert.courseTitle}</h2>
-=======
                   <h2 className="text-base font-black text-white leading-tight line-clamp-1">{cert.courseTitle}</h2>
->>>>>>> origin/main
                 </div>
               </div>
 
@@ -127,31 +115,19 @@ const Certificates = () => {
               <div className="p-6 pt-5 flex-1 flex flex-col gap-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Issued Date</span>
-<<<<<<< HEAD
-                    <span className="text-sm md:text-base font-black text-slate-900">{cert.earnedDate}</span>
+                    <span className="text-[9px] font-black text-[color:var(--color-text-light)] uppercase tracking-wider">Issued Date</span>
+                    <span className="text-xs md:text-sm font-black text-[color:var(--color-text)]">{cert.earnedDate}</span>
                   </div>
                   <div className="flex flex-col gap-1 text-right">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">ID</span>
-                    <span className="text-sm md:text-base font-black text-slate-900 font-mono">{cert.id.split('-').pop()}</span>
-=======
-                    <span className="text-xs md:text-sm font-black text-slate-900">{cert.earnedDate}</span>
-                  </div>
-                  <div className="flex flex-col gap-1 text-right">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">ID</span>
-                    <span className="text-xs md:text-sm font-black text-slate-900 font-mono">{cert.id.split('-').pop()}</span>
->>>>>>> origin/main
+                    <span className="text-[9px] font-black text-[color:var(--color-text-light)] uppercase tracking-wider">ID</span>
+                    <span className="text-xs md:text-sm font-black text-[color:var(--color-text)] font-mono">{cert.id.split('-').pop()}</span>
                   </div>
                 </div>
 
                 <div className="space-y-4 mt-auto">
                   <button 
                     onClick={() => setSelectedCert(cert)}
-<<<<<<< HEAD
-                    className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-95"
-=======
                     className="w-full py-3.5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-xs md:text-[13px] flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-95"
->>>>>>> origin/main
                   >
                     View & Download <Download size={16} />
                   </button>

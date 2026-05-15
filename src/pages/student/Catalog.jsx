@@ -319,21 +319,13 @@ const Catalog = () => {
       </div>
 
       {loading ? (
-<<<<<<< HEAD
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 min-[1800px]:grid-cols-4 min-[2200px]:grid-cols-5 gap-8">
-=======
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">
->>>>>>> origin/main
           {[...Array(6)].map((_, i) => (
             <div key={i} style={{ height: '400px', background: isDark ? '#1e293b' : 'white', borderRadius: '2.5rem', border: `1px solid ${isDark ? '#334155' : '#f1f5f9'}`, animation: 'pulse 1.5s infinite ease-in-out' }} />
           ))}
         </div>
       ) : (
-<<<<<<< HEAD
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 min-[1800px]:grid-cols-4 min-[2200px]:grid-cols-5 gap-8">
-=======
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">
->>>>>>> origin/main
           <AnimatePresence>
             {filteredCourses.map((course, index) => {
               const st = getStatusStyle(course.type);

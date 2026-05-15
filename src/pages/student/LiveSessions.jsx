@@ -108,28 +108,26 @@ const StudentLiveSessions = () => {
         animate={{ opacity: 1, y: 0 }} 
         transition={{ delay: idx * 0.05 }}
         style={{ 
-          background: 'white', 
+          background: 'var(--color-surface)', 
           borderRadius: '1.5rem', 
           padding: '1.25rem 1.5rem', 
-          border: `1px solid ${isLive ? 'rgba(239,68,68,0.15)' : '#f1f5f9'}`,
+          border: `1px solid ${isLive ? 'rgba(239,68,68,0.15)' : 'var(--color-border)'}`,
           display: 'flex',
           flexDirection: 'column',
-          md: { flexDirection: 'row' }, // This is not tailwind, I'll use class instead
           alignItems: 'stretch',
-          md: { alignItems: 'center' },
           gap: '1.5rem',
-          boxShadow: isLive ? '0 10px 30px rgba(239,68,68,0.08)' : '0 4px 20px rgba(0,0,0,0.02)',
+          boxShadow: isLive ? '0 10px 30px rgba(239,68,68,0.08)' : 'var(--shadow-sm)',
           position: 'relative',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
         className="flex-col md:flex-row md:items-center md:gap-8"
         onMouseEnter={e => {
             e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.06)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
         }}
         onMouseLeave={e => {
             e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = isLive ? '0 10px 30px rgba(239,68,68,0.08)' : '0 4px 20px rgba(0,0,0,0.02)';
+            e.currentTarget.style.boxShadow = isLive ? '0 10px 30px rgba(239,68,68,0.08)' : 'var(--shadow-sm)';
         }}
       >
         <div className="flex-1 min-w-0">
@@ -140,19 +138,19 @@ const StudentLiveSessions = () => {
             }}>
               {isLive ? 'Live Now' : (isHistory ? 'Completed' : 'Upcoming')}
             </span>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <ShieldCheck size={14} color="#059669" /> {session.course_title}
             </div>
           </div>
-          <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: '#0f172a' }}>{session.title}</h3>
+          <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: 'var(--color-text)' }}>{session.title}</h3>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-12">
           <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
               <Calendar size={15} color={accent} /> {new Date(session.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Clock size={15} /> {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(session.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
           </div>
@@ -164,8 +162,8 @@ const StudentLiveSessions = () => {
              style={{ 
                display: 'inline-flex', alignItems: 'center', gap: '0.75rem',
                padding: '0.75rem 1.5rem', borderRadius: '1rem', border: 'none',
-               background: isLive ? '#ef4444' : (isHistory ? '#f1f5f9' : '#0f172a'),
-               color: isHistory ? '#475569' : 'white',
+               background: isLive ? '#ef4444' : (isHistory ? 'var(--color-surface-muted)' : 'var(--color-text)'),
+               color: isHistory ? 'var(--color-text-muted)' : 'var(--color-bg)',
                fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer',
                boxShadow: isLive ? '0 8px 20px rgba(239,68,68,0.25)' : 'none',
                transition: 'all 0.2s'
@@ -191,16 +189,16 @@ const StudentLiveSessions = () => {
       
       {/* ── Page Header ── */}
       <div className="mb-8 md:mb-12">
-        <h1 className="text-3xl md:text-5xl" style={{ fontWeight: 950, color: '#0f172a', letterSpacing: '-0.03em', marginBottom: '0.75rem' }}>
+        <h1 className="text-3xl md:text-5xl" style={{ fontWeight: 950, color: 'var(--color-text)', letterSpacing: '-0.03em', marginBottom: '0.75rem' }}>
           Live <span style={{ color: '#ef4444' }}>Broadcasts</span>
         </h1>
-        <p style={{ margin: 0, maxWidth: '600px', fontSize: '1.05rem', color: '#64748b', fontWeight: 500, lineHeight: 1.6 }}>
+        <p style={{ margin: 0, maxWidth: '600px', fontSize: '1.05rem', color: 'var(--color-text-muted)', fontWeight: 500, lineHeight: 1.6 }}>
           Experience the classroom from anywhere. Join interactive sessions, participate in real-time, and catch up on missed discussions.
         </p>
       </div>
 
       {/* ── Tab Navigation ── */}
-      <div className="flex bg-slate-200/40 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar w-full sm:w-auto mb-10">
+      <div className="flex bg-[var(--color-surface-muted)] p-1.5 rounded-2xl border border-[var(--color-border)] overflow-x-auto no-scrollbar w-full md:w-fit mb-10">
         <div className="flex gap-2 min-w-max w-full">
           {[
             { id: 'live', label: 'Live Now', count: liveSessions.length, color: '#ef4444' },
@@ -211,13 +209,13 @@ const StudentLiveSessions = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 sm:flex-none px-4 md:px-7 py-3 rounded-xl border-none transition-all flex items-center justify-center gap-2 text-sm font-bold ${
-                activeTab === tab.id ? 'bg-white text-slate-900 shadow-sm' : 'bg-transparent text-slate-500'
+                activeTab === tab.id ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm' : 'bg-transparent text-[var(--color-text-muted)]'
               }`}
             >
               {tab.label}
               {tab.count > 0 && (
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-black text-white ${
-                  tab.id === 'live' ? 'bg-red-500 animate-pulse' : (activeTab === tab.id ? 'bg-slate-900' : 'bg-slate-300')
+                  tab.id === 'live' ? 'bg-red-500 animate-pulse' : (activeTab === tab.id ? 'bg-[var(--color-text)] text-[var(--color-bg)]' : 'bg-[var(--color-text-muted)]')
                 }`}>
                   {tab.count}
                 </span>
@@ -231,16 +229,16 @@ const StudentLiveSessions = () => {
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {[1, 2, 3].map(i => (
-            <div key={i} style={{ height: '100px', background: 'white', borderRadius: '1.5rem', animation: 'pulse-bg 1.5s infinite ease-in-out' }} />
+            <div key={i} style={{ height: '100px', background: 'var(--color-surface)', borderRadius: '1.5rem', animation: 'pulse-bg 1.5s infinite ease-in-out' }} />
           ))}
         </div>
       ) : currentList.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'white', borderRadius: '2.5rem', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f8fafc', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
+        <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'var(--color-surface)', borderRadius: '2.5rem', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--color-surface-muted)', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-light)' }}>
             <Video size={36} />
           </div>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '0.5rem' }}>No sessions found</h3>
-          <p style={{ color: '#94a3b8', fontSize: '1.05rem', fontWeight: 500, maxWidth: '400px', margin: '0 auto' }}>
+          <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--color-text)', marginBottom: '0.5rem' }}>No sessions found</h3>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '1.05rem', fontWeight: 500, maxWidth: '400px', margin: '0 auto' }}>
             There are no {activeTab} live sessions in your schedule at the moment.
           </p>
           <button 
@@ -260,7 +258,7 @@ const StudentLiveSessions = () => {
 
       <style>{`
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
-        @keyframes pulse-bg { 0% { background-color: white; } 50% { background-color: #f8fafc; } 100% { background-color: white; } }
+        @keyframes pulse-bg { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
       `}</style>
     </div>
   );

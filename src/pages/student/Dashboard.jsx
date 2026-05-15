@@ -70,7 +70,7 @@ const Dashboard = () => {
               </h1>
             </div>
 
-            <p className="text-base md:text-xl font-medium opacity-90 max-w-[550px] leading-relaxed">
+            <p className="text-base md:text-xl font-medium max-w-[550px] leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
               You're making great progress. Continue your learning journey and unlock new professional opportunities.
             </p>
 
@@ -113,18 +113,14 @@ const Dashboard = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {enrolledWithProgress.length === 0 ? (
-              <div style={{ padding: '4rem 2rem', background: 'white', borderRadius: '2rem', border: '2px dashed #e2e8f0', textAlign: 'center' }}>
-                <BookOpen size={48} color="#cbd5e1" style={{ margin: '0 auto 1rem' }} />
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b' }}>No active enrollments</h3>
-                <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.5rem' }}>Explore our catalog to start your learning journey.</p>
+              <div style={{ padding: '4rem 2rem', background: 'var(--color-surface)', borderRadius: '2rem', border: '2px dashed var(--color-border)', textAlign: 'center' }}>
+                <BookOpen size={48} color="var(--color-text-light)" style={{ margin: '0 auto 1rem' }} />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-text)' }}>No active enrollments</h3>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Explore our catalog to start your learning journey.</p>
                 <button onClick={() => navigate('/student/browse')} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', border: 'none', background: '#059669', color: 'white', fontWeight: 800, cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#047857'} onMouseLeave={e => e.currentTarget.style.background = '#059669'}>Browse Courses</button>
               </div>
             ) : (
-<<<<<<< HEAD
-              enrolledWithProgress.map((course, index) => (
-=======
               enrolledWithProgress.slice(0, 3).map((course, index) => (
->>>>>>> origin/main
                 <motion.div
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -179,11 +175,7 @@ const Dashboard = () => {
         <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
           {/* Live Session Tracker Section */}
-<<<<<<< HEAD
-          <LiveSessionTracker />
-=======
           <LiveSessionTracker limit={3} />
->>>>>>> origin/main
 
           {/* Stunning Achievement Card */}
           <div style={{ 

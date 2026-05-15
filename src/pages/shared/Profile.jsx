@@ -70,32 +70,44 @@ const Profile = () => {
     setLoading(true);
     try {
       const isTrainer = user.role === 'trainer';
-      const endpoint = isTrainer ? `${TRAINER_API}/update-trainer` : `${USER_API}/profile`;
-      
-      // For trainers, backend expects specific keys based on AdminUsers logic
-      const payload = isTrainer ? {
-        trainer_email: form.email,
-        trainer_name: form.name,
-        trainer_number: form.number,
-        trainer_dob: form.dob,
-        trainer_gender: form.gender,
-        trainer_city: form.city,
-        trainer_state: form.state,
-        trainer_expertise: form.expertise
-      } : {
-        user_name: form.name,
-        user_number: form.number,
-        user_dob: form.dob,
-        user_gender: form.gender,
-        user_city: form.city,
-        user_state: form.state
-      };
+      let res;
+      if (isTrainer) {
+        const endpoint = `${TRAINER_API}/update-trainer`;
+        const payload = {
+          trainer_email: form.email,
+          trainer_name: form.name,
+          trainer_number: form.number,
+          trainer_dob: form.dob,
+          trainer_gender: form.gender,
+          trainer_city: form.city,
+          trainer_state: form.state,
+          trainer_expertise: form.expertise
+        };
+        res = await authFetch(endpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        const endpoint = `${USER_API}/update_profile`;
+        const formData = new FormData();
+        formData.append('user_name', form.name);
+        formData.append('user_number', form.number);
+        formData.append('user_dob', form.dob);
+        formData.append('user_gender', form.gender);
+        formData.append('user_city', form.city);
+        formData.append('user_state', form.state);
+        
+        // Include picture if it's a URL or string
+        if (form.pic && typeof form.pic === 'string') {
+          formData.append('user_pic', form.pic);
+        }
 
-      const res = await authFetch(endpoint, {
-        method: isTrainer ? 'PUT' : 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+        res = await authFetch(endpoint, {
+          method: 'PUT',
+          body: formData
+        });
+      }
 
       if (res.ok) {
         showToast('Profile updated successfully');
@@ -192,7 +204,7 @@ const Profile = () => {
               </label>
             </div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: 0, color: 'var(--color-text)' }}>{form.name}</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 600, marginTop: '0.25rem' }}>{user.role === 'trainer' ? 'Expert Faculty' : 'Premium Student'}</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 600, marginTop: '0.25rem' }}>{user.role === 'trainer' ? 'Expert Faculty' : 'Student'}</p>
             
             <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.75rem', textAlign: 'left' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text-muted)' }}>

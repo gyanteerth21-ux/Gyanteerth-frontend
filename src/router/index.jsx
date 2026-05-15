@@ -58,6 +58,19 @@ export const router = createBrowserRouter([
     element: <Login />,
     errorElement: <ErrorBoundary />
   },
+  {
+    path: '/complete-profile',
+    element: <ProtectedRoute allowedRoles={['student']} />,
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        element: <DashboardLayout />,
+        children: [
+          { index: true, element: <Profile /> }
+        ]
+      }
+    ]
+  },
 
   {
     path: '/forgot-password',
