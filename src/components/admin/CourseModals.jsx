@@ -17,19 +17,43 @@ const Section = ({ title, children, icon: Icon }) => (
    </div>
 );
 
-const FormInput = ({ label, ...props }) => (
-   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
-      <label style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--color-text-muted)', marginLeft: '0.25rem' }}>{label}</label>
-      <input {...props} style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '0.75rem', padding: '0.85rem 1rem', color: 'var(--color-text)', fontWeight: '600', outline: 'none', transition: 'all 0.2s', fontSize: '0.9rem' }} onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'} onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}/>
-   </div>
-);
+const FormInput = ({ label, limit, ...props }) => {
+   const currentLength = props.value ? String(props.value).length : 0;
+   const isExceeded = limit && currentLength > limit;
 
-const FormTextArea = ({ label, ...props }) => (
-   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', gridColumn: '1 / -1' }}>
-      <label style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--color-text-muted)', marginLeft: '0.25rem' }}>{label}</label>
-      <textarea {...props} style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '1rem', color: 'var(--color-text)', fontWeight: '600', outline: 'none', resize: 'none', minHeight: '80px', transition: 'all 0.2s', fontSize: '0.9rem' }} onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'} onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}/>
-   </div>
-);
+   return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--color-text-muted)', marginLeft: '0.25rem' }}>{label}</label>
+            {limit && (
+               <span style={{ fontSize: '0.65rem', fontWeight: '700', color: isExceeded ? '#ef4444' : 'var(--color-text-muted)' }}>
+                  {isExceeded ? `Exceeded character limit of ${limit}` : `${limit - currentLength} chars left`}
+               </span>
+            )}
+         </div>
+         <input {...props} style={{ backgroundColor: 'var(--color-surface)', border: `1px solid ${isExceeded ? '#ef4444' : 'var(--color-border)'}`, borderRadius: '0.75rem', padding: '0.85rem 1rem', color: 'var(--color-text)', fontWeight: '600', outline: 'none', transition: 'all 0.2s', fontSize: '0.9rem' }} onFocus={(e) => e.target.style.borderColor = isExceeded ? '#ef4444' : 'var(--color-primary)'} onBlur={(e) => e.target.style.borderColor = isExceeded ? '#ef4444' : 'var(--color-border)'} />
+      </div>
+   );
+};
+
+const FormTextArea = ({ label, limit, ...props }) => {
+   const currentLength = props.value ? String(props.value).length : 0;
+   const isExceeded = limit && currentLength > limit;
+
+   return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', gridColumn: '1 / -1' }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--color-text-muted)', marginLeft: '0.25rem' }}>{label}</label>
+            {limit && (
+               <span style={{ fontSize: '0.65rem', fontWeight: '700', color: isExceeded ? '#ef4444' : 'var(--color-text-muted)' }}>
+                  {isExceeded ? `Exceeded character limit of ${limit}` : `${limit - currentLength} chars left`}
+               </span>
+            )}
+         </div>
+         <textarea {...props} style={{ backgroundColor: 'var(--color-surface)', border: `1px solid ${isExceeded ? '#ef4444' : 'var(--color-border)'}`, borderRadius: '1rem', padding: '1rem', color: 'var(--color-text)', fontWeight: '600', outline: 'none', resize: 'none', minHeight: '80px', transition: 'all 0.2s', fontSize: '0.9rem' }} onFocus={(e) => e.target.style.borderColor = isExceeded ? '#ef4444' : 'var(--color-primary)'} onBlur={(e) => e.target.style.borderColor = isExceeded ? '#ef4444' : 'var(--color-border)'} />
+      </div>
+   );
+};
 
 const FormSelect = ({ label, children, ...props }) => (
    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
@@ -112,7 +136,7 @@ export const CreateCategoryModal = ({ onClose, refresh, showToast, categories })
                   <Section title="Visual Assets">
                      <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '1.5rem' }}>
                         <FormInput label="Icon" value={formData.Icon} onChange={e => setFormData({ ...formData, Icon: e.target.value })} placeholder="📁" />
-                        <FormInput label="Thumbnail URL" value={formData.Thumbnail} onChange={e => setFormData({ ...formData, Thumbnail: e.target.value })} placeholder="https://..." />
+                        <FormInput label="Thumbnail URL" limit={255} value={formData.Thumbnail} onChange={e => setFormData({ ...formData, Thumbnail: e.target.value })} placeholder="https://..." />
                      </div>
                   </Section>
                </div>
@@ -184,18 +208,21 @@ export const CreateCourseModal = ({ onClose, trainers, categories, showToast, re
                discount_pay: Number(formData.discount_pay) || 0
             })
          });
-         if (res.ok) { 
-            showToast('Course profile initialized'); 
+         if (res.ok) {
+            showToast('Course profile initialized');
             clearCache('admin_course_ids');
             clearCache('admin_categories');
-            refresh(); 
-            onClose(); 
+            refresh();
+            onClose();
          }
-         else { 
-            const err = await res.json(); 
+         else {
+            const err = await res.json();
             let msg = err.detail || err.message || 'Creation failed';
             if (Array.isArray(err.detail)) msg = err.detail.map(d => `${d.loc?.join('.')}: ${d.msg}`).join(', ');
-            showToast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error'); 
+            if (res.status === 500 || err.error === 'HTTP 500') {
+               msg = 'Internal server error occurred while creating course. Please try again.';
+            }
+            showToast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error');
          }
       } catch (err) { showToast('Sync error', 'error'); }
       finally { setLoading(false); }
@@ -241,6 +268,7 @@ export const CreateCourseModal = ({ onClose, trainers, categories, showToast, re
                      <Section title="Learning Blueprint" icon={BookOpen}>
                         <FormTextArea label="Curriculum Narrative (Max 500)" value={formData.course_description} onChange={e => setFormData({ ...formData, course_description: e.target.value })} placeholder="Describe the core learning journey..." required />
                         <FormTextArea label="Strategic Outcomes & Benefits" value={formData.benefits} onChange={e => setFormData({ ...formData, benefits: e.target.value })} placeholder="What will the student master?" />
+                        <FormTextArea label="Required Prerequisites & Knowledge" value={formData.required_knowledge} onChange={e => setFormData({ ...formData, required_knowledge: e.target.value })} placeholder="Any prior knowledge needed?" />
                         <FormInput label="Primary Skill Set (Comma separated)" value={formData.skill_set} onChange={e => setFormData({ ...formData, skill_set: e.target.value })} placeholder="Python, AWS, Architecture..." />
                      </Section>
                   </div>
@@ -265,7 +293,7 @@ export const CreateCourseModal = ({ onClose, trainers, categories, showToast, re
                      <Section title="Metadata & Logistics" icon={Calendar}>
                         <FormInput label="Estimated Duration" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} placeholder="e.g. 45 Hours" />
                         <FormInput label="Instruction Language" value={formData.language} onChange={e => setFormData({ ...formData, language: e.target.value })} />
-                        <FormInput label="Banner/Thumbnail URL" value={formData.thumbnail} onChange={e => setFormData({ ...formData, thumbnail: e.target.value })} placeholder="https://unsplash.com/..." />
+                        <FormInput label="Banner/Thumbnail URL" limit={255} value={formData.thumbnail} onChange={e => setFormData({ ...formData, thumbnail: e.target.value })} placeholder="https://unsplash.com/..." />
                      </Section>
                   </div>
                </div>
@@ -332,18 +360,21 @@ export const EditCourseModal = ({ course, onClose, trainers, categories, showToa
                discount_pay: Number(formData.discount_pay) || 0
             })
          });
-         if (res.ok) { 
-            showToast('Course profile updated'); 
+         if (res.ok) {
+            showToast('Course profile updated');
             clearCache('admin_course_ids');
             clearCache(`details_${course.course_id}`);
-            refresh(); 
-            onClose(); 
+            refresh();
+            onClose();
          }
-         else { 
-            const err = await res.json(); 
+         else {
+            const err = await res.json();
             let msg = err.detail || err.message || 'Update failed';
             if (Array.isArray(err.detail)) msg = err.detail.map(d => `${d.loc?.join('.')}: ${d.msg}`).join(', ');
-            showToast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error'); 
+            if (res.status === 500 || err.error === 'HTTP 500') {
+               msg = 'Internal server error occurred while updating course. Please try again.';
+            }
+            showToast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error');
          }
       } catch (err) { showToast('Sync error', 'error'); }
       finally { setLoading(false); }
@@ -388,6 +419,7 @@ export const EditCourseModal = ({ course, onClose, trainers, categories, showToa
                      <Section title="Strategic Content" icon={BookOpen}>
                         <FormTextArea label="Course Description Narrative" value={formData.course_description} onChange={e => setFormData({ ...formData, course_description: e.target.value })} />
                         <FormTextArea label="Global Benefits & Outcomes" value={formData.benefits} onChange={e => setFormData({ ...formData, benefits: e.target.value })} />
+                        <FormTextArea label="Required Prerequisites & Knowledge" value={formData.required_knowledge} onChange={e => setFormData({ ...formData, required_knowledge: e.target.value })} />
                         <FormInput label="Tools & Frameworks" value={formData.skill_set} onChange={e => setFormData({ ...formData, skill_set: e.target.value })} />
                      </Section>
                   </div>
@@ -412,7 +444,7 @@ export const EditCourseModal = ({ course, onClose, trainers, categories, showToa
                      <Section title="Logistics & Assets" icon={Calendar}>
                         <FormInput label="Architecture Duration" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} />
                         <FormInput label="Primary Language" value={formData.language} onChange={e => setFormData({ ...formData, language: e.target.value })} />
-                        <FormInput label="Strategic Banner URL" value={formData.thumbnail} onChange={e => setFormData({ ...formData, thumbnail: e.target.value })} />
+                        <FormInput label="Strategic Banner URL" limit={255} value={formData.thumbnail} onChange={e => setFormData({ ...formData, thumbnail: e.target.value })} />
                      </Section>
                   </div>
                </div>
@@ -649,13 +681,13 @@ export const ManageModuleModal = ({ course, onClose, showToast, refresh }) => {
             ? { Title: formData.Title, Course_Description: formData.Course_Description }
             : { Course_ID: course.course_id, Title: formData.Title, Course_Description: formData.Course_Description, Position: parseInt(formData.Position) };
          const res = await authFetch(url, { method: isEdit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-         if (res.ok) { 
-            showToast(isEdit ? 'Module updated' : 'Module created'); 
+         if (res.ok) {
+            showToast(isEdit ? 'Module updated' : 'Module created');
             clearCache(`details_${course.course_id}`);
-            await fetchFullCourse(); 
-            setFormData({ Title: '', Course_Description: '', Position: modules.length + 1 }); 
-            setEditingModule(null); 
-            refresh(); 
+            await fetchFullCourse();
+            setFormData({ Title: '', Course_Description: '', Position: modules.length + 1 });
+            setEditingModule(null);
+            refresh();
          }
          else { const err = await res.json(); showToast(err.detail || err.message || 'Module operation failed', 'error'); }
       } catch (err) { showToast('Sync error', 'error'); } finally { setLoading(false); }
@@ -669,12 +701,12 @@ export const ManageModuleModal = ({ course, onClose, showToast, refresh }) => {
          const url = isEdit ? `${ADMIN_API}/update_video/${videoForm.editingId}` : `${ADMIN_API}/create_video`;
          const body = { Course_ID: course.course_id, Module_ID: activeModuleId, Video_URL: videoForm.Video_URL, course_description: videoForm.course_description };
          const res = await authFetch(url, { method: isEdit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-         if (res.ok) { 
-            showToast(isEdit ? 'Lesson updated' : 'Lesson added'); 
+         if (res.ok) {
+            showToast(isEdit ? 'Lesson updated' : 'Lesson added');
             clearCache(`details_${course.course_id}`);
-            await fetchFullCourse(); 
-            setVideoForm({ Video_URL: '', course_description: '', editingId: null }); 
-            refresh(); 
+            await fetchFullCourse();
+            setVideoForm({ Video_URL: '', course_description: '', editingId: null });
+            refresh();
          }
          else { const err = await res.json(); showToast(err.detail || err.message || 'Video operation failed', 'error'); }
       } catch (err) { showToast('Sync error', 'error'); } finally { setLoading(false); }
@@ -692,12 +724,12 @@ export const ManageModuleModal = ({ course, onClose, showToast, refresh }) => {
             Start_time: liveForm.Start_time, End_time: liveForm.End_time, Status: liveForm.Status
          };
          const res = await authFetch(url, { method: isEdit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-         if (res.ok) { 
-            showToast(isEdit ? 'Live session updated' : 'Live session created'); 
+         if (res.ok) {
+            showToast(isEdit ? 'Live session updated' : 'Live session created');
             clearCache(`details_${course.course_id}`);
-            await fetchFullCourse(); 
-            setLiveForm({ Meeting_URL: '', Provider: 'Zoom', Start_time: '', End_time: '', Status: 'scheduled', editingId: null }); 
-            refresh(); 
+            await fetchFullCourse();
+            setLiveForm({ Meeting_URL: '', Provider: 'Zoom', Start_time: '', End_time: '', Status: 'scheduled', editingId: null });
+            refresh();
          }
          else { const err = await res.json(); showToast(err.detail || err.message || 'Live session operation failed', 'error'); }
       } catch (err) { showToast('Sync error', 'error'); } finally { setLoading(false); }
