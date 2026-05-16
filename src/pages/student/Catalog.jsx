@@ -32,8 +32,10 @@ const CourseSkeleton = () => (
   </div>
 );
 
-/* ── Enrollment Confirmation Modal ── */
+/* ── Premium Enrollment Confirmation Modal ── */
 function EnrollModal({ course, onConfirm, onCancel }) {
+  const { isDark } = useTheme();
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'unset'; };
@@ -42,51 +44,65 @@ function EnrollModal({ course, onConfirm, onCancel }) {
   const typeLower = (course?.type || course?.course_type || course?.course_Type || 'recorded').toLowerCase();
   const isLive = typeLower === 'live' || typeLower === 'live_course' || typeLower === 'live session';
 
-  const formatPrice = () => {
-    if (!course) return 'Free';
-    if (course.price?.discount !== undefined && course.price?.discount !== null) return `₹${course.price.discount}`;
-    if (course.price?.original) return `₹${course.price.original}`;
-    return 'Free';
-  };
+  const hasDiscount = course?.price?.discount !== undefined && course?.price?.discount !== null && course?.price?.original > course?.price?.discount;
+  const isFree = !course?.price || (course.price.discount === 0 || course.price.original === 0 && !hasDiscount);
+
+  const displayPrice = isFree ? 'Free' : `₹${hasDiscount ? course.price.discount : course.price.original}`;
+  const displayOriginal = hasDiscount && !isFree ? `₹${course.price.original}` : null;
+
+  const bgSurface = isDark ? '#1e293b' : 'white';
+  const textMain = isDark ? 'white' : '#0f172a';
+  const textMuted = isDark ? '#94a3b8' : '#64748b';
+  const borderCol = isDark ? '#334155' : '#f1f5f9';
 
   const modalContent = (
     <div style={{ position: 'fixed', inset: 0, zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      {/* Optimized Backdrop */}
-      <div onClick={onCancel} style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(5px)', willChange: 'transform' }} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onCancel} style={{ position: 'absolute', inset: 0, background: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(8px)', willChange: 'transform' }} />
 
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} style={{ position: 'relative', zIndex: 1, background: 'white', borderRadius: '2.5rem', width: 'min(95vw, 500px)', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', overflow: 'hidden', border: '1px solid #f1f5f9' }}>
-        <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #059669 100%)', padding: '1.75rem 1.5rem md:padding:2.5rem 2rem', position: 'relative', color: 'white' }}>
-          <button onClick={onCancel} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.2)', padding: '0.25rem 0.7rem', borderRadius: '2rem', fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: '0.75rem' }}>{isLive ? '🔴 Live Program' : '🎬 Pro Course'}</div>
-          <h2 style={{ fontSize: '1.25rem md:fontSize:1.5rem', fontWeight: 900, lineHeight: 1.3, margin: 0 }}>{course.title}</h2>
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} style={{ position: 'relative', zIndex: 1, background: bgSurface, borderRadius: '2.5rem', width: 'min(95vw, 450px)', boxShadow: '0 32px 80px rgba(0,0,0,0.4)', overflow: 'hidden', border: `1px solid ${borderCol}` }}>
+        {/* Dynamic Header */}
+        <div style={{ background: isLive ? 'linear-gradient(135deg, #be123c 0%, #e11d48 100%)' : 'linear-gradient(135deg, #065f46 0%, #059669 100%)', padding: '2rem 2.5rem', position: 'relative', color: 'white' }}>
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+          
+          <button onClick={onCancel} style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background='rgba(255,255,255,0.25)'} onMouseOut={e => e.currentTarget.style.background='rgba(255,255,255,0.15)'}><X size={16} /></button>
+          
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(0,0,0,0.2)', padding: '0.4rem 0.85rem', borderRadius: '2rem', fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.05em' }}>
+              {isLive ? '🔴 Live Program' : '🎬 Pro Course'}
+            </div>
+            <h2 style={{ fontSize: '1.65rem', fontWeight: 900, lineHeight: 1.2, margin: 0, textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>{course.title}</h2>
+          </div>
         </div>
 
-        <div style={{ padding: '1.25rem md:padding:2rem' }}>
-          <div style={{ background: '#f8fafc', borderRadius: '1.25rem', padding: '1.25rem', marginBottom: '1.5rem', border: '1px solid #f1f5f9' }}>
-            <p style={{ fontSize: '0.65rem', fontWeight: 900, color: '#059669', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>Inclusions</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+        <div style={{ padding: '2.5rem' }}>
+          <div style={{ background: isDark ? '#0f172a' : '#f8fafc', borderRadius: '1.5rem', padding: '1.5rem', marginBottom: '2rem', border: `1px solid ${borderCol}` }}>
+            <p style={{ fontSize: '0.7rem', fontWeight: 900, color: isLive ? '#e11d48' : '#059669', textTransform: 'uppercase', marginBottom: '1rem', letterSpacing: '0.05em' }}>What you will get</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               {[
-                { icon: <Layers size={14} color="#059669" />, text: 'Full curriculum access' },
-                { icon: <Video size={14} color="#059669" />, text: isLive ? 'Live interactive sessions' : 'Recorded masterclasses' },
-                { icon: <Award size={14} color="#059669" />, text: 'Industry recognized certificate' },
-                { icon: <Zap size={14} color="#059669" />, text: 'Lifetime platform access' },
+                { icon: <Layers size={16} color={isLive ? '#e11d48' : '#059669'} />, text: 'Full curriculum access' },
+                { icon: <Video size={16} color={isLive ? '#e11d48' : '#059669'} />, text: isLive ? 'Live interactive sessions' : 'Recorded masterclasses' },
+                { icon: <Award size={16} color={isLive ? '#e11d48' : '#059669'} />, text: 'Industry recognized certificate' },
+                { icon: <Zap size={16} color={isLive ? '#e11d48' : '#059669'} />, text: 'Lifetime platform access' },
               ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: '#1e293b', fontWeight: 600 }}>{item.icon} {item.text}</div>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '0.9rem', color: textMain, fontWeight: 700 }}>
+                  <div style={{ padding: '0.4rem', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: '0.6rem' }}>{item.icon}</div>
+                  {item.text}
+                </div>
               ))}
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', padding: '0 0.5rem' }}>
             <div>
-              <div style={{ fontSize: '1.5rem md:fontSize:1.75rem', fontWeight: 900, color: '#0f172a' }}>{formatPrice()}</div>
-              {course.price?.original && <div style={{ fontSize: '0.8rem', color: '#94a3b8', textDecoration: 'line-through' }}>₹{course.price.original}</div>}
+              <div style={{ fontSize: '2rem', fontWeight: 950, color: textMain, lineHeight: 1 }}>{displayPrice}</div>
+              {displayOriginal && <div style={{ fontSize: '0.85rem', color: textMuted, textDecoration: 'line-through', marginTop: '0.2rem', fontWeight: 600 }}>{displayOriginal}</div>}
             </div>
-            <div style={{ padding: '0.4rem 0.8rem', background: '#f1f5f9', borderRadius: '0.8rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>{course.level || 'Advanced'}</div>
+            <div style={{ padding: '0.5rem 1rem', background: isDark ? '#334155' : '#f1f5f9', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 800, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{course.level || 'Advanced'}</div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <button onClick={onConfirm} style={{ width: '100%', background: '#f97316', color: 'white', border: 'none', borderRadius: '1rem', padding: '1rem', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', boxShadow: '0 8px 20px rgba(249, 115, 22, 0.25)' }}>Confirm Enrollment <ArrowRight size={18} /></button>
-            <button onClick={onCancel} style={{ width: '100%', background: 'white', color: '#64748b', border: '1.5px solid #f1f5f9', borderRadius: '1rem', padding: '0.85rem', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}>I'll decide later</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <button onClick={onConfirm} style={{ width: '100%', background: '#ff7a1a', color: 'white', border: 'none', borderRadius: '1.25rem', padding: '1.15rem', fontWeight: 900, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', boxShadow: '0 8px 25px rgba(255, 122, 26, 0.3)', transition: 'all 0.2s' }} onMouseOver={e => e.currentTarget.style.transform='translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform='translateY(0)'}>Confirm Enrollment <ArrowRight size={18} /></button>
+            <button onClick={onCancel} style={{ width: '100%', background: 'transparent', color: textMuted, border: 'none', borderRadius: '1.25rem', padding: '1rem', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color=textMain} onMouseOut={e => e.currentTarget.style.color=textMuted}>I'll decide later</button>
           </div>
         </div>
       </motion.div>

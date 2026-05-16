@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../../shared/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ADMIN_API } from '../../config';
+import { ADMIN_API, optimizeImageUrl } from '../../config';
 import { CreateCourseModal } from '../../components/admin/CourseModals';
 
 const AdminCategories = () => {
@@ -280,7 +280,7 @@ const PremiumCategoryCard = ({ cat, onEdit, onDelete, onView, onCreateCourse, in
      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
            <div style={{ width: '3.25rem', height: '3.25rem', borderRadius: '1rem', overflow: 'hidden', backgroundColor: 'var(--color-surface-muted)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={cat.Thumbnail || "https://images.unsplash.com/photo-1542744094-3a31f272c490?w=400"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={optimizeImageUrl(cat.Thumbnail)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
            </div>
            <div>
               <div style={{ fontSize: '0.55rem', fontWeight: 950, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.1rem' }}>Stack Domain</div>
@@ -316,7 +316,7 @@ const PremiumCategoryListRow = ({ cat, onEdit, onDelete, onView, onCreateCourse,
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1 }}>
        <div style={{ width: '3.5rem', height: '3rem', borderRadius: '1rem', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-          <img src={cat.Thumbnail || "https://images.unsplash.com/photo-1542744094-3a31f272c490?w=400"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={optimizeImageUrl(cat.Thumbnail)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
        </div>
        <div>
           <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>{cat.Category_Name}</h4>
