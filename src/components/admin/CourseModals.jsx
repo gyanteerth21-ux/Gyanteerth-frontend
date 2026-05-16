@@ -136,7 +136,7 @@ export const CreateCategoryModal = ({ onClose, refresh, showToast, categories })
                   <Section title="Visual Assets">
                      <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '1.5rem' }}>
                         <FormInput label="Icon" value={formData.Icon} onChange={e => setFormData({ ...formData, Icon: e.target.value })} placeholder="📁" />
-                        <FormInput label="Thumbnail URL" limit={255} value={formData.Thumbnail} onChange={e => setFormData({ ...formData, Thumbnail: e.target.value })} placeholder="https://..." />
+                        <FormInput label="Thumbnail URL" limit={2000} value={formData.Thumbnail} onChange={e => setFormData({ ...formData, Thumbnail: e.target.value })} placeholder="https://..." />
                      </div>
                   </Section>
                </div>
@@ -269,7 +269,6 @@ export const CreateCourseModal = ({ onClose, trainers, categories, showToast, re
                         <FormTextArea label="Curriculum Narrative (Max 500)" value={formData.course_description} onChange={e => setFormData({ ...formData, course_description: e.target.value })} placeholder="Describe the core learning journey..." required />
                         <FormTextArea label="Strategic Outcomes & Benefits" value={formData.benefits} onChange={e => setFormData({ ...formData, benefits: e.target.value })} placeholder="What will the student master?" />
                         <FormTextArea label="Required Prerequisites & Knowledge" value={formData.required_knowledge} onChange={e => setFormData({ ...formData, required_knowledge: e.target.value })} placeholder="Any prior knowledge needed?" />
-                        <FormInput label="Primary Skill Set (Comma separated)" value={formData.skill_set} onChange={e => setFormData({ ...formData, skill_set: e.target.value })} placeholder="Python, AWS, Architecture..." />
                      </Section>
                   </div>
 
@@ -293,7 +292,7 @@ export const CreateCourseModal = ({ onClose, trainers, categories, showToast, re
                      <Section title="Metadata & Logistics" icon={Calendar}>
                         <FormInput label="Estimated Duration" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} placeholder="e.g. 45 Hours" />
                         <FormInput label="Instruction Language" value={formData.language} onChange={e => setFormData({ ...formData, language: e.target.value })} />
-                        <FormInput label="Banner/Thumbnail URL" limit={255} value={formData.thumbnail} onChange={e => setFormData({ ...formData, thumbnail: e.target.value })} placeholder="https://unsplash.com/..." />
+                        <FormInput label="Banner/Thumbnail URL" limit={2000} value={formData.thumbnail} onChange={e => setFormData({ ...formData, thumbnail: e.target.value })} placeholder="https://unsplash.com/..." />
                      </Section>
                   </div>
                </div>
@@ -420,7 +419,6 @@ export const EditCourseModal = ({ course, onClose, trainers, categories, showToa
                         <FormTextArea label="Course Description Narrative" value={formData.course_description} onChange={e => setFormData({ ...formData, course_description: e.target.value })} />
                         <FormTextArea label="Global Benefits & Outcomes" value={formData.benefits} onChange={e => setFormData({ ...formData, benefits: e.target.value })} />
                         <FormTextArea label="Required Prerequisites & Knowledge" value={formData.required_knowledge} onChange={e => setFormData({ ...formData, required_knowledge: e.target.value })} />
-                        <FormInput label="Tools & Frameworks" value={formData.skill_set} onChange={e => setFormData({ ...formData, skill_set: e.target.value })} />
                      </Section>
                   </div>
 
@@ -444,7 +442,7 @@ export const EditCourseModal = ({ course, onClose, trainers, categories, showToa
                      <Section title="Logistics & Assets" icon={Calendar}>
                         <FormInput label="Architecture Duration" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} />
                         <FormInput label="Primary Language" value={formData.language} onChange={e => setFormData({ ...formData, language: e.target.value })} />
-                        <FormInput label="Strategic Banner URL" limit={255} value={formData.thumbnail} onChange={e => setFormData({ ...formData, thumbnail: e.target.value })} />
+                        <FormInput label="Strategic Banner URL" limit={2000} value={formData.thumbnail} onChange={e => setFormData({ ...formData, thumbnail: e.target.value })} />
                      </Section>
                   </div>
                </div>
