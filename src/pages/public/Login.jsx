@@ -71,11 +71,7 @@ const Login = () => {
       }
     }
     
-    if (isStudent && !isComplete) {
-      navigate('/complete-profile');
-    } else {
-      navigate(`/${userRole}`);
-    }
+    navigate(`/${userRole}`);
   }, [email, login, authFetch, navigate]);
 
   const handleLoginSubmit = async (e) => {
