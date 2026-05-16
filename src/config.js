@@ -14,3 +14,17 @@ export const getHeaders = (token) => ({
   'Accept': 'application/json',
   'Content-Type': 'application/json'
 });
+
+// Helper to format image URLs (e.g. converting Google Drive viewer links to direct image links)
+export const optimizeImageUrl = (url) => {
+  if (!url) return 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800';
+  if (url.includes('drive.google.com/file/d/')) {
+    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      // Google recently started blocking drive.google.com/uc hotlinks with 403s.
+      // Using lh3.googleusercontent.com is a known workaround for public drive images.
+      return `https://lh3.googleusercontent.com/d/${match[1]}`;
+    }
+  }
+  return url;
+};
