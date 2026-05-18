@@ -303,36 +303,40 @@ const StudentCourses = () => {
                   key={course.id || course.course_id} 
                   style={{ 
                     background: isDark ? '#1e293b' : 'white', 
-                    borderRadius: '2rem', 
+                    borderRadius: '2.5rem', 
                     border: `1px solid ${isDark ? '#334155' : '#f1f5f9'}`, 
                     display: 'flex', 
-                    alignItems: 'center' 
+                    alignItems: 'center',
+                    boxShadow: isDark ? 'none' : '0 10px 30px -5px rgba(0,0,0,0.05)',
                   }}
-                  className="p-3 md:p-5 gap-3 md:gap-5"
+                  className="p-4 md:p-6 gap-4 md:gap-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
                 >
-                  <div 
-                    className="w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: isDark ? 'rgba(16,185,129,0.1)' : '#ecfdf5' }}
-                  >
-                    <Award className="w-6 h-6 md:w-8 md:h-8" color="#10b981" />
+                  <div className="w-28 h-16 md:w-48 md:h-28 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-900 shadow-sm">
+                    <img 
+                      src={optimizeImageUrl(course.thumbnail)} 
+                      alt={course.title || "Course Thumbnail"} 
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm md:text-lg font-black truncate" style={{ color: isDark ? 'white' : '#1e293b' }}>
+                    <h4 className="text-sm md:text-xl font-black truncate mb-1" style={{ color: isDark ? 'white' : '#1e293b' }}>
                       {course.title}
                     </h4>
-                    <p className="text-[10px] md:text-xs text-slate-500 mt-0.5 font-bold">
+                    <p className="text-[10px] md:text-xs text-slate-500 font-bold">
                       Program Graduate · {course.level || 'Expert'}
                     </p>
-                    <div className="flex flex-wrap gap-3 md:gap-4 mt-3">
+                    <div className="flex flex-wrap gap-3 mt-4">
                       <button 
                         onClick={() => navigate(`/student/course/${course.id || course.course_id}`)} 
-                        className="bg-transparent border-none text-emerald-500 font-black text-[10px] md:text-xs cursor-pointer p-0"
+                        className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-black text-[10px] md:text-xs rounded-xl cursor-pointer transition-all border border-emerald-500/10"
                       >
                         Review Module
                       </button>
                       <button 
                         onClick={() => setViewingCertificate(course)}
-                        className="bg-transparent border-none text-orange-500 font-black text-[10px] md:text-xs cursor-pointer p-0"
+                        className="px-4 py-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 font-black text-[10px] md:text-xs rounded-xl cursor-pointer transition-all border border-orange-500/10"
                       >
                         Download Certificate
                       </button>
@@ -498,7 +502,11 @@ const StudentCourses = () => {
                       setActiveGeneratorCert(viewingCertificate);
                       setViewingCertificate(null);
                     }}
-                    className="w-full py-4 mb-8 bg-[#0f172a] dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all text-xs md:text-sm cursor-pointer"
+                    className={`w-full py-4 mb-8 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all text-xs md:text-sm cursor-pointer ${
+                      isDark 
+                        ? 'bg-white hover:bg-slate-100 text-slate-900' 
+                        : 'bg-[#0f172a] hover:bg-black text-white'
+                    }`}
                   >
                     View & Download <ArrowRight size={18} />
                   </button>
