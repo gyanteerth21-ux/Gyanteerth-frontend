@@ -4,7 +4,7 @@ import { useAuth } from '../../shared/AuthContext';
 import { Book, Loader2, Search, BookOpen, PlayCircle, Users, BarChart2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { ADMIN_API, TRAINER_API } from '../../config';
+import { ADMIN_API, TRAINER_API, optimizeImageUrl } from '../../config';
 
 const TrainerCourses = () => {
   const { user, smartFetch } = useAuth();
@@ -168,9 +168,10 @@ const TrainerCourses = () => {
                     {/* Thumbnail */}
                     <div style={{ height: '180px', position: 'relative', overflow: 'hidden', backgroundColor: '#f8fafc' }}>
                       <img 
-                        src={course.thumbnail || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80`} 
+                        src={optimizeImageUrl(course.thumbnail)} 
                         alt={course.course_title}
                         loading="lazy"
+                        referrerPolicy="no-referrer"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%)' }} />

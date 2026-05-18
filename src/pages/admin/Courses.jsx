@@ -296,7 +296,7 @@ const PremiumCourseCardSmall = ({ course, onEdit, onDelete, onManage, onPublish,
   return (
     <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: '1.5rem', overflow: 'hidden', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', transition: 'all 0.4s', position: 'relative' }} className="premium-glow-card">
        <div style={{ height: '160px', position: 'relative', overflow: 'hidden' }}>
-          <img src={optimizeImageUrl(course.thumbnail)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={optimizeImageUrl(course.thumbnail)} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.3), transparent)' }} />
           
           <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', display: 'flex', gap: '0.5rem', zIndex: 10 }}>

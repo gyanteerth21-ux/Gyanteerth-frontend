@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Video, Star, Users, Clock, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { ADMIN_API } from '../../config';
+import { ADMIN_API, optimizeImageUrl } from '../../config';
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -35,7 +35,7 @@ export default function Courses() {
                   course_id: c.course_id || id,
                   title: c.course_title || c.title || 'Untitled',
                   type: c.type || c.course_Type || 'recorded',
-                  thumbnail: c.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
+                  thumbnail: optimizeImageUrl(c.thumbnail),
                   rating: c.course_rating || c.rating || c.average_rating || 0,
                   students: c.students || c.enrollment_count || c.student_count || (c.enrollments ? c.enrollments.length : 0)
                 });
@@ -94,7 +94,7 @@ export default function Courses() {
                 <div className="absolute top-4 left-4 z-20 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide flex items-center gap-1 shadow-md">
                   <Star className="w-3 h-3 fill-current" /> Leading Path
                 </div>
-                <img src={topSeller.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'} alt={topSeller.title} className="w-full h-full absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-700" />
+                <img src={topSeller.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'} alt={topSeller.title} referrerPolicy="no-referrer" className="w-full h-full absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-700" />
               </div>
               <div className="w-full md:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
                  <div className="flex items-center gap-2 mb-4">
@@ -159,7 +159,7 @@ export default function Courses() {
                     {course.type?.toLowerCase() === 'live' ? <><span className="w-2 h-2 rounded-full bg-white animate-pulse" /> Live Session</> : '▶ Recorded'}
                   </span>
                 </div>
-                <img src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <img src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'} alt={course.title} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               </div>
               <div className="p-6 flex flex-col flex-1">
                  <div className="flex items-center gap-4 text-sm text-slate-500 mb-3 font-medium border-b border-slate-100 pb-3">

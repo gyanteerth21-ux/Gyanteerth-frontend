@@ -9,7 +9,7 @@ import {
 import { useEnrollment } from '../../shared/EnrollmentContext';
 import { useAuth } from '../../shared/AuthContext';
 import { useTheme } from '../../shared/ThemeContext';
-import { ADMIN_API } from '../../config';
+import { ADMIN_API, optimizeImageUrl } from '../../config';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CACHE_KEY = 'lms_catalog_cache_v2';
@@ -203,7 +203,7 @@ const Catalog = () => {
                   ...c,
                   id: c.course_id || c.Course_id || c.Course_ID || id,
                   title: c.course_title || c.title || c.Course_Title || 'Untitled',
-                  thumbnail: c.thumbnail || c.Thumbnail || c.course_thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
+                  thumbnail: optimizeImageUrl(c.thumbnail || c.Thumbnail || c.course_thumbnail),
                   category_name: catName || 'Mastery',
                   type: (c.course_type || c.course_Type || c.Course_Type || c.type || 'recorded').toLowerCase(),
                   level: c.level || c.Level || 'Intermediate'
@@ -367,6 +367,7 @@ const Catalog = () => {
                     <img 
                       src={course.thumbnail} 
                       alt={course.title} 
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
                     

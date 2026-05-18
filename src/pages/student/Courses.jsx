@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEnrollment } from '../../shared/EnrollmentContext';
 import { useAuth } from '../../shared/AuthContext';
 import { useTheme } from '../../shared/ThemeContext';
-import { USER_API } from '../../config';
+import { USER_API, optimizeImageUrl } from '../../config';
 import { motion, AnimatePresence } from 'framer-motion';
 
 
@@ -224,8 +224,9 @@ const StudentCourses = () => {
                       {/* Compact Thumbnail - Optimized for 320px */}
                       <div className="w-16 h-16 sm:w-36 sm:h-36 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-900 shadow-sm">
                         <img
-                          src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'}
+                          src={optimizeImageUrl(course.thumbnail)}
                           alt={course.title}
+                          referrerPolicy="no-referrer"
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           loading="lazy"
                         />
@@ -440,8 +441,9 @@ const StudentCourses = () => {
               >
                 <div className="relative h-48 md:h-64 overflow-hidden">
                   <img 
-                    src={viewingCertificate.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'} 
+                    src={optimizeImageUrl(viewingCertificate.thumbnail)} 
                     alt="Certificate Banner" 
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
@@ -474,7 +476,8 @@ const StudentCourses = () => {
                   </div>
 
                   <button
-                    className="w-full py-4 mb-8 bg-[#0f172a] dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all text-xs md:text-sm"
+                    onClick={() => navigate('/student/certificates')}
+                    className="w-full py-4 mb-8 bg-[#0f172a] dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all text-xs md:text-sm cursor-pointer"
                   >
                     View & Download <ArrowRight size={18} />
                   </button>

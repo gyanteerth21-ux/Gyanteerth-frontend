@@ -6,7 +6,7 @@ import {
   AlertCircle, ChevronRight, Globe
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { USER_API, TRAINER_API } from '../../config';
+import { USER_API, TRAINER_API, optimizeImageUrl } from '../../config';
 
 const Profile = () => {
   const { user, authFetch, login, clearCache } = useAuth();
@@ -192,7 +192,7 @@ const Profile = () => {
           <div style={{ background: 'var(--color-surface)', borderRadius: '2.5rem', padding: '2.5rem', border: '1px solid var(--color-border)', textAlign: 'center', boxShadow: 'var(--shadow-lg)' }}>
             <div style={{ position: 'relative', width: '150px', height: '150px', margin: '0 auto 1.5rem', borderRadius: '2.5rem', overflow: 'hidden', border: '4px solid var(--color-surface-muted)', boxShadow: 'var(--shadow-md)' }}>
               {form.pic ? (
-                <img src={form.pic} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={optimizeImageUrl(form.pic)} alt="Avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <div style={{ width: '100%', height: '100%', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', fontWeight: 900 }}>
                   {form.name.charAt(0).toUpperCase()}

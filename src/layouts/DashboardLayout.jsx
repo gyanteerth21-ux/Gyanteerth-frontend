@@ -7,6 +7,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import { LayoutDashboard, Book, Users, Video, FileText, MessageSquare, LogOut, Menu, X, Compass, UserCog, ChevronUp, Folder, Search, Bell, Clock } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { optimizeImageUrl } from '../config';
 
 const SidebarLink = ({ to, icon, label, currentPath }) => {
   const isRoot = ['/admin', '/trainer', '/student'].includes(to);
@@ -274,7 +275,7 @@ const DashboardLayout = () => {
           >
             <div style={{ minWidth: '2.5rem', height: '2.5rem', borderRadius: '0.85rem', overflow: 'hidden', border: '2px solid var(--color-border)', flexShrink: 0 }}>
               {user?.pic ? (
-                <img src={user.pic} alt={user?.name || 'User'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={optimizeImageUrl(user.pic)} alt={user?.name || 'User'} referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <div style={{ backgroundColor: 'var(--color-primary)', color: 'white', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '950', fontSize: '1rem' }}>
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}

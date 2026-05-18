@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../shared/AuthContext';
 import { useEnrollment } from '../../shared/EnrollmentContext';
 import CertificateGenerator from '../../components/CertificateGenerator';
+import { optimizeImageUrl } from '../../config';
 
 const Certificates = () => {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ const Certificates = () => {
         courseId: c.id || c.course_id,
         courseTitle: c.title || c.course_title || 'Professional Certification',
         earnedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        thumbnail: c.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400',
+        thumbnail: optimizeImageUrl(c.thumbnail),
         category: c.category_name || 'Technical'
       }));
   }, [enrolledCourses]);
@@ -81,7 +82,7 @@ const Certificates = () => {
           <p className="text-[color:var(--color-text-muted)] text-sm md:text-lg max-w-md mx-auto mb-10 leading-relaxed">
             Finish a course to 100% completion to unlock your professional certification.
           </p>
-          <button className="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl transition-all shadow-xl shadow-emerald-600/20 active:scale-95">
+          <button className="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl transition-all shadow-xl shadow-emerald-600/20 active:scale-95 cursor-pointer">
             Explore Courses
           </button>
         </motion.div>
@@ -103,7 +104,7 @@ const Certificates = () => {
               
               {/* Image Section - Reduced Height for Compact View */}
               <div className="h-44 relative overflow-hidden">
-                <img src={cert.thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Course" />
+                <img src={cert.thumbnail} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Course" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-5 left-5 right-5">
                   <div className="text-[9px] font-black text-white/70 uppercase tracking-widest mb-1">{cert.category} Certification</div>
@@ -127,7 +128,7 @@ const Certificates = () => {
                 <div className="space-y-4 mt-auto">
                   <button 
                     onClick={() => setSelectedCert(cert)}
-                    className="w-full py-3.5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-xs md:text-[13px] flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-95"
+                    className="w-full py-3.5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-xs md:text-[13px] flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-95 cursor-pointer"
                   >
                     View & Download <Download size={16} />
                   </button>
@@ -156,13 +157,13 @@ const Certificates = () => {
                 <button 
                   onClick={(e) => { e.stopPropagation(); downloadFn && downloadFn(); }}
                   disabled={!downloadFn}
-                  className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-2xl active:scale-95 transition-all disabled:opacity-50"
+                  className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-2xl active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   <Download size={18} /> Download PDF
                 </button>
                 <button 
                   onClick={() => { setSelectedCert(null); setDownloadFn(null); }}
-                  className="w-11 h-11 rounded-full bg-white text-slate-900 flex items-center justify-center font-bold text-2xl shadow-2xl active:scale-95 transition-all"
+                  className="w-11 h-11 rounded-full bg-white text-slate-900 flex items-center justify-center font-bold text-2xl shadow-2xl active:scale-95 transition-all cursor-pointer"
                 >
                   ×
                 </button>

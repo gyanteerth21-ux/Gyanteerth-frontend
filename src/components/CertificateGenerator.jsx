@@ -243,20 +243,25 @@ const CertificateGenerator = ({
         .certificate-scale-wrapper {
           --cert-original-width: 794px;
           --cert-original-height: 1123px;
-          --available-width: min(100vw - 64px, 1200px);
-          --scale-factor: min(0.95, calc(var(--available-width) / var(--cert-original-width)));
-          padding-top: 2rem;
-          padding-bottom: 2rem;
+          --available-width: calc(100vw - 64px);
+          --available-height: calc(90vh - 140px);
+          --scale-w: calc(var(--available-width) / var(--cert-original-width));
+          --scale-h: calc(var(--available-height) / var(--cert-original-height));
+          --scale-factor: min(0.95, var(--scale-w), var(--scale-h));
+          padding-top: 1.5rem;
+          padding-bottom: 1.5rem;
         }
 
         .certificate-render-target {
           transform: scale(var(--scale-factor)) !important;
+          transform-origin: top center;
           margin-bottom: calc((var(--cert-original-height) * (1 - var(--scale-factor))) * -1 - 20px) !important;
         }
 
         @media (max-width: 480px) {
           .certificate-scale-wrapper {
             --available-width: calc(100vw - 32px);
+            --available-height: calc(85vh - 100px);
           }
           .certificate-render-target {
             margin-bottom: calc((var(--cert-original-height) * (1 - var(--scale-factor))) * -1 - 10px) !important;

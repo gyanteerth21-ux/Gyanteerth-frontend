@@ -6,6 +6,7 @@ import { BookOpen, Award, Clock, PlayCircle, ChevronRight, Zap, Video, ArrowRigh
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import LiveSessionTracker from '../../components/student/LiveSessionTracker';
+import { optimizeImageUrl } from '../../config';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -60,7 +61,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3 md:gap-5 mb-4 md:mb-6">
               <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white border-2 md:border-3 border-white/30 overflow-hidden flex items-center justify-center text-emerald-800 flex-shrink-0">
                 {user?.pic ? (
-                  <img src={user.pic} alt="Profile" className="w-full h-full object-cover" />
+                  <img src={optimizeImageUrl(user.pic)} alt="Profile" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xl md:text-2xl font-black">{(user?.firstName || user?.name || 'S').charAt(0).toUpperCase()}</span>
                 )}
@@ -151,7 +152,7 @@ const Dashboard = () => {
                   }}
                 >
                   <div className="w-16 h-10 md:w-[100px] md:h-[65px] rounded-lg md:rounded-2xl bg-slate-900 overflow-hidden flex-shrink-0">
-                    <img src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200'} loading="lazy" className="w-full h-full object-cover" alt="Course Thumbnail" />
+                    <img src={optimizeImageUrl(course.thumbnail)} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover" alt="Course Thumbnail" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900, color: isDark ? 'white' : '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.title || 'Course Module'}</h4>

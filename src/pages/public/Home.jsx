@@ -14,7 +14,7 @@ import {
   Zap
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { USER_API } from '../../config';
+import { USER_API, optimizeImageUrl } from '../../config';
 import CertificateVerifyBox from '../../components/CertificateVerifyBox';
 
 const FeatureCard = ({ icon, title, desc, delay, accentColor = "emerald" }) => {
@@ -352,7 +352,7 @@ const Home = () => {
                      </p>
                      <div className="flex items-center gap-4 mt-auto border-t border-[var(--color-border)] pt-6">
                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--color-primary)]/20 shadow-sm bg-[var(--color-primary-bg)] flex items-center justify-center font-black text-[var(--color-primary)]">
-                         {item.user_pic ? <img src={item.user_pic} className="w-full h-full object-cover" alt={item.user_name} /> : (item.user_name?.charAt(0) || 'S')}
+                         {item.user_pic ? <img src={optimizeImageUrl(item.user_pic)} referrerPolicy="no-referrer" className="w-full h-full object-cover" alt={item.user_name} /> : (item.user_name?.charAt(0) || 'S')}
                        </div>
                        <div>
                          <p className="text-[var(--color-text)] font-black text-lg">{item.user_name}</p>

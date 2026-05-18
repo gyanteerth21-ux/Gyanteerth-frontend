@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/AuthContext';
 import { Book, Users, Video, Clock, Activity, ArrowRight, Calendar, Shield, BookOpen, Award, CalendarDays, ExternalLink, Zap, Layers, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ADMIN_API, TRAINER_API } from '../../config';
+import { ADMIN_API, TRAINER_API, optimizeImageUrl } from '../../config';
 
 const CACHE_KEY = 'trainer_dashboard_cache';
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -247,7 +247,7 @@ const TrainerDashboard = () => {
                   >
                     <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
                        <div style={{ width: '80px', height: '60px', borderRadius: '1rem', background: '#0f172a', overflow: 'hidden', flexShrink: 0 }}>
-                         <img src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200'} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Course Thumbnail" />
+                         <img src={optimizeImageUrl(course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200')} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Course Thumbnail" />
                        </div>
                        <div style={{ flex: 1, minWidth: 0 }}>
                          <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.course_title}</h4>
