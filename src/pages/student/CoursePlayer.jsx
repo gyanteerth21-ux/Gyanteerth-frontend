@@ -135,8 +135,10 @@ function getEmbedUrl(url) {
   return url; // Default to the URL itself for other providers
 }
 
-/* ── Iframe Video Player ───────────────────────── */
+/* ── Video Player ───────────────────────────────── */
 function VideoPlayer({ lesson }) {
+  const [videoError, setVideoError] = useState(false);
+
   if (!lesson || !lesson.url) {
     return (
       <div style={{ width: '100%', aspectRatio: '16/9', background: '#0f172a', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
@@ -156,15 +158,49 @@ function VideoPlayer({ lesson }) {
     if (videoId) embedUrl = `https://www.youtube.com/embed/${videoId}`;
   }
 
+  // Detect Google Drive links → route through server-side proxy
+  const isDrive = lesson.url.includes('drive.google.com');
+  let driveStreamUrl = null;
+  if (isDrive) {
+    const m = lesson.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (m && m[1]) {
+      // Server-side proxy: works locally (Vite middleware) + production (Vercel function)
+      driveStreamUrl = `/api/proxy-video?id=${m[1]}`;
+    }
+  }
+
+  // Google Drive → Native HTML5 video via Google's lh3 CDN
+  if (driveStreamUrl && !videoError) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ width: '100%', background: '#0f172a', borderRadius: '16px', overflow: 'hidden', aspectRatio: '16/9', boxShadow: '0 20px 50px rgba(0,0,0,0.15)', position: 'relative' }}>
+          <video
+            src={driveStreamUrl}
+            controls
+            controlsList="nodownload"
+            onError={() => setVideoError(true)}
+            style={{ width: '100%', height: '100%', outline: 'none', background: '#0f172a' }}
+            title={lesson.title || 'Video Player'}
+          >
+            Your browser does not support HTML5 video.
+          </video>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback for non-Drive or if lh3 fails → standard iframe
   return (
-    <div style={{ width: '100%', background: '#000', borderRadius: '12px', overflow: 'hidden', aspectRatio: '16/9', boxShadow: '0 20px 50px rgba(0,0,0,0.15)' }}>
-      <iframe
-        src={embedUrl}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        style={{ width: '100%', height: '100%', border: 'none' }}
-        title={lesson.title || 'Video Player'}
-      />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ width: '100%', background: '#000', borderRadius: '16px', overflow: 'hidden', aspectRatio: '16/9', boxShadow: '0 20px 50px rgba(0,0,0,0.15)', position: 'relative' }}>
+        <iframe
+          src={embedUrl}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{ width: '100%', height: '100%', border: 'none' }}
+          title={lesson.title || 'Video Player'}
+        />
+      </div>
     </div>
   );
 }
