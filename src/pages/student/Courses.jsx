@@ -1,7 +1,7 @@
 import {
   BookOpen, PlayCircle, Clock, Award, Compass,
   CheckCircle, Layers, Video, Monitor, BarChart2,
-  Zap, Star, X, Loader2, MessageSquare, ArrowRight
+  Zap, Star, X, Loader2, MessageSquare, ArrowRight, Download
 } from 'lucide-react';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -11,6 +11,7 @@ import { useAuth } from '../../shared/AuthContext';
 import { useTheme } from '../../shared/ThemeContext';
 import { USER_API, optimizeImageUrl } from '../../config';
 import { motion, AnimatePresence } from 'framer-motion';
+import CertificateGenerator from '../../components/CertificateGenerator';
 
 
 
@@ -30,6 +31,23 @@ const StudentCourses = () => {
 
   // ── Certificate state ──────────────────────────────────────────────────
   const [viewingCertificate, setViewingCertificate] = useState(null);
+  const [activeGeneratorCert, setActiveGeneratorCert] = useState(null);
+  const [downloadFn, setDownloadFn] = useState(null);
+
+  const handleDownloadReady = useCallback((fn) => {
+    setDownloadFn(() => fn);
+  }, []);
+
+  const dynamicDate = useMemo(() => {
+    if (!viewingCertificate) return '';
+    return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }, [viewingCertificate]);
+
+  const dynamicId = useMemo(() => {
+    if (!viewingCertificate) return '';
+    const cid = viewingCertificate.id || viewingCertificate.course_id;
+    return `GT-${cid.toString().slice(-4).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  }, [viewingCertificate]);
 
   // Reset form whenever a new course is selected for feedback
   useEffect(() => {
@@ -469,14 +487,17 @@ const StudentCourses = () => {
                     </span>
                     <div className="flex items-center justify-between gap-4">
                       <span className={`text-lg md:text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                        May 2026
+                        {dynamicDate}
                       </span>
-                      <span className="text-slate-400 font-bold text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">5628-GT</span>
+                      <span className="text-slate-400 font-bold text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{dynamicId}</span>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => navigate('/student/certificates')}
+                    onClick={() => {
+                      setActiveGeneratorCert(viewingCertificate);
+                      setViewingCertificate(null);
+                    }}
                     className="w-full py-4 mb-8 bg-[#0f172a] dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all text-xs md:text-sm cursor-pointer"
                   >
                     View & Download <ArrowRight size={18} />
@@ -496,6 +517,49 @@ const StudentCourses = () => {
                 >
                   <X size={14} />
                 </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* ── Dynamic PDF Generation Modal ── */}
+      {createPortal(
+        <AnimatePresence>
+          {activeGeneratorCert && (
+            <div 
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-xl z-[999999] flex items-center justify-center p-4"
+              onClick={() => setActiveGeneratorCert(null)}
+            >
+              {/* Top Controls */}
+              <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); downloadFn && downloadFn(); }}
+                  disabled={!downloadFn}
+                  className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-2xl active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  <Download size={18} /> Download PDF
+                </button>
+                <button 
+                  onClick={() => { setActiveGeneratorCert(null); setDownloadFn(null); }}
+                  className="w-11 h-11 rounded-full bg-white text-slate-900 flex items-center justify-center font-bold text-2xl shadow-2xl active:scale-95 transition-all cursor-pointer"
+                >
+                  ×
+                </button>
+              </div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 40 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 40 }}
+                className="relative max-h-[90vh] w-full max-w-4xl flex flex-col items-center overflow-y-auto no-scrollbar"
+                onClick={e => e.stopPropagation()}
+              >
+                <CertificateGenerator 
+                  courseId={activeGeneratorCert.id || activeGeneratorCert.course_id}
+                  onDownload={handleDownloadReady}
+                />
               </motion.div>
             </div>
           )}
