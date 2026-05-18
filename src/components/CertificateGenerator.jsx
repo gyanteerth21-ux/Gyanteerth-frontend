@@ -43,25 +43,43 @@ const CertificateGenerator = ({
     const element = certificateRef.current;
     if (!element) return;
 
+    // Find the wrapper element to toggle print styles and prevent scale-distortion during download
+    const wrapper = element.closest('.certificate-scale-wrapper');
+    if (wrapper) {
+      wrapper.classList.add('is-printing');
+    }
+
     try {
+      // Small delay to allow the browser to reflow the layout back to its 1:1 scale (794px x 1123px)
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
       const canvas = await html2canvas(element, {
-        scale: 3, 
+        scale: 3, // High scale factor for professional print quality
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 794,
+        height: 1123,
+        scrollX: 0,
+        scrollY: 0
       });
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'px',
-        format: [canvas.width / 3, canvas.height / 3]
+        format: [794, 1123] // A4 Portrait pixel dimensions
       });
 
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 3, canvas.height / 3);
+      pdf.addImage(imgData, 'PNG', 0, 0, 794, 1123);
       pdf.save(`Certificate_${(certData?.user_name || 'candidate').replace(/\s+/g, '_')}.pdf`);
     } catch (error) {
       console.error("Certificate generation failed:", error);
+    } finally {
+      // Restore scaling preview
+      if (wrapper) {
+        wrapper.classList.remove('is-printing');
+      }
     }
   };
 
@@ -141,7 +159,7 @@ const CertificateGenerator = ({
         }} />
 
         {/* LOGO AREA */}
-        <div style={{ alignSelf: 'flex-start', zIndex: 10 }}>
+        <div style={{ alignSelf: 'flex-start', position: 'relative', zIndex: 10 }}>
            <img 
              src="/logo.png" 
              alt="Gyanteerth Logo" 
@@ -151,7 +169,7 @@ const CertificateGenerator = ({
         </div>
 
         {/* MAIN TEXT */}
-        <div style={{ marginTop: '120px', textAlign: 'center', width: '100%', zIndex: 10 }}>
+        <div style={{ marginTop: '120px', textAlign: 'center', width: '100%', position: 'relative', zIndex: 10 }}>
           <h1 style={{ fontSize: '64px', fontWeight: 300, letterSpacing: '8px', margin: '0', color: '#000' }}>CERTIFICATE</h1>
           <h2 style={{ fontSize: '24px', fontWeight: 600, letterSpacing: '3px', marginTop: '20px', color: '#1a1a1a', textTransform: 'uppercase' }}>OF COMPLETION</h2>
           
@@ -177,7 +195,7 @@ const CertificateGenerator = ({
           <div style={{ marginTop: '50px', maxWidth: '650px', margin: '50px auto 0 auto', lineHeight: '1.6', fontSize: '18px', fontWeight: 600, color: '#374151' }}>
             has successfully completed the 
             <div style={{ fontSize: '26px', fontWeight: 900, color: '#000', margin: '15px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>{certData.course_name}</div>
-            conducted by <span style={{ color: 'rgb(57, 123, 33)', fontWeight: 900 }}>Gyan</span><span style={{ color: 'rgb(189, 148, 0)', fontWeight: 900 }}>teerth</span>, with a duration of {certData.course_duration} Hours.
+            conducted by <span style={{ color: 'rgb(57, 123, 33)', fontWeight: 900 }}>Gyan</span><span style={{ color: 'rgb(189, 148, 0)', fontWeight: 900 }}>teerth</span>, with a duration of {certData.course_duration?.toString().toLowerCase().includes('hour') ? certData.course_duration : `${certData.course_duration} Hours`}.
           </div>
 
           <p style={{ marginTop: '30px', maxWidth: '650px', margin: '30px auto 0 auto', lineHeight: '1.7', fontSize: '16px', fontWeight: 500, color: '#4b5563' }}>
@@ -186,7 +204,7 @@ const CertificateGenerator = ({
         </div>
 
         {/* SIGNATURE & ACCREDITATIONS */}
-        <div style={{ marginTop: 'auto', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: '40px', zIndex: 10 }}>
+        <div style={{ marginTop: 'auto', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: '40px', position: 'relative', zIndex: 10 }}>
           
           <div style={{ textAlign: 'left', zIndex: 20 }}>
             <img 
@@ -231,7 +249,7 @@ const CertificateGenerator = ({
         }} />
 
         {/* Certificate ID */}
-        <div style={{ position: 'absolute', bottom: '30px', right: '40px', fontSize: '15px', color: '#111827', fontWeight: 900, letterSpacing: '0.5px' }}>
+        <div style={{ position: 'absolute', bottom: '30px', right: '40px', fontSize: '15px', color: '#111827', fontWeight: 900, letterSpacing: '0.5px', zIndex: 10 }}>
           CERT ID: {certData.uuid}
         </div>
       </div>
@@ -256,6 +274,13 @@ const CertificateGenerator = ({
           transform: scale(var(--scale-factor)) !important;
           transform-origin: top center;
           margin-bottom: calc((var(--cert-original-height) * (1 - var(--scale-factor))) * -1 - 20px) !important;
+        }
+
+        /* 🖨️ DISABLE SCALING DURING PDF GENERATION TO PREVENT html2canvas DISTORTION 🖨️ */
+        .certificate-scale-wrapper.is-printing .certificate-render-target {
+          transform: none !important;
+          margin-bottom: 0 !important;
+          box-shadow: none !important;
         }
 
         @media (max-width: 480px) {
