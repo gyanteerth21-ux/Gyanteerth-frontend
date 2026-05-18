@@ -321,12 +321,22 @@ const StudentCourses = () => {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm md:text-xl font-black truncate mb-1" style={{ color: isDark ? 'white' : '#1e293b' }}>
-                      {course.title}
-                    </h4>
-                    <p className="text-[10px] md:text-xs text-slate-500 font-bold">
-                      Program Graduate · {course.level || 'Expert'}
-                    </p>
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="min-w-0">
+                        <h4 className="text-sm md:text-xl font-black truncate mb-1" style={{ color: isDark ? 'white' : '#1e293b' }}>
+                          {course.title}
+                        </h4>
+                        <p className="text-[10px] md:text-xs text-slate-500 font-bold">
+                          Program Graduate · {course.level || 'Expert'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setFeedbackCourse(course); }}
+                        className="text-slate-400 hover:text-orange-500 transition-colors p-1 flex-shrink-0 cursor-pointer"
+                      >
+                        <Star size={16} />
+                      </button>
+                    </div>
                     <div className="flex flex-wrap gap-3 mt-4">
                       <button 
                         onClick={() => navigate(`/student/course/${course.id || course.course_id}`)} 
@@ -361,11 +371,19 @@ const StudentCourses = () => {
                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                style={{ position: 'relative', width: 'min(95vw, 440px)', backgroundColor: 'white', borderRadius: '1.5rem', overflow: 'hidden', boxShadow: '0 30px 60px rgba(0,0,0,0.3)', border: '1px solid #f1f5f9' }}
+                style={{ 
+                  position: 'relative', 
+                  width: 'min(95vw, 440px)', 
+                  backgroundColor: isDark ? '#1e293b' : 'white', 
+                  borderRadius: '1.5rem', 
+                  overflow: 'hidden', 
+                  boxShadow: '0 30px 60px rgba(0,0,0,0.3)', 
+                  border: `1px solid ${isDark ? '#334155' : '#f1f5f9'}` 
+                }}
                 onClick={e => e.stopPropagation()}
               >
                 {/* Stepped Journey Background */}
-                <div style={{ position: 'absolute', inset: 0, opacity: 0.85, pointerEvents: 'none', zIndex: 0, background: `linear-gradient(135deg, 
+                <div style={{ position: 'absolute', inset: 0, opacity: isDark ? 0.45 : 0.85, pointerEvents: 'none', zIndex: 0, background: `linear-gradient(135deg, 
                   rgba(249,115,22,0.18) 0%, rgba(249,115,22,0.18) 15%,
                   rgba(249,115,22,0.10) 15%, rgba(249,115,22,0.10) 30%,
                   rgba(249,115,22,0.04) 30%, rgba(249,115,22,0.04) 45%,
@@ -380,47 +398,47 @@ const StudentCourses = () => {
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   {feedbackSuccess ? (
                     <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-                      <div style={{ width: '80px', height: '80px', background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', border: '2px solid #10b981' }}>
+                      <div style={{ width: '80px', height: '80px', background: isDark ? 'rgba(16,185,129,0.1)' : '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', border: '2px solid #10b981' }}>
                         <CheckCircle size={40} color="#10b981" />
                       </div>
-                      <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#064e3b' }}>Feedback Received!</h2>
-                      <p style={{ color: '#047857', marginTop: '0.4rem', fontWeight: 600, fontSize: '0.9rem' }}>Thank you for helping us evolve.</p>
+                      <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: isDark ? '#a7f3d0' : '#064e3b' }}>Feedback Received!</h2>
+                      <p style={{ color: isDark ? '#34d399' : '#047857', marginTop: '0.4rem', fontWeight: 600, fontSize: '0.9rem' }}>Thank you for helping us evolve.</p>
                     </div>
                   ) : (
                     <form onSubmit={handleSubmitFeedback} style={{ padding: '2rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                         <div>
-                          <h2 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#1e293b', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                          <h2 style={{ fontSize: '1.35rem', fontWeight: 900, color: isDark ? 'white' : '#1e293b', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                             <Star size={20} color="#f97316" /> Course Evaluation
                           </h2>
                           <div style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.3rem', marginLeft: '1.75rem' }}>Goal Achieved! You reached the top.</div>
                         </div>
-                        <button type="button" onClick={() => setFeedbackCourse(null)} style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f8fafc', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }} onMouseEnter={e=>e.currentTarget.style.background='#f1f5f9'} onMouseLeave={e=>e.currentTarget.style.background='#f8fafc'}>
-                          <X size={18} color="#64748b" />
+                        <button type="button" onClick={() => setFeedbackCourse(null)} style={{ width: '32px', height: '32px', borderRadius: '50%', background: isDark ? '#334155' : '#f8fafc', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }} onMouseEnter={e=>e.currentTarget.style.background=isDark ? '#475569' : '#f1f5f9'} onMouseLeave={e=>e.currentTarget.style.background=isDark ? '#334155' : '#f8fafc'}>
+                          <X size={18} color={isDark ? '#94a3b8' : '#64748b'} />
                         </button>
                       </div>
 
                       <div style={{ marginBottom: '1.25rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Overall Rating</label>
+                        <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: isDark ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Overall Rating</label>
                         <div style={{ display: 'flex', gap: '0.35rem' }}>
                           {[1, 2, 3, 4, 5].map(num => (
                             <button key={num} type="button" onClick={() => setFeedbackForm(prev => ({ ...prev, Course_rating: String(num) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', transition: 'transform 0.1s' }} onMouseEnter={e=>e.currentTarget.style.transform='scale(1.1)'} onMouseLeave={e=>e.currentTarget.style.transform='none'}>
-                              <Star size={32} fill={num <= parseInt(feedbackForm.Course_rating) ? '#f97316' : '#f1f5f9'} color={num <= parseInt(feedbackForm.Course_rating) ? '#f97316' : '#cbd5e1'} />
+                              <Star size={32} fill={num <= parseInt(feedbackForm.Course_rating) ? '#f97316' : (isDark ? '#475569' : '#f1f5f9')} color={num <= parseInt(feedbackForm.Course_rating) ? '#f97316' : (isDark ? '#475569' : '#cbd5e1')} />
                             </button>
                           ))}
                         </div>
                       </div>
 
                       <div style={{ marginBottom: '1.75rem' }}>
-                        <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Your Review</label>
+                        <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 800, color: isDark ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Your Review</label>
                         <textarea
                           required rows="3"
                           placeholder="Tell us what you liked most..."
                           value={feedbackForm.Review}
                           onChange={e => setFeedbackForm(prev => ({ ...prev, Review: e.target.value }))}
-                          style={{ width: '100%', padding: '1rem', borderRadius: '1rem', border: '1px solid #e2e8f0', background: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', resize: 'none', outline: 'none', transition: 'border 0.2s', fontFamily: 'inherit' }}
+                          style={{ width: '100%', padding: '1rem', borderRadius: '1rem', border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`, background: isDark ? '#1e293b' : 'rgba(255,255,255,0.5)', color: isDark ? 'white' : '#1e293b', fontSize: '0.9rem', resize: 'none', outline: 'none', transition: 'border 0.2s', fontFamily: 'inherit' }}
                           onFocus={e=>e.currentTarget.style.borderColor='#10b981'}
-                          onBlur={e=>e.currentTarget.style.borderColor='#e2e8f0'}
+                          onBlur={e=>e.currentTarget.style.borderColor=isDark ? '#334155' : '#e2e8f0'}
                         />
                       </div>
 
