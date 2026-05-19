@@ -38,10 +38,6 @@ const FeatureCard = ({ icon, title, desc, delay, accentColor = "emerald" }) => {
       </div>
       <h3 className="text-2xl font-black text-[var(--color-text)] mb-4 relative z-10 tracking-tight leading-tight">{title}</h3>
       <p className="text-[var(--color-text-muted)] font-medium leading-relaxed relative z-10">{desc}</p>
-
-      <div className="mt-8 flex items-center gap-2 text-[var(--color-primary)] font-black text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-4 transition-all duration-300">
-        Discover more <ArrowRight className="w-4 h-4 ml-1" />
-      </div>
     </motion.div>
   );
 };
@@ -130,12 +126,6 @@ const Home = () => {
                     <ArrowRight className="w-6 h-6 text-white group-hover:text-[var(--color-accent)] group-hover:translate-x-1 transition-all" />
                   </Link>
                 </motion.div>
-                <Link
-                  to="/courses"
-                  className="btn bg-[var(--color-surface)] hover:bg-[var(--color-surface-muted)] text-[var(--color-text)] px-12 py-6 text-lg rounded-3xl border-2 border-[var(--color-border)] shadow-md transition-all"
-                >
-                  Explore Catalog <BookOpen className="w-5 h-5 text-[var(--color-primary)]" />
-                </Link>
               </div>
 
               <div className="mt-16 pt-8 border-t border-[var(--color-border)] flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-10">
@@ -218,7 +208,7 @@ const Home = () => {
           </div>
         </section>
 
-      {/* FEATURES Section */}
+        {/* FEATURES Section */}
         <section className="py-32 relative">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-2 bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)] to-[var(--color-primary)]/20 rounded-full" />
 
@@ -270,7 +260,7 @@ const Home = () => {
         {/* 🛡️ NEW: Certificate Verification Section */}
         <section className="py-24 relative overflow-hidden">
           <div className="max-w-4xl mx-auto px-6 relative z-10">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
@@ -278,7 +268,7 @@ const Home = () => {
             >
               {/* Decorative Blur */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-primary)]/5 rounded-full blur-3xl -mr-32 -mt-32 transition-colors group-hover:bg-[var(--color-primary)]/10" />
-              
+
               <div className="text-center mb-10 relative z-10">
                 <div className="w-16 h-16 bg-[var(--color-primary-bg)] text-[var(--color-primary)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
                   <ShieldCheck size={32} />
@@ -297,68 +287,39 @@ const Home = () => {
         </section>
 
         {/* CTA Section - REFINED BUTTONS */}
-        <section className="py-32 px-4 sm:px-6">
-          <div className="max-w-5xl mx-auto relative rounded-[4rem] overflow-hidden bg-[var(--navy-950)] p-12 md:p-24 shadow-2xl border border-white/5">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--color-accent)]/10 rounded-full blur-[80px] -mr-32 -mt-32" />
-
-            <div className="relative z-10 text-center max-w-3xl mx-auto">
-              <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-[1.1]">
-                Architecture your <span className="text-[var(--color-accent)] italic">Future</span> Today.
-              </h2>
-              <p className="text-xl text-emerald-100/90 mb-12 font-bold leading-relaxed max-w-xl mx-auto">
-                Stop settling for basic tutorials. Join the most advanced ecosystem for educational excellence and high-impact career growth.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <Link
-                  to="/courses"
-                  className="group flex items-center justify-center gap-3 w-full sm:w-auto px-12 py-6 bg-white text-[var(--navy-950)] font-black rounded-3xl shadow-2xl hover:bg-[var(--color-accent)] hover:text-white transition-all hover:-translate-y-1 text-lg"
-                >
-                  Explore Catalog <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform text-[var(--color-primary)] group-hover:text-white" />
-                </Link>
-                <Link
-                  to="/under-construction"
-                  className="flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-6 border-2 border-white/30 hover:border-white text-white font-black rounded-3xl transition-all hover:bg-white/10"
-                >
-                  View Pricing <ArrowRight className="w-5 h-5 text-white" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Testimonial Section - Dynamic */}
         {feedbacks.length > 0 && (
           <section className="py-32 bg-[var(--color-surface-muted)] overflow-hidden relative border-t border-[var(--color-border)]">
             <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[var(--color-primary)]/5 rounded-full blur-[120px] -mr-40 -mt-40 pointer-events-none" />
             <div className="max-w-7xl mx-auto px-6 relative z-10 font-bold">
               <div className="text-center mb-16">
-                 <h3 className="text-[var(--color-accent)] font-black uppercase text-[10px] tracking-widest mb-4">Student Success</h3>
-                 <h2 className="text-4xl md:text-6xl font-black text-[var(--color-text)] tracking-tight leading-none">See what they're saying</h2>
+                <h3 className="text-[var(--color-accent)] font-black uppercase text-[10px] tracking-widest mb-4">Student Success</h3>
+                <h2 className="text-4xl md:text-6xl font-black text-[var(--color-text)] tracking-tight leading-none">See what they're saying</h2>
               </div>
               <div className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar" style={{ scrollSnapType: 'x mandatory' }}>
                 {feedbacks.slice(0, 6).map((item, idx) => (
-                  <motion.div 
+                  <motion.div
                     key={idx}
                     initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
                     className="min-w-[350px] md:min-w-[450px] p-8 md:p-10 bg-[var(--color-surface)] shadow-sm rounded-[2.5rem] border border-[var(--color-border)] snap-center flex flex-col justify-between whitespace-normal"
                   >
-                     <div className="flex items-center gap-1 mb-6">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={16} fill={i < Math.round(parseFloat(item.course_rating || item.rating || item.Rating || 0)) ? "var(--color-accent)" : "transparent"} stroke={i < Math.round(parseFloat(item.course_rating || item.rating || item.Rating || 0)) ? "var(--color-accent)" : "var(--color-border-strong)"} />
-                        ))}
-                     </div>
-                     <p className="text-lg md:text-2xl text-[var(--color-text)] font-black leading-tight tracking-tight mb-10 italic">
-                       "{item.review}"
-                     </p>
-                     <div className="flex items-center gap-4 mt-auto border-t border-[var(--color-border)] pt-6">
-                       <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--color-primary)]/20 shadow-sm bg-[var(--color-primary-bg)] flex items-center justify-center font-black text-[var(--color-primary)]">
-                         {item.user_pic ? <img src={optimizeImageUrl(item.user_pic)} referrerPolicy="no-referrer" className="w-full h-full object-cover" alt={item.user_name} /> : (item.user_name?.charAt(0) || 'S')}
-                       </div>
-                       <div>
-                         <p className="text-[var(--color-text)] font-black text-lg">{item.user_name}</p>
-                         <p className="text-[var(--color-primary)] font-bold uppercase text-[10px] tracking-widest">{item.course_title}</p>
-                       </div>
-                     </div>
+                    <div className="flex items-center gap-1 mb-6">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={16} fill={i < Math.round(parseFloat(item.course_rating || item.rating || item.Rating || 0)) ? "var(--color-accent)" : "transparent"} stroke={i < Math.round(parseFloat(item.course_rating || item.rating || item.Rating || 0)) ? "var(--color-accent)" : "var(--color-border-strong)"} />
+                      ))}
+                    </div>
+                    <p className="text-lg md:text-2xl text-[var(--color-text)] font-black leading-tight tracking-tight mb-10 italic">
+                      "{item.review}"
+                    </p>
+                    <div className="flex items-center gap-4 mt-auto border-t border-[var(--color-border)] pt-6">
+                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--color-primary)]/20 shadow-sm bg-[var(--color-primary-bg)] flex items-center justify-center font-black text-[var(--color-primary)]">
+                        {item.user_pic ? <img src={optimizeImageUrl(item.user_pic)} referrerPolicy="no-referrer" className="w-full h-full object-cover" alt={item.user_name} /> : (item.user_name?.charAt(0) || 'S')}
+                      </div>
+                      <div>
+                        <p className="text-[var(--color-text)] font-black text-lg">{item.user_name}</p>
+                        <p className="text-[var(--color-primary)] font-bold uppercase text-[10px] tracking-widest">{item.course_title}</p>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </div>

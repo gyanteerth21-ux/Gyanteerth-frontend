@@ -111,7 +111,7 @@ export default function Courses() {
                       <span className="text-sm md:text-lg text-slate-400 line-through">₹{topSeller.price?.original}</span>
                     )}
                   </div>
-                  <Link to={`/signup`} className="w-full sm:w-auto text-center flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 !text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-[0_4px_14px_0_rgba(5,150,105,0.39)] hover:shadow-[0_6px_20px_rgba(5,150,105,0.23)] hover:-translate-y-0.5">
+                  <Link to={`/login`} className="w-full sm:w-auto text-center flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 !text-white px-6 py-3.5 rounded-xl font-bold transition-all shadow-[0_4px_14px_0_rgba(5,150,105,0.39)] hover:shadow-[0_6px_20px_rgba(5,150,105,0.23)] hover:-translate-y-0.5">
                     Enroll Now <ArrowRight className="w-5 h-5" />
                   </Link>
                 </div>
@@ -175,7 +175,7 @@ export default function Courses() {
                       <span className="text-xs text-slate-400 line-through">₹{course.price?.original}</span>
                     )}
                   </div>
-                  <Link to="/signup" className="w-full sm:w-auto text-center !text-white font-bold text-sm bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg">
+                  <Link to="/login" className="w-full sm:w-auto text-center !text-white font-bold text-sm bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg">
                     Enroll Now
                   </Link>
                 </div>

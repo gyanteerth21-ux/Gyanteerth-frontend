@@ -69,10 +69,12 @@ const MainLayout = () => {
     { name: 'Courses', path: '/courses' },
   ];
 
-  const dummyLinks = [
-    { name: 'Our Products', path: '/under-construction', icon: ShoppingBag },
+  const ecosystemLinks = [
+    { name: 'Courses', path: '/courses', icon: ShoppingBag },
     { name: 'About Us', path: '/under-construction', icon: Users },
-    { name: 'Pricing', path: '/under-construction', icon: Sparkles },
+  ];
+
+  const supportLinks = [
     { name: 'Support', path: '/under-construction', icon: HelpCircle },
     { name: 'Contact', path: '/under-construction', icon: Mail },
   ];
@@ -273,7 +275,6 @@ const MainLayout = () => {
               </p>
               <div className="mt-10 flex gap-4">
                 {[
-                  { name: 'Twitter', icon: TwitterIcon },
                   { name: 'Instagram', icon: InstagramIcon },
                   { name: 'LinkedIn', icon: LinkedinIcon }
                 ].map(({ name, icon: Icon }) => (
@@ -288,7 +289,7 @@ const MainLayout = () => {
               <div>
                 <h4 className="text-[11px] font-black tracking-[0.3em] text-orange-400 uppercase mb-10">Ecosystem</h4>
                 <ul className="space-y-5">
-                  {dummyLinks.slice(0, 3).map(link => (
+                  {ecosystemLinks.map(link => (
                     <li key={link.name}>
                       <Link to={link.path} className="text-slate-400 hover:text-emerald-400 font-bold text-sm transition-colors flex items-center gap-2">
                         <ChevronRight className="w-3 h-3" /> {link.name}
@@ -300,7 +301,7 @@ const MainLayout = () => {
               <div>
                 <h4 className="text-[11px] font-black tracking-[0.3em] text-orange-400 uppercase mb-10">Support</h4>
                 <ul className="space-y-5">
-                  {dummyLinks.slice(3).map(link => (
+                  {supportLinks.map(link => (
                     <li key={link.name}>
                       <Link to={link.path} className="text-slate-400 hover:text-emerald-400 font-bold text-sm transition-colors flex items-center gap-2">
                         <ChevronRight className="w-3 h-3" /> {link.name}
