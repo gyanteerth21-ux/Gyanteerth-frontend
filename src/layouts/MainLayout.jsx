@@ -125,8 +125,8 @@ const MainLayout = () => {
       <header 
         className={`sticky top-0 z-[100] w-full transition-all duration-300 ${
           isScrolled 
-          ? 'bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border)] py-3 shadow-xl' 
-          : 'bg-[var(--color-bg)] py-5'
+          ? 'bg-[var(--color-surface)]/80 backdrop-blur-xl border-b border-[var(--color-border)] py-2 shadow-xl' 
+          : 'bg-[var(--color-bg)] py-3.5'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -161,7 +161,7 @@ const MainLayout = () => {
             <div className="flex items-center justify-center">
               <button 
                 onClick={() => setIsVerifyModalOpen(true)}
-                className="flex items-center gap-2 p-2 md:px-8 md:py-3 bg-white border-2 border-emerald-500/20 text-emerald-800 text-sm font-black rounded-2xl hover:bg-emerald-50 hover:border-emerald-500/50 transition-all shadow-sm transform hover:-translate-y-0.5 active:scale-95"
+                className="flex items-center gap-2 p-2 md:px-5 md:py-2.5 bg-white border-2 border-emerald-500/20 text-emerald-800 text-sm font-black rounded-2xl hover:bg-emerald-50 hover:border-emerald-500/50 transition-all shadow-sm transform hover:-translate-y-0.5 active:scale-95"
                 title="Verify Credential"
               >
                 <ShieldCheck size={18} className="text-emerald-600" /> 
@@ -194,7 +194,7 @@ const MainLayout = () => {
                 ) : (
                   <Link 
                     to="/login" 
-                    className="group flex items-center gap-1 text-[10px] md:text-sm font-black bg-gradient-to-r from-emerald-600 to-emerald-800 px-2.5 md:px-7 py-2 md:py-3 rounded-xl md:rounded-2xl shadow-xl shadow-emerald-500/20 transition-all"
+                    className="group flex items-center gap-1 text-[10px] md:text-sm font-black bg-gradient-to-r from-emerald-600 to-emerald-800 px-2.5 md:px-5.5 py-2 md:py-2.5 rounded-xl md:rounded-2xl shadow-xl shadow-emerald-500/20 transition-all"
                   >
                     <span className="text-white hidden min-[380px]:inline">Sign In</span>
                     <LogIn className="w-4 h-4 text-white" />

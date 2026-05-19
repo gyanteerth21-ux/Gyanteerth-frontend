@@ -196,7 +196,7 @@ const Home = () => {
         </section>
 
         {/* Improved Logo Cloud */}
-        <section className="py-20 bg-[var(--color-surface)]/30">
+        <section className="py-12 bg-[var(--color-surface)]/30">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex flex-wrap items-center justify-center md:justify-between gap-12 opacity-30 grayscale hover:grayscale-0 transition-all duration-700">
               <span className="text-3xl font-black tracking-tighter text-[var(--color-text)] border-4 border-[var(--color-text)] px-4 py-1">FORBES</span>
@@ -209,11 +209,11 @@ const Home = () => {
         </section>
 
         {/* FEATURES Section */}
-        <section className="py-32 relative">
+        <section className="pt-16 pb-16 relative">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-2 bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)] to-[var(--color-primary)]/20 rounded-full" />
 
           <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center max-w-3xl mx-auto mb-24">
+            <div className="text-center max-w-3xl mx-auto mb-16">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -258,7 +258,7 @@ const Home = () => {
         </section>
 
         {/* 🛡️ NEW: Certificate Verification Section */}
-        <section className="py-24 relative overflow-hidden">
+        <section className="py-16 relative overflow-hidden">
           <div className="max-w-4xl mx-auto px-6 relative z-10">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -289,7 +289,7 @@ const Home = () => {
         {/* CTA Section - REFINED BUTTONS */}
         {/* Testimonial Section - Dynamic */}
         {feedbacks.length > 0 && (
-          <section className="py-32 bg-[var(--color-surface-muted)] overflow-hidden relative border-t border-[var(--color-border)]">
+          <section className="py-20 bg-[var(--color-surface-muted)] overflow-hidden relative border-t border-[var(--color-border)]">
             <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[var(--color-primary)]/5 rounded-full blur-[120px] -mr-40 -mt-40 pointer-events-none" />
             <div className="max-w-7xl mx-auto px-6 relative z-10 font-bold">
               <div className="text-center mb-16">
