@@ -3,7 +3,7 @@ import { useAuth } from '../../shared/AuthContext';
 import { 
   User, Mail, Phone, MapPin, Calendar, Activity, 
   Briefcase, Save, Camera, Loader2, CheckCircle2, 
-  AlertCircle, ChevronRight, Globe
+  AlertCircle, ChevronRight, Globe, BookOpen, GraduationCap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { USER_API, TRAINER_API, optimizeImageUrl } from '../../config';
@@ -21,6 +21,9 @@ const Profile = () => {
     gender: '',
     city: '',
     state: '',
+    college: '', // for students
+    branch: '', // for students
+    year: '', // for students
     expertise: '', // for trainers
     pic: null
   });
@@ -46,6 +49,9 @@ const Profile = () => {
             gender: data.user_gender || data.trainer_gender || '',
             city: data.user_city || data.trainer_city || '',
             state: data.user_state || data.trainer_state || '',
+            college: data.user_college || '',
+            branch: data.user_branch || '',
+            year: data.user_year || '',
             expertise: data.trainer_expertise || '',
             pic: data.user_pic || data.pic || user.pic || null
           });
@@ -97,6 +103,9 @@ const Profile = () => {
         formData.append('user_gender', form.gender);
         formData.append('user_city', form.city);
         formData.append('user_state', form.state);
+        formData.append('user_college', form.college);
+        formData.append('user_branch', form.branch);
+        formData.append('user_year', form.year);
         
         // Include picture if it's a URL or string
         if (form.pic && typeof form.pic === 'string') {
@@ -254,6 +263,32 @@ const Profile = () => {
               <div style={{ gridColumn: 'span 2' }}>
                 <ProfileInput label="Area of Expertise" name="expertise" value={form.expertise} onChange={handleChange} icon={<Briefcase size={18} />} placeholder="e.g. Full Stack Development, Cloud Architecture" />
               </div>
+            )}
+
+            {user.role === 'student' && (
+              <>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <ProfileInput label="College Name" name="college" value={form.college} onChange={handleChange} icon={<BookOpen size={18} />} placeholder="e.g. ABC College" />
+                </div>
+                <ProfileInput label="Specialization / Branch" name="branch" value={form.branch} onChange={handleChange} icon={<Briefcase size={18} />} placeholder="e.g. Computer Science" />
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <label style={{ fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Academic Year
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <select name="year" value={form.year} onChange={handleChange} style={{ width: '100%', padding: '1rem', borderRadius: '1.25rem', border: '1px solid var(--color-border)', background: 'var(--color-surface-muted)', fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-text)', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                      <option value="">Select Academic Year</option>
+                      <option value="1st Year">1st Year</option>
+                      <option value="2nd Year">2nd Year</option>
+                      <option value="3rd Year">3rd Year</option>
+                      <option value="4th Year">4th Year</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <GraduationCap size={18} style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                  </div>
+                </div>
+              </>
             )}
           </div>
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../shared/AuthContext';
-import { Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, ChevronDown, Globe, Upload, X, CheckCircle2, AlertCircle, Database, FileText } from 'lucide-react';
+import { Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, ChevronDown, Globe, Upload, X, CheckCircle2, AlertCircle, Database, FileText, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API, TRAINER_API } from '../../config';
 
@@ -152,6 +152,9 @@ const AdminStudents = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('All');
   const [progressFilter, setProgressFilter] = useState('All'); 
+  const [collegeFilter, setCollegeFilter] = useState('All');
+  const [branchFilter, setBranchFilter] = useState('All');
+  const [yearFilter, setYearFilter] = useState('All');
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
 
@@ -188,7 +191,10 @@ const AdminStudents = () => {
                         progress: st.progress_percentage || 0,
                         course_title: title,
                         completed_modules: st.completed_modules,
-                        total_modules: st.total_modules
+                        total_modules: st.total_modules,
+                        college: st.user_college || '',
+                        branch: st.user_branch || '',
+                        year: st.user_year || ''
                     }));
                 }
             } catch(e) {
@@ -215,7 +221,10 @@ const AdminStudents = () => {
                     email: st.email,
                     name: st.name,
                     enrollments: [],
-                    avgProgress: 0
+                    avgProgress: 0,
+                    college: st.college,
+                    branch: st.branch,
+                    year: st.year
                 });
             }
             uniqueMap.get(key).enrollments.push(st);
@@ -270,34 +279,58 @@ const AdminStudents = () => {
     }
   };
 
+  const uniqueColleges = useMemo(() => {
+    const colleges = uniqueStudents.map(s => s.college).filter(Boolean);
+    return ['All Colleges', ...Array.from(new Set(colleges))];
+  }, [uniqueStudents]);
+
+  const uniqueBranches = useMemo(() => {
+    const branches = uniqueStudents.map(s => s.branch).filter(Boolean);
+    return ['All Branches', ...Array.from(new Set(branches))];
+  }, [uniqueStudents]);
+
+  const uniqueYears = useMemo(() => {
+    const years = uniqueStudents.map(s => s.year).filter(Boolean);
+    return ['All Years', ...Array.from(new Set(years))];
+  }, [uniqueStudents]);
+
   const filteredStudents = useMemo(() => {
     return students.filter(st => {
       const q = searchQuery.toLowerCase();
-      const matchesSearch = (st.name || '').toLowerCase().includes(q) || (st.email || '').toLowerCase().includes(q) || (st.course_title || '').toLowerCase().includes(q);
+      const matchesSearch = (st.name || '').toLowerCase().includes(q) || 
+                            (st.email || '').toLowerCase().includes(q) || 
+                            (st.course_title || '').toLowerCase().includes(q);
       const matchesCourse = courseFilter === 'All' || st.course_id === courseFilter;
+      const matchesCollege = collegeFilter === 'All' || st.college === collegeFilter;
+      const matchesBranch = branchFilter === 'All' || st.branch === branchFilter;
+      const matchesYear = yearFilter === 'All' || st.year === yearFilter;
       
       let matchesProgress = true;
       if (progressFilter === 'Completed') matchesProgress = st.progress === 100;
       else if (progressFilter === 'InProgress') matchesProgress = st.progress > 0 && st.progress < 100;
       else if (progressFilter === 'NotStarted') matchesProgress = st.progress === 0;
 
-      return matchesSearch && matchesCourse && matchesProgress;
+      return matchesSearch && matchesCourse && matchesCollege && matchesBranch && matchesYear && matchesProgress;
     });
-  }, [students, searchQuery, courseFilter, progressFilter]);
+  }, [students, searchQuery, courseFilter, collegeFilter, branchFilter, yearFilter, progressFilter]);
 
   const filteredUniqueStudents = useMemo(() => {
     return uniqueStudents.filter(st => {
       const q = searchQuery.toLowerCase();
-      const matchesSearch = (st.name || '').toLowerCase().includes(q) || (st.email || '').toLowerCase().includes(q);
+      const matchesSearch = (st.name || '').toLowerCase().includes(q) || 
+                            (st.email || '').toLowerCase().includes(q);
+      const matchesCollege = collegeFilter === 'All' || st.college === collegeFilter;
+      const matchesBranch = branchFilter === 'All' || st.branch === branchFilter;
+      const matchesYear = yearFilter === 'All' || st.year === yearFilter;
       
       let matchesProgress = true;
       if (progressFilter === 'Completed') matchesProgress = st.avgProgress === 100;
       else if (progressFilter === 'InProgress') matchesProgress = st.avgProgress > 0 && st.avgProgress < 100;
       else if (progressFilter === 'NotStarted') matchesProgress = st.avgProgress === 0;
 
-      return matchesSearch && matchesProgress;
+      return matchesSearch && matchesCollege && matchesBranch && matchesYear && matchesProgress;
     });
-  }, [uniqueStudents, searchQuery, progressFilter]);
+  }, [uniqueStudents, searchQuery, collegeFilter, branchFilter, yearFilter, progressFilter]);
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1400px', margin: '0 auto', paddingBottom: '4rem' }}>
@@ -455,6 +488,45 @@ const AdminStudents = () => {
              </select>
              <Filter size={14} style={{ position: 'absolute', right: '1.15rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
           </div>
+
+          <div style={{ position: 'relative' }}>
+             <select 
+               value={collegeFilter} 
+               onChange={(e) => setCollegeFilter(e.target.value)}
+               style={{ appearance: 'none', padding: '0.85rem 2.85rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '160px', maxWidth: '200px', textOverflow: 'ellipsis' }}
+             >
+               {uniqueColleges.map(c => (
+                 <option key={c} value={c === 'All Colleges' ? 'All' : c}>{c}</option>
+               ))}
+             </select>
+             <ChevronDown size={14} style={{ position: 'absolute', right: '1.15rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+             <select 
+               value={branchFilter} 
+               onChange={(e) => setBranchFilter(e.target.value)}
+               style={{ appearance: 'none', padding: '0.85rem 2.85rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '160px', maxWidth: '200px', textOverflow: 'ellipsis' }}
+             >
+               {uniqueBranches.map(b => (
+                 <option key={b} value={b === 'All Branches' ? 'All' : b}>{b}</option>
+               ))}
+             </select>
+             <ChevronDown size={14} style={{ position: 'absolute', right: '1.15rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+             <select 
+               value={yearFilter} 
+               onChange={(e) => setYearFilter(e.target.value)}
+               style={{ appearance: 'none', padding: '0.85rem 2.85rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '130px' }}
+             >
+               {uniqueYears.map(y => (
+                 <option key={y} value={y === 'All Years' ? 'All' : y}>{y}</option>
+               ))}
+             </select>
+             <ChevronDown size={14} style={{ position: 'absolute', right: '1.15rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+          </div>
         </div>
       </div>
 
@@ -491,6 +563,14 @@ const AdminStudents = () => {
                          <p style={{ margin: '0.25rem 0 0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 600 }}><Mail size={14}/> {selectedUser.email}</p>
                        </div>
                     </div>
+                    
+                    {(selectedUser.college || selectedUser.branch || selectedUser.year) && (
+                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', padding: '1.5rem', backgroundColor: 'var(--color-surface-muted)', borderRadius: '1.75rem', border: '1px solid var(--color-border)', textAlign: 'left', marginBottom: '2rem', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)' }}>
+                          {selectedUser.college && <VItem icon={<GraduationCap size={14} />} label="College" value={selectedUser.college} />}
+                          {selectedUser.branch && <VItem icon={<BookOpen size={14} />} label="Branch" value={selectedUser.branch} />}
+                          {selectedUser.year && <VItem icon={<Calendar size={14} />} label="Year" value={selectedUser.year} />}
+                       </div>
+                     )}
                     
                     <h3 style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)' }}><BookOpen size={16} color="var(--color-primary)" /> Registered Courses</h3>
                     <div style={{ display: 'grid', gap: '1rem' }}>
@@ -563,6 +643,12 @@ const AdminStudents = () => {
                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 600, marginTop: '0.2rem' }}>
                                <Mail size={12} /> {st.email.length > 25 ? st.email.slice(0,25) + '...' : st.email}
                              </div>
+                             {(st.college || st.branch || st.year) && (
+                                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                  <GraduationCap size={12} style={{ color: 'var(--color-primary)' }} />
+                                  <span>{[st.college, st.branch, st.year].filter(Boolean).join(' • ')}</span>
+                                </div>
+                              )}
                            </div>
                          </div>
                        </td>
@@ -623,5 +709,14 @@ const AdminStudents = () => {
     </div>
   );
 };
+
+const VItem = ({ icon, label, value }) => (
+  <div>
+     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.55rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.2rem', letterSpacing: '0.04em' }}>
+        {React.cloneElement(icon, { size: 11, color: 'var(--color-primary)' })} {label}
+     </div>
+     <div style={{ fontWeight: 950, color: 'var(--color-text)', fontSize: '0.85rem' }}>{value}</div>
+  </div>
+);
 
 export default AdminStudents;

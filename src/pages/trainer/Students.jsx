@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../../shared/AuthContext';
 import { 
   Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, 
-  ChevronDown, Upload, X, AlertCircle, Database, CheckCircle2 
+  ChevronDown, Upload, X, AlertCircle, Database, CheckCircle2,
+  GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API, TRAINER_API } from '../../config';
@@ -127,6 +128,9 @@ const TrainerStudents = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('All');
   const [progressFilter, setProgressFilter] = useState('All'); 
+  const [collegeFilter, setCollegeFilter] = useState('All');
+  const [branchFilter, setBranchFilter] = useState('All');
+  const [yearFilter, setYearFilter] = useState('All');
 
   const fetchStudents = useCallback(async () => {
     const identifier = user?.user_id || user?.id || user?.email;
@@ -151,7 +155,10 @@ const TrainerStudents = () => {
             name: st.user_name || 'Anonymous Student',
             progress: st.progress_percentage || 0,
             completed_modules: st.completed_modules,
-            total_modules: st.total_modules
+            total_modules: st.total_modules,
+            college: st.user_college || '',
+            branch: st.user_branch || '',
+            year: st.user_year || ''
           }));
         }
         return { courseId: id, courseTitle, students: courseStudents };
@@ -195,18 +202,37 @@ const TrainerStudents = () => {
     }
   };
 
+  const uniqueColleges = useMemo(() => {
+    const colleges = students.map(s => s.college).filter(Boolean);
+    return ['All Colleges', ...Array.from(new Set(colleges))];
+  }, [students]);
+
+  const uniqueBranches = useMemo(() => {
+    const branches = students.map(s => s.branch).filter(Boolean);
+    return ['All Branches', ...Array.from(new Set(branches))];
+  }, [students]);
+
+  const uniqueYears = useMemo(() => {
+    const years = students.map(s => s.year).filter(Boolean);
+    return ['All Years', ...Array.from(new Set(years))];
+  }, [students]);
+
   const filteredStudents = useMemo(() => {
     return students.filter(st => {
       const q = searchQuery.toLowerCase();
-      const matchesSearch = (st.name || '').toLowerCase().includes(q) || (st.email || '').toLowerCase().includes(q);
+      const matchesSearch = (st.name || '').toLowerCase().includes(q) || 
+                            (st.email || '').toLowerCase().includes(q);
       const matchesCourse = courseFilter === 'All' || st.course_id === courseFilter;
+      const matchesCollege = collegeFilter === 'All' || st.college === collegeFilter;
+      const matchesBranch = branchFilter === 'All' || st.branch === branchFilter;
+      const matchesYear = yearFilter === 'All' || st.year === yearFilter;
       let matchesProgress = true;
       if (progressFilter === 'Completed') matchesProgress = st.progress === 100;
       else if (progressFilter === 'InProgress') matchesProgress = st.progress > 0 && st.progress < 100;
       else if (progressFilter === 'NotStarted') matchesProgress = st.progress === 0;
-      return matchesSearch && matchesCourse && matchesProgress;
+      return matchesSearch && matchesCourse && matchesCollege && matchesBranch && matchesYear && matchesProgress;
     });
-  }, [students, searchQuery, courseFilter, progressFilter]);
+  }, [students, searchQuery, courseFilter, collegeFilter, branchFilter, yearFilter, progressFilter]);
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1400px', margin: '0 auto', paddingBottom: '4rem' }}>
@@ -261,6 +287,45 @@ const TrainerStudents = () => {
             </select>
             <ChevronDown size={16} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
           </div>
+
+          <div style={{ position: 'relative' }}>
+            <select 
+              value={collegeFilter} 
+              onChange={(e) => setCollegeFilter(e.target.value)}
+              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', maxWidth: '200px', textOverflow: 'ellipsis' }}
+            >
+              {uniqueColleges.map(c => (
+                <option key={c} value={c === 'All Colleges' ? 'All' : c}>{c}</option>
+              ))}
+            </select>
+            <ChevronDown size={16} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <select 
+              value={branchFilter} 
+              onChange={(e) => setBranchFilter(e.target.value)}
+              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', maxWidth: '200px', textOverflow: 'ellipsis' }}
+            >
+              {uniqueBranches.map(b => (
+                <option key={b} value={b === 'All Branches' ? 'All' : b}>{b}</option>
+              ))}
+            </select>
+            <ChevronDown size={16} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <select 
+              value={yearFilter} 
+              onChange={(e) => setYearFilter(e.target.value)}
+              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', minWidth: '130px' }}
+            >
+              {uniqueYears.map(y => (
+                <option key={y} value={y === 'All Years' ? 'All' : y}>{y}</option>
+              ))}
+            </select>
+            <ChevronDown size={16} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+          </div>
         </div>
       </div>
 
@@ -303,6 +368,12 @@ const TrainerStudents = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: '#64748b' }}>
                               <Mail size={12} /> {st.email}
                             </div>
+                            {(st.college || st.branch || st.year) && (
+                              <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <GraduationCap size={12} style={{ color: '#6366f1' }} />
+                                <span>{[st.college, st.branch, st.year].filter(Boolean).join(' • ')}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
