@@ -3,12 +3,12 @@ import { useAuth } from '../../shared/AuthContext';
 import { useTheme } from '../../shared/ThemeContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, BookOpen, ArrowRight, AlertCircle, Eye, EyeOff, User, Key, CheckCircle } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, User, CheckCircle } from 'lucide-react';
 import Logo from '../../components/Logo';
 import { USER_API, API_BASE } from '../../config';
 
 const Login = () => {
-  // View mode: 'login' | 'register' | 'verify'
+  // View mode: 'login' | 'register'
   const [mode, setMode] = useState('login');
 
   // Form states
@@ -17,9 +17,6 @@ const Login = () => {
   
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
-  const [userId, setUserId] = useState('');
-  
-  const [otp, setOtp] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -108,35 +105,6 @@ const Login = () => {
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    setSuccessMsg(null);
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE}/auth_checkpoint/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ name: regName.trim(), email: regEmail.trim() })
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setUserId(data.user_id);
-        setMode('verify');
-        setSuccessMsg(data.message || 'OTP sent to your email.');
-      } else {
-        setError(data.message || 'Registration failed');
-      }
-    } catch (err) {
-      setError('Failed to connect to the server');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifySubmit = async (e) => {
-    e.preventDefault();
     if (regPassword !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -151,14 +119,14 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth_checkpoint/verify_registration`, {
+      const response = await fetch(`${API_BASE}/auth_checkpoint/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ 
-          user_id: userId, 
-          otp: otp.trim(), 
-          password: regPassword, 
-          confirm_password: confirmPassword 
+        body: JSON.stringify({
+          name: regName.trim(),
+          email: regEmail.trim(),
+          password: regPassword,
+          confirm_password: confirmPassword
         })
       });
 
@@ -166,13 +134,14 @@ const Login = () => {
 
       if (response.ok && data.success) {
         setMode('login');
-        setEmail(regEmail);
+        setEmail(regEmail.trim());
         setSuccessMsg(data.message || 'Account created successfully. You can now log in.');
+        setRegName('');
+        setRegEmail('');
         setRegPassword('');
         setConfirmPassword('');
-        setOtp('');
       } else {
-        setError(data.message || 'Verification failed');
+        setError(data.message || data.detail || 'Registration failed');
       }
     } catch (err) {
       setError('Failed to connect to the server');
@@ -233,13 +202,12 @@ const Login = () => {
             <div className="inline-flex items-center justify-center bg-[var(--color-primary-bg)] text-[var(--color-primary)] w-12 h-12 rounded-xl mb-4 shadow-sm border border-[var(--color-primary)]/10">
               {mode === 'login' && <Lock className="w-6 h-6" />}
               {mode === 'register' && <User className="w-6 h-6" />}
-              {mode === 'verify' && <Key className="w-6 h-6" />}
             </div>
             <h2 className="text-2xl font-extrabold text-[var(--color-text)] tracking-tight">
-              {mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Verify Email'}
+              {mode === 'login' ? 'Sign In' : 'Create Account'}
             </h2>
             <p className="text-[var(--color-text-muted)] mt-1 font-medium text-sm">
-              {mode === 'login' ? 'Enter your credentials to access your account' : mode === 'register' ? 'Register to start your learning journey' : 'Enter the OTP sent to your email to verify your account'}
+              {mode === 'login' ? 'Enter your credentials to access your account' : 'Register to start your learning journey'}
             </p>
           </div>
 
@@ -352,43 +320,9 @@ const Login = () => {
                     />
                   </div>
                 </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit" disabled={loading}
-                  style={{ background: isDark ? 'white' : '#0f172a', color: isDark ? '#0f172a' : 'white', boxShadow: isDark ? 'none' : '0 4px 14px 0 rgba(15,23,42,0.39)' }}
-                  className="w-full flex items-center justify-center gap-2 py-4 px-4 font-bold rounded-lg hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:hover:translate-y-0"
-                >
-                  {loading ? 'Creating Account...' : <>Continue <ArrowRight className="w-5 h-5" /></>}
-                </button>
-              </div>
-              <div className="text-center mt-4 text-sm font-medium text-[var(--color-text-muted)]">
-                Already have an account? <button type="button" onClick={() => switchMode('login')} className="text-[var(--color-primary)] hover:underline">Sign in</button>
-              </div>
-            </form>
-          )}
-
-          {/* VERIFY FORM */}
-          {mode === 'verify' && (
-            <form onSubmit={handleVerifySubmit} className="space-y-4">
-              <div className="space-y-4 pt-1">
-                <div className="relative group">
-                  <label className="text-sm font-semibold text-[var(--color-text)] mb-1 block">Verification OTP</label>
-                  <div className="relative flex items-center">
-                    <div className="absolute left-3 text-[var(--color-text-light)] group-focus-within:text-[var(--color-primary)] transition-colors">
-                      <Key className="w-5 h-5" />
-                    </div>
-                    <input
-                      type="text" required placeholder="6-digit OTP" maxLength="6"
-                      value={otp} onChange={(e) => setOtp(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3.5 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm font-mono tracking-widest text-lg"
-                    />
-                  </div>
-                </div>
 
                 <div className="relative group">
-                  <label className="text-sm font-semibold text-[var(--color-text)] mb-1 block">Set Password</label>
+                  <label className="text-sm font-semibold text-[var(--color-text)] mb-1 block">Password</label>
                   <div className="relative flex items-center">
                     <div className="absolute left-3 text-[var(--color-text-light)] group-focus-within:text-[var(--color-primary)] transition-colors">
                       <Lock className="w-5 h-5" />
@@ -434,11 +368,11 @@ const Login = () => {
                   style={{ background: isDark ? 'white' : '#0f172a', color: isDark ? '#0f172a' : 'white', boxShadow: isDark ? 'none' : '0 4px 14px 0 rgba(15,23,42,0.39)' }}
                   className="w-full flex items-center justify-center gap-2 py-4 px-4 font-bold rounded-lg hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
-                  {loading ? 'Verifying...' : <>Complete Registration <CheckCircle className="w-5 h-5" /></>}
+                  {loading ? 'Creating Account...' : <>Create Account <CheckCircle className="w-5 h-5" /></>}
                 </button>
               </div>
               <div className="text-center mt-4 text-sm font-medium text-[var(--color-text-muted)]">
-                <button type="button" onClick={() => switchMode('register')} className="text-[var(--color-primary)] hover:underline">Change Email Address</button>
+                Already have an account? <button type="button" onClick={() => switchMode('login')} className="text-[var(--color-primary)] hover:underline">Sign in</button>
               </div>
             </form>
           )}
