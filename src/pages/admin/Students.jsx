@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../shared/AuthContext';
-import { Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, ChevronDown, Globe, Upload, X, CheckCircle2, AlertCircle, Database, FileText, GraduationCap } from 'lucide-react';
+import { Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, ChevronDown, Globe, Upload, X, CheckCircle2, AlertCircle, Database, FileText, GraduationCap, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API, TRAINER_API } from '../../config';
 
@@ -499,9 +499,9 @@ const AdminStudents = () => {
               <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 600, marginTop: '0.2rem' }}>{filteredUniqueStudents.length} Students found</div>
             </div>
             {filteredUniqueStudents.map(st => (
-              <div key={st.email} onClick={() => setSelectedUser(st)} style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', background: selectedUser?.email === st.email ? 'var(--color-primary-bg)' : 'transparent', borderLeft: selectedUser?.email === st.email ? '4px solid var(--color-primary)' : '4px solid transparent', transition: 'all 0.2s' }}>
-                <div style={{ fontWeight: 900, color: 'var(--color-text)', fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{st.name || st.email.split('@')[0]}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><Mail size={12} /> {st.email}</div>
+              <div key={st.email || Math.random().toString()} onClick={() => setSelectedUser(st)} style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', background: selectedUser?.email === st.email ? 'var(--color-primary-bg)' : 'transparent', borderLeft: selectedUser?.email === st.email ? '4px solid var(--color-primary)' : '4px solid transparent', transition: 'all 0.2s' }}>
+                <div style={{ fontWeight: 900, color: 'var(--color-text)', fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{st.name || (st.email ? st.email.split('@')[0] : 'Unknown')}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><Mail size={12} /> {st.email || 'No email provided'}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.65rem' }}>
                   <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#4f46e5', background: '#eef2ff', padding: '0.15rem 0.5rem', borderRadius: '1rem' }}>{st.enrollments.length} Courses</span>
                   <span style={{ fontSize: '0.75rem', fontWeight: 900, color: st.avgProgress === 100 ? 'var(--color-primary)' : '#64748b' }}>Avg: {st.avgProgress}%</span>
@@ -513,14 +513,14 @@ const AdminStudents = () => {
           {/* Right Panel - Details */}
           <div style={{ flex: '2', background: 'var(--color-surface)', borderRadius: '1.5rem', border: '1px solid var(--color-border)', padding: '1.75rem', overflowY: 'auto', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} className="no-scrollbar">
             {selectedUser ? (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={selectedUser.email}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={selectedUser.email || Math.random().toString()}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
                   <div style={{ width: '4rem', height: '4rem', borderRadius: '1rem', background: 'var(--color-primary-bg)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 950, border: '1px solid rgba(16,185,129,0.1)' }}>
                     {(selectedUser.name || 'S').charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 950, color: 'var(--color-text)' }}>{selectedUser.name || selectedUser.email.split('@')[0]}</h2>
-                    <p style={{ margin: '0.25rem 0 0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 600 }}><Mail size={14} /> {selectedUser.email}</p>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 950, color: 'var(--color-text)' }}>{selectedUser.name || (selectedUser.email ? selectedUser.email.split('@')[0] : 'Unknown User')}</h2>
+                    <p style={{ margin: '0.25rem 0 0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 600 }}><Mail size={14} /> {selectedUser.email || 'No email provided'}</p>
                   </div>
                 </div>
 
