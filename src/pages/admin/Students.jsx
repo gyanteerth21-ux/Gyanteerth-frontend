@@ -163,83 +163,43 @@ const AdminStudents = () => {
     setLoading(true);
     
     try {
-        const statsData = await smartFetch(`${ADMIN_API}/enrollment-stats`, { cacheKey: 'admin_enrollment_stats', forceRefresh: true });
-        let courseList = statsData?.data || [];
+        const response = await smartFetch(`${ADMIN_API}/students`, { cacheKey: 'admin_students_data', forceRefresh: true });
         
-        if (courseList.length === 0) {
-            const courseData = await smartFetch(`${ADMIN_API}/courses/ids-by-status`, { cacheKey: 'admin_course_ids', forceRefresh: true });
-            if (courseData) {
-                const { active, draft, inactive } = courseData.courses || {};
-                const ids = [...(active || []), ...(draft || []), ...(inactive || [])];
-                courseList = ids.map(id => ({ course_id: id, course_title: 'Enrolled Course' }));
-            }
-        }
-        
-        const progressPromises = courseList.map(async (course) => {
-            const id = course.course_id || course;
-            let title = course.course_title || 'Enrolled Course';
-            
-            try {
-                const progressData = await smartFetch(`${TRAINER_API}/course/${id}/students-progress`, { cacheKey: `st_prog_${id}`, forceRefresh: true });
-                if (progressData && progressData.data) {
-                    const sData = progressData.data || [];
-                    return sData.map((st, index) => ({
-                        id: `${id}-${st.user_id || index}`,
-                        course_id: id,
-                        email: st.email || st.user_id, 
-                        name: st.user_name || 'Anonymous Student',
-                        progress: st.progress_percentage || 0,
-                        course_title: title,
-                        completed_modules: st.completed_modules,
-                        total_modules: st.total_modules,
-                        college: st.user_college || '',
-                        branch: st.user_branch || '',
-                        year: st.user_year || ''
-                    }));
+        if (response && response.status) {
+            const uniqueArr = response.data;
+            let allStudents = [];
+            let courseMap = new Map();
+
+            uniqueArr.forEach(st => {
+                if (st.enrollments) {
+                    st.enrollments.forEach(enr => {
+                        allStudents.push({
+                            id: `${enr.course_id}-${st.user_id}`,
+                            course_id: enr.course_id,
+                            email: st.email || st.user_id,
+                            name: st.name || 'Anonymous Student',
+                            progress: enr.progress || 0,
+                            course_title: enr.course_title,
+                            college: st.college || '',
+                            branch: st.branch || '',
+                            year: st.year || ''
+                        });
+                        
+                        if (!courseMap.has(enr.course_id)) {
+                            courseMap.set(enr.course_id, { id: enr.course_id, title: enr.course_title, count: 0 });
+                        }
+                        courseMap.get(enr.course_id).count += 1;
+                    });
                 }
-            } catch(e) {
-                console.error(`Error fetching progress for course ${id}:`, e);
-            }
-            return [];
-        });
+            });
 
-        const progressResults = await Promise.all(progressPromises);
-        const allStudents = progressResults.flat();
-        
-        const clist = courseList.map(c => {
-           const id = c.course_id;
-           const count = allStudents.filter(s => s.course_id === id).length;
-           return { id, title: c.course_title, count };
-        }).filter(c => c.count > 0);
+            const clist = Array.from(courseMap.values());
 
-        // Aggregate unique students
-        const uniqueMap = new Map();
-        allStudents.forEach(st => {
-            const key = st.email;
-            if (!uniqueMap.has(key)) {
-                uniqueMap.set(key, {
-                    email: st.email,
-                    name: st.name,
-                    enrollments: [],
-                    avgProgress: 0,
-                    college: st.college,
-                    branch: st.branch,
-                    year: st.year
-                });
-            }
-            uniqueMap.get(key).enrollments.push(st);
-        });
-
-        const uniqueArr = Array.from(uniqueMap.values()).map(u => {
-            const totalProg = u.enrollments.reduce((sum, e) => sum + e.progress, 0);
-            u.avgProgress = Math.round(totalProg / u.enrollments.length) || 0;
-            return u;
-        }).sort((a,b) => b.avgProgress - a.avgProgress);
-
-        setStudents(allStudents.sort((a,b) => b.progress - a.progress));
-        setUniqueStudents(uniqueArr);
-        setAvailableCourses(clist);
-        if (uniqueArr.length > 0) setSelectedUser(uniqueArr[0]);
+            setStudents(allStudents.sort((a,b) => b.progress - a.progress));
+            setUniqueStudents(uniqueArr);
+            setAvailableCourses(clist);
+            if (uniqueArr.length > 0) setSelectedUser(uniqueArr[0]);
+        }
     } catch(err) {
         console.error("Failed to fetch students roster:", err);
     } finally {
