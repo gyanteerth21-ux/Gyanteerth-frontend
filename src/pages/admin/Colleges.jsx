@@ -198,10 +198,10 @@ const Colleges = () => {
                   <tr key={college.College_ID} style={{ borderBottom: '1px solid var(--color-border)' }}>
                     <td style={{ padding: '1rem', fontWeight: 600 }}>
                       {college.College_Name}
-                      {tpos.filter(t => t.college === college.College_Name).length > 0 && (
+                      {tpos.filter(t => t.college === college.College_ID || t.college === college.College_Name).length > 0 && (
                         <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', fontWeight: 700 }}>TPO Accounts ({tpos.filter(t => t.college === college.College_Name).length})</span>
-                          {tpos.filter(t => t.college === college.College_Name).map(tpo => (
+                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', fontWeight: 700 }}>TPO Accounts ({tpos.filter(t => t.college === college.College_ID || t.college === college.College_Name).length})</span>
+                          {tpos.filter(t => t.college === college.College_ID || t.college === college.College_Name).map(tpo => (
                             <div key={tpo.user_id} style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 500, backgroundColor: 'var(--color-bg)', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
                               <ShieldCheck size={14} className="text-primary" />
                               <span>{tpo.name}</span>
