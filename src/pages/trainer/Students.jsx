@@ -7,7 +7,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ADMIN_API, TRAINER_API } from '../../config';
+import { ADMIN_API, TRAINER_API, USER_API } from '../../config';
 
 
 const BulkImportModal = ({ onClose, onImport, loading }) => {
@@ -137,6 +137,21 @@ const TrainerStudents = () => {
     if (!identifier) return;
     setLoading(true);
     try {
+      const [colData, branchData] = await Promise.all([
+        smartFetch(`${USER_API}/colleges`, { cacheKey: 'all_colleges' }).catch(() => null),
+        smartFetch(`${USER_API}/branches`, { cacheKey: 'all_branches' }).catch(() => null)
+      ]);
+      
+      let colMap = {};
+      if (colData && colData.data) {
+        (colData.data || []).forEach(c => colMap[c.College_ID] = c.College_Name);
+      }
+      
+      let branchMap = {};
+      if (branchData && branchData.data) {
+        (branchData.data || []).forEach(b => branchMap[b.branch_id] = b.branch_name);
+      }
+
       const data = await smartFetch(`${TRAINER_API}/trainer_course_ids`, { cacheKey: `trainer_course_ids_${identifier}`, forceRefresh: true });
       const ids = data?.course_ids || [];
       const fetchPromises = ids.map(async (id) => {
@@ -156,8 +171,8 @@ const TrainerStudents = () => {
             progress: st.progress_percentage || 0,
             completed_modules: st.completed_modules,
             total_modules: st.total_modules,
-            college: st.user_college || '',
-            branch: st.user_branch || '',
+            college: colMap[st.user_college] || st.user_college || '',
+            branch: branchMap[st.user_branch] || st.user_branch || '',
             year: st.user_year || ''
           }));
         }

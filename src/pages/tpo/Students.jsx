@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Users, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../shared/AuthContext';
-import { getHeaders } from '../../config';
+import { getHeaders, USER_API } from '../../config';
 import ExportExcelButton from '../../components/ExportExcelButton';
 
 const TpoStudents = () => {
@@ -18,11 +18,35 @@ const TpoStudents = () => {
     const fetchStudents = async () => {
       try {
         setLoading(true);
-        const res = await authFetch(`${API_BASE}/tpo/students`);
+        const [res, colRes, branchRes] = await Promise.all([
+          authFetch(`${API_BASE}/tpo/students`),
+          authFetch(`${USER_API}/colleges`).catch(() => null),
+          authFetch(`${USER_API}/branches`).catch(() => null)
+        ]);
+        
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Failed to fetch students');
         
-        setStudents(data.data || []);
+        const colData = colRes && colRes.ok ? await colRes.json() : null;
+        const branchData = branchRes && branchRes.ok ? await branchRes.json() : null;
+
+        let colMap = {};
+        if (colData && colData.data) {
+          (colData.data || []).forEach(c => colMap[c.College_ID] = c.College_Name);
+        }
+        
+        let branchMap = {};
+        if (branchData && branchData.data) {
+          (branchData.data || []).forEach(b => branchMap[b.branch_id] = b.branch_name);
+        }
+
+        const studentsData = data.data || [];
+        studentsData.forEach(st => {
+            st.college = colMap[st.college] || st.college || '';
+            st.branch = branchMap[st.branch] || st.branch || '';
+        });
+
+        setStudents(studentsData);
       } catch (err) {
         setError(err.message);
       } finally {

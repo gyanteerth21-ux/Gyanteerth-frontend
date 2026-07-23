@@ -16,7 +16,7 @@ const Colleges = () => {
   const [isTpoModalOpen, setIsTpoModalOpen] = useState(false);
   
   const [collegeForm, setCollegeForm] = useState({ id: null, name: '' });
-  const [tpoForm, setTpoForm] = useState({ name: '', email: '', password: '', number: '', college: '' });
+  const [tpoForm, setTpoForm] = useState({ name: '', email: '', password: '', number: '', collegeId: '', collegeName: '' });
   
   const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(null);
@@ -112,7 +112,7 @@ const Colleges = () => {
           tpo_email: tpoForm.email,
           tpo_pass: tpoForm.password,
           tpo_number: tpoForm.number,
-          tpo_college: tpoForm.college
+          tpo_college: tpoForm.collegeId
         })
       });
       
@@ -122,7 +122,7 @@ const Colleges = () => {
       setActionSuccess('TPO created successfully!');
       setTimeout(() => {
         setIsTpoModalOpen(false);
-        setTpoForm({ name: '', email: '', password: '', number: '', college: '' });
+        setTpoForm({ name: '', email: '', password: '', number: '', collegeId: '', collegeName: '' });
         setActionSuccess(null);
       }, 1500);
     } catch (err) {
@@ -218,7 +218,7 @@ const Colleges = () => {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                         <button 
                           onClick={() => {
-                            setTpoForm(prev => ({ ...prev, college: college.College_Name }));
+                            setTpoForm(prev => ({ ...prev, collegeId: college.College_ID, collegeName: college.College_Name }));
                             setIsTpoModalOpen(true);
                           }}
                           className="btn btn-primary"
@@ -293,7 +293,7 @@ const Colleges = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <ShieldCheck className="text-primary" size={20} />
-                  Add TPO for {tpoForm.college}
+                  Add TPO for {tpoForm.collegeName}
                 </h2>
                 <button onClick={() => setIsTpoModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={20} /></button>
               </div>

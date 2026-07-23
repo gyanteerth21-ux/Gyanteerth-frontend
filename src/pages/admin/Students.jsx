@@ -164,6 +164,26 @@ const AdminStudents = () => {
     setLoading(true);
 
     try {
+      // Fetch colleges to map IDs to Names
+      let colMap = {};
+      try {
+        const colRes = await authFetch(`${ADMIN_API}/colleges`);
+        if (colRes.ok) {
+          const colData = await colRes.json();
+          (colData.data || []).forEach(c => colMap[c.College_ID] = c.College_Name);
+        }
+      } catch (e) { console.error("Failed to fetch colleges mapping", e); }
+
+      // Fetch branches to map IDs to Names
+      let brMap = {};
+      try {
+        const brRes = await authFetch(`${ADMIN_API}/branches`);
+        if (brRes.ok) {
+          const brData = await brRes.json();
+          (brData.data || []).forEach(b => brMap[b.branch_id] = b.branch_name);
+        }
+      } catch (e) { console.error("Failed to fetch branches mapping", e); }
+
       const response = await smartFetch(`${ADMIN_API}/students`, { cacheKey: 'admin_students_data', forceRefresh: true });
 
       if (response && response.status) {
@@ -172,6 +192,10 @@ const AdminStudents = () => {
         let courseMap = new Map();
 
         uniqueArr.forEach(st => {
+          // Map IDs to Names
+          st.college = colMap[st.college] || st.college;
+          st.branch = brMap[st.branch] || st.branch;
+
           if (st.enrollments) {
             st.enrollments.forEach(enr => {
               allStudents.push({

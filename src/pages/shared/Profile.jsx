@@ -351,7 +351,7 @@ const Profile = () => {
                   <div style={{ position: 'relative' }}>
                     <select name="college" value={form.college} onChange={handleChange} style={{ width: '100%', padding: '1rem', borderRadius: '1.25rem', border: '1px solid var(--color-border)', background: 'var(--color-surface-muted)', fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-text)', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                       <option value="">Select College</option>
-                      {colleges.map(c => <option key={c.College_ID} value={c.College_Name}>{c.College_Name}</option>)}
+                      {colleges.map(c => <option key={c.College_ID} value={c.College_ID}>{c.College_Name}</option>)}
                     </select>
                     <BookOpen size={18} style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
                   </div>
@@ -363,7 +363,7 @@ const Profile = () => {
                     <div style={{ position: 'relative' }}>
                       <select name="branch" value={form.branch} onChange={handleChange} style={{ width: '100%', padding: '0.85rem 3rem 0.85rem 1rem', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', color: 'var(--color-text)', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
                         <option value="" disabled>Select your branch</option>
-                        {branches.map(b => <option key={b.branch_id} value={b.branch_name}>{b.branch_name}</option>)}
+                        {branches.map(b => <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>)}
                       </select>
                       <Briefcase size={18} style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
                     </div>
