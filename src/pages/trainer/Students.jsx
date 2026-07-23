@@ -42,25 +42,25 @@ const BulkImportModal = ({ onClose, onImport, loading }) => {
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(12px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={onClose}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        style={{ width: 'min(95vw, 500px)', backgroundColor: 'white', borderRadius: '2rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', padding: '2rem' }}
+        style={{ width: 'min(95vw, 500px)', backgroundColor: 'var(--color-surface)', borderRadius: '2rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', padding: '2rem' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, color: '#1e293b' }}>Bulk Import Students</h2>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.25rem', fontWeight: 500 }}>Add multiple students to your registry via Excel.</p>
+            <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, color: 'var(--color-text)' }}>Bulk Import Students</h2>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', fontWeight: 500 }}>Add multiple students to your registry via Excel.</p>
           </div>
-          <button onClick={onClose} style={{ width: '2rem', height: '2rem', borderRadius: '50%', border: 'none', backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18}/></button>
+          <button onClick={onClose} style={{ width: '2rem', height: '2rem', borderRadius: '50%', border: 'none', backgroundColor: 'var(--color-border)', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18}/></button>
         </div>
 
         <div 
           style={{ 
-            width: '100%', border: `2px dashed ${error ? '#ef4444' : '#cbd5e1'}`, borderRadius: '1.5rem', padding: '2.5rem 1.5rem', textAlign: 'center', backgroundColor: '#f8fafc', cursor: 'pointer', marginBottom: '1.5rem', position: 'relative', transition: 'all 0.2s'
+            width: '100%', border: `2px dashed ${error ? '#ef4444' : 'var(--color-text-light)'}`, borderRadius: '1.5rem', padding: '2.5rem 1.5rem', textAlign: 'center', backgroundColor: 'var(--color-bg)', cursor: 'pointer', marginBottom: '1.5rem', position: 'relative', transition: 'all 0.2s'
           }}
         >
           <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
           <Upload size={32} color={error ? '#ef4444' : '#6366f1'} style={{ marginBottom: '1rem' }} />
-          <p style={{ margin: 0, fontWeight: 700, fontSize: '0.95rem', color: error ? '#ef4444' : '#334155' }}>{file ? file.name : 'Click or drop Excel file'}</p>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: '0.95rem', color: error ? '#ef4444' : 'var(--color-text)' }}>{file ? file.name : 'Click or drop Excel file'}</p>
         </div>
 
         {error && <div style={{ marginBottom: '1.5rem', color: '#ef4444', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}><AlertCircle size={14}/> {error}</div>}
@@ -71,7 +71,7 @@ const BulkImportModal = ({ onClose, onImport, loading }) => {
           disabled={loading || !file}
           style={{ 
             width: '100%', padding: '1rem', borderRadius: '1rem', border: 'none', 
-            backgroundColor: error ? '#ef4444' : '#0f172a', color: 'white', fontWeight: 900, 
+            backgroundColor: error ? '#ef4444' : 'var(--color-text)', color: 'var(--color-surface)', fontWeight: 900, 
             fontSize: '1rem', cursor: loading || !file ? 'not-allowed' : 'pointer', 
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', opacity: loading ? 0.7 : 1
@@ -107,16 +107,16 @@ const TrainerStudents = () => {
       {[1, 2, 3, 4, 5].map((i) => (
         <div key={i} style={{ display: 'flex', padding: '1.5rem 2rem', borderBottom: '1px solid #f1f5f9', gap: '2rem', alignItems: 'center' }}>
           <div style={{ flex: 1.5, display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '1rem', background: '#f1f5f9', animation: 'pulse 1.5s infinite ease-in-out' }} />
+            <div style={{ width: '44px', height: '44px', borderRadius: '1rem', background: 'var(--color-border)', animation: 'pulse 1.5s infinite ease-in-out' }} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ height: '16px', width: '60%', background: '#f1f5f9', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} />
-              <div style={{ height: '12px', width: '40%', background: '#f1f5f9', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} />
+              <div style={{ height: '16px', width: '60%', background: 'var(--color-border)', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} />
+              <div style={{ height: '12px', width: '40%', background: 'var(--color-border)', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} />
             </div>
           </div>
-          <div style={{ flex: 1 }}><div style={{ height: '16px', width: '80%', background: '#f1f5f9', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} /></div>
-          <div style={{ flex: 1 }}><div style={{ height: '24px', width: '100%', background: '#f1f5f9', borderRadius: '8px', animation: 'pulse 1.5s infinite ease-in-out' }} /></div>
+          <div style={{ flex: 1 }}><div style={{ height: '16px', width: '80%', background: 'var(--color-border)', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} /></div>
+          <div style={{ flex: 1 }}><div style={{ height: '24px', width: '100%', background: 'var(--color-border)', borderRadius: '8px', animation: 'pulse 1.5s infinite ease-in-out' }} /></div>
           <div style={{ flex: 0.5, display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '0.85rem', background: '#f1f5f9', animation: 'pulse 1.5s infinite ease-in-out' }} />
+            <div style={{ width: '40px', height: '40px', borderRadius: '0.85rem', background: 'var(--color-border)', animation: 'pulse 1.5s infinite ease-in-out' }} />
           </div>
         </div>
       ))}
@@ -240,8 +240,8 @@ const TrainerStudents = () => {
       {/* ── Page Header ── */}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1.5rem', marginBottom: '2.5rem' }}>
         <div>
-          <h1 style={{ fontSize: '2.25rem', fontWeight: 900, color: '#0f172a', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Student Roster</h1>
-          <p style={{ margin: 0, maxWidth: '500px', fontSize: '1.05rem', color: '#64748b', fontWeight: 500 }}>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--color-text)', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Student Roster</h1>
+          <p style={{ margin: 0, maxWidth: '500px', fontSize: '1.05rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>
              Manage and track the progress of all students enrolled in your knowledge nodes.
           </p>
         </div>
@@ -251,7 +251,7 @@ const TrainerStudents = () => {
             onClick={() => setShowImportModal(true)}
             style={{ 
               padding: '0.85rem 1.75rem', borderRadius: '1rem', 
-              background: '#0f172a', color: 'white', border: 'none', 
+              background: 'var(--color-text)', color: 'var(--color-surface)', border: 'none', 
               fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: '0.6rem',
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -270,7 +270,7 @@ const TrainerStudents = () => {
                placeholder="Search students..." 
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
-               style={{ width: '220px', padding: '0.85rem 1rem 0.85rem 3rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.95rem', fontWeight: 600, outline: 'none', color: '#0f172a' }} 
+               style={{ width: '220px', padding: '0.85rem 1rem 0.85rem 3rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.95rem', fontWeight: 600, outline: 'none', color: 'var(--color-text)' }} 
              />
           </div>
 
@@ -278,7 +278,7 @@ const TrainerStudents = () => {
             <select 
               value={courseFilter} 
               onChange={(e) => setCourseFilter(e.target.value)}
-              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer' }}
+              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer' }}
             >
               <option value="All">All Courses</option>
               {availableCourses.map(c => (
@@ -292,7 +292,7 @@ const TrainerStudents = () => {
             <select 
               value={collegeFilter} 
               onChange={(e) => setCollegeFilter(e.target.value)}
-              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', maxWidth: '200px', textOverflow: 'ellipsis' }}
+              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', maxWidth: '200px', textOverflow: 'ellipsis' }}
             >
               {uniqueColleges.map(c => (
                 <option key={c} value={c === 'All Colleges' ? 'All' : c}>{c}</option>
@@ -305,7 +305,7 @@ const TrainerStudents = () => {
             <select 
               value={branchFilter} 
               onChange={(e) => setBranchFilter(e.target.value)}
-              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', maxWidth: '200px', textOverflow: 'ellipsis' }}
+              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', maxWidth: '200px', textOverflow: 'ellipsis' }}
             >
               {uniqueBranches.map(b => (
                 <option key={b} value={b === 'All Branches' ? 'All' : b}>{b}</option>
@@ -318,7 +318,7 @@ const TrainerStudents = () => {
             <select 
               value={yearFilter} 
               onChange={(e) => setYearFilter(e.target.value)}
-              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', minWidth: '130px' }}
+              style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', minWidth: '130px' }}
             >
               {uniqueYears.map(y => (
                 <option key={y} value={y === 'All Years' ? 'All' : y}>{y}</option>
@@ -329,11 +329,11 @@ const TrainerStudents = () => {
         </div>
       </div>
 
-      <div style={{ background: 'white', borderRadius: '1.5rem', overflow: 'hidden', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+      <div style={{ background: 'var(--color-surface)', borderRadius: '1.5rem', overflow: 'hidden', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '900px' }}>
-            <thead style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-              <tr style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            <thead style={{ backgroundColor: 'var(--color-bg)', borderBottom: '1px solid #e2e8f0' }}>
+              <tr style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 <th style={{ padding: '1.5rem 2rem', fontWeight: 900 }}>Student Profile</th>
                 <th style={{ padding: '1.5rem 2rem', fontWeight: 900 }}>Enrolled Course</th>
                 <th style={{ padding: '1.5rem 2rem', fontWeight: 900 }}>Learning Progress</th>
@@ -347,7 +347,7 @@ const TrainerStudents = () => {
                 <tr>
                   <td colSpan="4" style={{ padding: '8rem', textAlign: 'center' }}>
                      <Users size={56} color="#cbd5e1" style={{ margin: '0 auto 1.5rem auto' }} />
-                     <p style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1e293b' }}>No students found.</p>
+                     <p style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--color-text)' }}>No students found.</p>
                   </td>
                 </tr>
               ) : (
@@ -364,8 +364,8 @@ const TrainerStudents = () => {
                             {(st.name || 'S').charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 800, color: '#0f172a' }}>{st.name || st.username}</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: '#64748b' }}>
+                            <div style={{ fontWeight: 800, color: 'var(--color-text)' }}>{st.name || st.username}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                               <Mail size={12} /> {st.email}
                             </div>
                             {(st.college || st.branch || st.year) && (
@@ -378,24 +378,24 @@ const TrainerStudents = () => {
                         </div>
                       </td>
                       <td style={{ padding: '1.5rem 2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e293b', fontSize: '0.9rem', fontWeight: 700 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)', fontSize: '0.9rem', fontWeight: 700 }}>
                           <BookOpen size={16} color="#10b981" /> {st.course_title}
                         </div>
                       </td>
                       <td style={{ padding: '1.5rem 2rem' }}>
                         <div style={{ width: '100%', maxWidth: '200px' }}>
                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 800, marginBottom: '0.6rem' }}>
-                             <span style={{ color: '#64748b' }}>Status</span>
+                             <span style={{ color: 'var(--color-text-muted)' }}>Status</span>
                              <span style={{ color: st.progress === 100 ? '#10b981' : '#4f46e5' }}>{st.progress || 0}%</span>
                            </div>
-                           <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '1rem', overflow: 'hidden' }}>
+                           <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--color-border)', borderRadius: '1rem', overflow: 'hidden' }}>
                              <motion.div initial={{ width: 0 }} animate={{ width: `${st.progress || 0}%` }} transition={{ duration: 1 }} style={{ width: `${st.progress || 0}%`, height: '100%', backgroundColor: st.progress === 100 ? '#10b981' : '#4f46e5' }} />
                            </div>
                         </div>
                       </td>
                       <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
                         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                           <button onClick={() => window.location.href = `mailto:${st.email}`} style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.75rem', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           <button onClick={() => window.location.href = `mailto:${st.email}`} style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.75rem', background: 'var(--color-surface)', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                <Mail size={16} color="#64748b" />
                            </button>
                         </div>
@@ -412,8 +412,8 @@ const TrainerStudents = () => {
       {showImportModal && <BulkImportModal onClose={() => setShowImportModal(false)} onImport={handleBulkImport} loading={actionLoading} />}
 
       {toast && (
-        <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} style={{ position: 'fixed', bottom: '4rem', left: '50%', transform: 'translateX(-50%)', zIndex: 10000, padding: '1rem 2.5rem', borderRadius: '4rem', backgroundColor: toast.type === 'success' ? '#0f172a' : '#ef4444', color: 'white', fontWeight: 900, boxShadow: '0 20px 40px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {toast.type === 'success' ? <CheckCircle2 size={20} color="#10b981" /> : <AlertCircle size={20} color="white" />}
+        <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} style={{ position: 'fixed', bottom: '4rem', left: '50%', transform: 'translateX(-50%)', zIndex: 10000, padding: '1rem 2.5rem', borderRadius: '4rem', backgroundColor: toast.type === 'success' ? 'var(--color-text)' : '#ef4444', color: 'var(--color-surface)', fontWeight: 900, boxShadow: '0 20px 40px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {toast.type === 'success' ? <CheckCircle2 size={20} color="#10b981" /> : <AlertCircle size={20} color="var(--color-surface)" />}
           {toast.message}
         </motion.div>
       )}

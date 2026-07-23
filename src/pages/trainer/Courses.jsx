@@ -18,7 +18,7 @@ const TrainerCourses = () => {
   const CourseGridSkeleton = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
       {[1, 2, 3, 4, 5, 6].map(i => (
-        <div key={i} style={{ height: '380px', background: '#f1f5f9', borderRadius: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }} />
+        <div key={i} style={{ height: '380px', background: 'var(--color-border)', borderRadius: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }} />
       ))}
       <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
     </div>
@@ -110,10 +110,10 @@ const TrainerCourses = () => {
       {/* ── Page Header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
-          <h1 style={{ fontSize: '2.25rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--color-text)', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
             Course Repository
           </h1>
-          <p style={{ color: '#64748b', fontSize: '1.05rem', fontWeight: 500 }}>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '1.05rem', fontWeight: 500 }}>
             Management interface for your assigned knowledge nodes and student delivery metrics.
           </p>
         </div>
@@ -125,9 +125,9 @@ const TrainerCourses = () => {
               placeholder="Search nodes..." 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              style={{ width: '320px', padding: '0.85rem 1rem 0.85rem 3rem', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.95rem', fontWeight: 600, outline: 'none', color: '#0f172a', transition: 'border-color 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }} 
+              style={{ width: '320px', padding: '0.85rem 1rem 0.85rem 3rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.95rem', fontWeight: 600, outline: 'none', color: 'var(--color-text)', transition: 'border-color 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }} 
               onFocus={e => e.target.style.borderColor = '#4f46e5'}
-              onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+              onBlur={e => e.target.style.borderColor = 'var(--color-border-strong)'}
             />
         </div>
       </div>
@@ -139,10 +139,10 @@ const TrainerCourses = () => {
           {filteredCourses.length === 0 ? (
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ padding: '6rem 2rem', textAlign: 'center', background: 'white', borderRadius: '2rem', border: '2px dashed #e2e8f0' }}
+              style={{ padding: '6rem 2rem', textAlign: 'center', background: 'var(--color-surface)', borderRadius: '2rem', border: '2px dashed #e2e8f0' }}
             >
               <BookOpen size={56} color="#cbd5e1" style={{ margin: '0 auto 1.25rem' }} />
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b' }}>No courses found</h3>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text)' }}>No courses found</h3>
               <p style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: 500, marginTop: '0.5rem' }}>Try adjusting your search terms or wait for new assignments.</p>
             </motion.div>
           ) : (
@@ -161,12 +161,12 @@ const TrainerCourses = () => {
                     whileHover={{ y: -6 }}
                     style={{ 
                       display: 'flex', flexDirection: 'column', borderRadius: '1.5rem', 
-                      backgroundColor: 'white', border: '1px solid #f1f5f9', overflow: 'hidden',
+                      backgroundColor: 'var(--color-surface)', border: '1px solid #f1f5f9', overflow: 'hidden',
                       boxShadow: '0 4px 20px rgba(0,0,0,0.03)', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
                   >
                     {/* Thumbnail */}
-                    <div style={{ height: '180px', position: 'relative', overflow: 'hidden', backgroundColor: '#f8fafc' }}>
+                    <div style={{ height: '180px', position: 'relative', overflow: 'hidden', backgroundColor: 'var(--color-bg)' }}>
                       <img 
                         src={optimizeImageUrl(course.thumbnail)} 
                         alt={course.course_title}
@@ -189,11 +189,11 @@ const TrainerCourses = () => {
 
                     {/* Content */}
                     <div style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                      <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem', fontWeight: 900, color: 'var(--color-text)', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {course.course_title}
                       </h3>
                       
-                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: '#64748b', marginBottom: '1.5rem', alignItems: 'center', fontWeight: 600 }}>
+                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem', alignItems: 'center', fontWeight: 600 }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                           <Users size={16} color="#4f46e5" /> {course.studentCount} Students
                         </span>
@@ -205,18 +205,18 @@ const TrainerCourses = () => {
 
                       <div style={{ marginTop: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.6rem' }}>
-                          <span style={{ color: '#64748b', fontWeight: 600 }}>Avg. Engagement</span>
+                          <span style={{ color: 'var(--color-text-muted)', fontWeight: 600 }}>Avg. Engagement</span>
                           <span style={{ fontWeight: 800, color: '#4f46e5' }}>{course.avgProgress}%</span>
                         </div>
-                        <div style={{ width: '100%', background: '#f1f5f9', height: '8px', borderRadius: '99px', overflow: 'hidden', marginBottom: '1.5rem' }}>
+                        <div style={{ width: '100%', background: 'var(--color-border)', height: '8px', borderRadius: '99px', overflow: 'hidden', marginBottom: '1.5rem' }}>
                           <motion.div initial={{ width: 0 }} animate={{ width: `${course.avgProgress}%` }} transition={{ duration: 1 }} style={{ background: 'linear-gradient(90deg, #4f46e5, #818cf8)', height: '100%', borderRadius: '99px' }} />
                         </div>
 
                         <button 
                           onClick={() => navigate(`/trainer/course/${course.course_id}`)}
-                          style={{ width: '100%', padding: '0.9rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.2s' }}
+                          style={{ width: '100%', padding: '0.9rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.2s' }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#4f46e5'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = '#4f46e5'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0f172a'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-bg)'; e.currentTarget.style.color = 'var(--color-text)'; e.currentTarget.style.borderColor = 'var(--color-border-strong)'; }}
                         >
                           <PlayCircle size={18} /> View Content
                         </button>

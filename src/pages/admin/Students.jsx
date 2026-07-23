@@ -4,6 +4,7 @@ import { useAuth } from '../../shared/AuthContext';
 import { Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, ChevronDown, Globe, Upload, X, CheckCircle2, AlertCircle, Database, FileText, GraduationCap, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API, TRAINER_API } from '../../config';
+import ExportExcelButton from '../../components/ExportExcelButton';
 
 
 
@@ -315,6 +316,7 @@ const AdminStudents = () => {
               style={{ width: '300px', padding: '0.85rem 1rem 0.85rem 2.75rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, outline: 'none' }}
             />
           </div>
+          <ExportExcelButton data={uniqueStudents} filename="Admin_Students_List" sheetName="Students" />
           <button
             onClick={() => setShowImportModal(true)}
             className="btn btn-primary"

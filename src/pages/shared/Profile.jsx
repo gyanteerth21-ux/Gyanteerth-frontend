@@ -7,11 +7,14 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { USER_API, TRAINER_API, optimizeImageUrl } from '../../config';
+import { State, City } from 'country-state-city';
 
 const Profile = () => {
   const { user, authFetch, login, clearCache } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [colleges, setColleges] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [toast, setToast] = useState(null);
   const [form, setForm] = useState({
     name: '',
@@ -63,8 +66,42 @@ const Profile = () => {
       }
     };
 
-    if (user) fetchProfile();
+    const fetchColleges = async () => {
+      try {
+        const res = await fetch(`${USER_API}/colleges`);
+        if (res.ok) {
+          const data = await res.json();
+          setColleges(data.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch colleges:", err);
+      }
+    };
+
+    const fetchBranches = async () => {
+      try {
+        const res = await fetch(`${USER_API}/branches`);
+        if (res.ok) {
+          const data = await res.json();
+          setBranches(data.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch branches:", err);
+      }
+    };
+
+    if (user) {
+      fetchProfile();
+      if (user.role === 'student') {
+        fetchColleges();
+        fetchBranches();
+      }
+    }
   }, [user, authFetch]);
+
+  const indianStates = State.getStatesOfCountry('IN');
+  const selectedStateObj = indianStates.find(s => s.name === form.state);
+  const cities = selectedStateObj ? City.getCitiesOfState('IN', selectedStateObj.isoCode) : [];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -256,8 +293,48 @@ const Profile = () => {
               </div>
             </div>
 
-            <ProfileInput label="City Hub" name="city" value={form.city} onChange={handleChange} icon={<Globe size={18} />} />
-            <ProfileInput label="State/Region" name="state" value={form.state} onChange={handleChange} icon={<MapPin size={18} />} />
+              <div>
+                <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
+                  State/Region
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    name="state"
+                    value={form.state}
+                    onChange={(e) => {
+                      setForm(prev => ({ ...prev, state: e.target.value, city: '' })); // Reset city when state changes
+                    }}
+                    style={{ width: '100%', padding: '0.85rem 1rem 0.85rem 2.75rem', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', color: 'var(--color-text)', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}
+                  >
+                    <option value="" disabled>Select State</option>
+                    {indianStates.map(s => (
+                      <option key={s.isoCode} value={s.name}>{s.name}</option>
+                    ))}
+                  </select>
+                  <MapPin size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
+                  City Hub
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    name="city"
+                    value={form.city}
+                    onChange={handleChange}
+                    disabled={!form.state}
+                    style={{ width: '100%', padding: '0.85rem 1rem 0.85rem 2.75rem', backgroundColor: form.state ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', color: form.state ? 'var(--color-text)' : 'var(--color-text-muted)', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: form.state ? 'pointer' : 'not-allowed' }}
+                  >
+                    <option value="" disabled>{form.state ? 'Select City' : 'Select State First'}</option>
+                    {cities.map(c => (
+                      <option key={c.name} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                  <Globe size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                </div>
+              </div>
 
             {user.role === 'trainer' && (
               <div style={{ gridColumn: 'span 2' }}>
@@ -268,9 +345,29 @@ const Profile = () => {
             {user.role === 'student' && (
               <>
                 <div style={{ gridColumn: 'span 2' }}>
-                  <ProfileInput label="College Name" name="college" value={form.college} onChange={handleChange} icon={<BookOpen size={18} />} placeholder="e.g. ABC College" />
+                  <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
+                    College Name
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <select name="college" value={form.college} onChange={handleChange} style={{ width: '100%', padding: '1rem', borderRadius: '1.25rem', border: '1px solid var(--color-border)', background: 'var(--color-surface-muted)', fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-text)', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                      <option value="">Select College</option>
+                      {colleges.map(c => <option key={c.College_ID} value={c.College_Name}>{c.College_Name}</option>)}
+                    </select>
+                    <BookOpen size={18} style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                  </div>
                 </div>
-                <ProfileInput label="Specialization / Branch" name="branch" value={form.branch} onChange={handleChange} icon={<Briefcase size={18} />} placeholder="e.g. Computer Science" />
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
+                      Specialization / Branch
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <select name="branch" value={form.branch} onChange={handleChange} style={{ width: '100%', padding: '0.85rem 3rem 0.85rem 1rem', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', color: 'var(--color-text)', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                        <option value="" disabled>Select your branch</option>
+                        {branches.map(b => <option key={b.branch_id} value={b.branch_name}>{b.branch_name}</option>)}
+                      </select>
+                      <Briefcase size={18} style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <label style={{ fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>

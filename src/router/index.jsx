@@ -1,4 +1,4 @@
-import { createHashRouter } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -36,13 +36,19 @@ import AdminCurriculum from '../pages/admin/Curriculum';
 import AdminFeedbacks from '../pages/admin/Feedbacks';
 import AdminStudents from '../pages/admin/Students';
 import ResetRequests from '../pages/admin/ResetRequests';
+import AdminColleges from '../pages/admin/Colleges';
+import AdminBranches from '../pages/admin/Branches';
+
+// TPO
+import TpoDashboard from '../pages/tpo/Dashboard';
+import TpoStudents from '../pages/tpo/Students';
 
 // Shared
 import Profile from '../pages/shared/Profile';
 
 import ErrorBoundary from '../components/ErrorBoundary';
 
-export const router = createHashRouter([
+export const router = createBrowserRouter([
   {
     path: '/',
     element: <MainLayout />,
@@ -133,12 +139,29 @@ export const router = createHashRouter([
         children: [
           { index: true, element: <AdminDashboard /> },
           { path: 'categories', element: <AdminCategories /> },
+          { path: 'colleges', element: <AdminColleges /> },
+          { path: 'branches', element: <AdminBranches /> },
           { path: 'courses', element: <AdminCourses /> },
           { path: 'users', element: <AdminUsers /> },
           { path: 'students', element: <AdminStudents /> },
           { path: 'assessments', element: <AdminAssessments /> },
           { path: 'feedbacks', element: <AdminFeedbacks /> },
           { path: 'reset-requests', element: <ResetRequests /> },
+        ]
+      }
+    ]
+  },
+  // TPO Protected Routes
+  {
+    path: '/tpo',
+    element: <ProtectedRoute allowedRoles={['tpo', 'admin']} />,
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        element: <DashboardLayout />,
+        children: [
+          { index: true, element: <TpoDashboard /> },
+          { path: 'students', element: <TpoStudents /> }
         ]
       }
     ]

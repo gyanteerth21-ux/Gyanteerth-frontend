@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import ExportExcelButton from '../../components/ExportExcelButton';
 import { useAuth } from '../../shared/AuthContext';
 import { ADMIN_API, getHeaders } from '../../config';
 
@@ -334,6 +335,7 @@ const AdminUsers = () => {
                   <button onClick={() => setViewMode('list')} style={{ padding: '0.6rem 0.85rem', borderRadius: '0.9rem', border: 'none', background: viewMode === 'list' ? 'var(--color-surface)' : 'transparent', color: viewMode === 'list' ? 'var(--color-primary)' : 'var(--color-text-light)', cursor: 'pointer', boxShadow: viewMode === 'list' ? 'var(--shadow-md)' : 'none', transition: 'all 0.3s' }}><List size={20}/></button>
                </div>
 
+                <ExportExcelButton data={trainers} filename="Admin_Trainers_List" sheetName="Trainers" />
                 <button 
                   onClick={() => setShowImportModal(true)}
                   style={{ padding: '0.65rem 1.25rem', borderRadius: '1rem', border: 'none', backgroundColor: '#0f172a', color: 'white', fontSize: '0.85rem', fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.2)' }}

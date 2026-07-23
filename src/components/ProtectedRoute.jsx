@@ -22,6 +22,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
         let endpoint = `${AUTH_API}/security_check/`;
         if (user?.role === 'admin') endpoint = `${AUTH_API}/security_check_admin/`;
         else if (user?.role === 'trainer') endpoint = `${AUTH_API}/security_check_trainer/`;
+        else if (user?.role === 'tpo') endpoint = `${AUTH_API}/security_check_tpo/`;
 
         // Notice we just use authFetch. No headers needed.
         // If it fails with a 401, authFetch handles the logout automatically.

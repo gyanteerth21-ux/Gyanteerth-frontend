@@ -4,13 +4,13 @@ import { useAuth } from '../shared/AuthContext';
 import { useTheme } from '../shared/ThemeContext';
 import Logo from '../components/Logo';
 import ThemeToggle from '../components/ThemeToggle';
-import { LayoutDashboard, Book, Users, Video, FileText, MessageSquare, LogOut, Menu, X, Compass, UserCog, ChevronUp, Folder, Search, Bell, Clock } from 'lucide-react';
+import { LayoutDashboard, Book, Users, Video, FileText, MessageSquare, LogOut, Menu, X, Compass, UserCog, ChevronUp, Folder, Search, Bell, Clock, Building, Network } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { optimizeImageUrl } from '../config';
 
 const SidebarLink = ({ to, icon, label, currentPath }) => {
-  const isRoot = ['/admin', '/trainer', '/student'].includes(to);
+  const isRoot = ['/admin', '/trainer', '/student', '/tpo'].includes(to);
   const isActive = isRoot 
     ? currentPath === to || currentPath === `${to}/`
     : currentPath === to || currentPath.startsWith(`${to}/`);
@@ -117,11 +117,13 @@ const DashboardLayout = () => {
         return [
           { index: 0, to: '/admin', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
           { index: 1, to: '/admin/categories', icon: <Folder size={20} />, label: 'Categories' },
-          { index: 2, to: '/admin/users', icon: <Users size={20} />, label: 'Trainers' },
-          { index: 3, to: '/admin/students', icon: <Users size={20} />, label: 'Students' },
-          { index: 4, to: '/admin/assessments', icon: <FileText size={20} />, label: 'Assessments' },
-          { index: 5, to: '/admin/feedbacks', icon: <MessageSquare size={20} />, label: 'Feedbacks' },
-          { index: 6, to: '/admin/reset-requests', icon: <Clock size={20} />, label: 'Reset Requests' },
+          { index: 2, to: '/admin/colleges', icon: <Building size={20} />, label: 'Colleges & TPO' },
+          { index: 2.5, to: '/admin/branches', icon: <Network size={20} />, label: 'Branches' },
+          { index: 3, to: '/admin/users', icon: <Users size={20} />, label: 'Trainers' },
+          { index: 4, to: '/admin/students', icon: <Users size={20} />, label: 'Students' },
+          { index: 5, to: '/admin/assessments', icon: <FileText size={20} />, label: 'Assessments' },
+          { index: 6, to: '/admin/feedbacks', icon: <MessageSquare size={20} />, label: 'Feedbacks' },
+          { index: 7, to: '/admin/reset-requests', icon: <Clock size={20} />, label: 'Reset Requests' },
         ];
       case 'trainer':
         return [
@@ -139,6 +141,11 @@ const DashboardLayout = () => {
           { to: '/student/courses', icon: <Book size={20} />, label: 'My Learning' },
           { to: '/student/live-sessions', icon: <Video size={20} />, label: 'Live Sessions' },
           { to: '/student/certificates', icon: <FileText size={20} />, label: 'Certificates' },
+        ];
+      case 'tpo':
+        return [
+          { to: '/tpo', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+          { to: '/tpo/students', icon: <Users size={20} />, label: 'My Students' },
         ];
     }
   };

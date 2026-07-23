@@ -14,7 +14,7 @@ const StatCard = ({ title, value, icon, color, delay }) => (
     initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}
     style={{ 
       display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.5rem',
-      background: 'white', borderRadius: '1.5rem', border: '1px solid #f1f5f9',
+      background: 'var(--color-surface)', borderRadius: '1.5rem', border: '1px solid #f1f5f9',
       boxShadow: '0 4px 20px rgba(0,0,0,0.03)', flex: 1, minWidth: '220px'
     }}
   >
@@ -26,8 +26,8 @@ const StatCard = ({ title, value, icon, color, delay }) => (
       {React.cloneElement(icon, { size: 24 })}
     </div>
     <div>
-      <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>{value}</div>
-      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748b' }}>{title}</div>
+      <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--color-text)', lineHeight: 1.2 }}>{value}</div>
+      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text-muted)' }}>{title}</div>
     </div>
   </motion.div>
 );
@@ -36,13 +36,13 @@ const StatCard = ({ title, value, icon, color, delay }) => (
 const DashboardSkeleton = () => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
-      {[1, 2, 3, 4].map(i => <div key={i} style={{ height: '100px', background: '#f1f5f9', borderRadius: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }} />)}
+      {[1, 2, 3, 4].map(i => <div key={i} style={{ height: '100px', background: 'var(--color-border)', borderRadius: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }} />)}
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '2rem' }}>
-      <div style={{ height: '400px', background: '#f1f5f9', borderRadius: '2rem', animation: 'pulse 1.5s infinite ease-in-out' }} />
+      <div style={{ height: '400px', background: 'var(--color-border)', borderRadius: '2rem', animation: 'pulse 1.5s infinite ease-in-out' }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div style={{ height: '180px', background: '#f1f5f9', borderRadius: '2rem', animation: 'pulse 1.5s infinite ease-in-out' }} />
-        <div style={{ height: '200px', background: '#f1f5f9', borderRadius: '2rem', animation: 'pulse 1.5s infinite ease-in-out' }} />
+        <div style={{ height: '180px', background: 'var(--color-border)', borderRadius: '2rem', animation: 'pulse 1.5s infinite ease-in-out' }} />
+        <div style={{ height: '200px', background: 'var(--color-border)', borderRadius: '2rem', animation: 'pulse 1.5s infinite ease-in-out' }} />
       </div>
     </div>
     <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
@@ -202,7 +202,7 @@ const TrainerDashboard = () => {
           
           {/* Quick Actions inside Hero */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '220px' }}>
-             <button onClick={() => navigate('/trainer/courses')} style={{ background: 'white', color: '#1e1b4b', border: 'none', padding: '1rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateX(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
+             <button onClick={() => navigate('/trainer/courses')} style={{ background: 'var(--color-surface)', color: '#1e1b4b', border: 'none', padding: '1rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateX(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
                 <Book size={18} color="#4f46e5" /> Course Repository <ArrowRight size={16} style={{ marginLeft: 'auto' }}/>
              </button>
              <button onClick={() => navigate('/trainer/live-sessions')} style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', padding: '1rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', backdropFilter: 'blur(10px)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
@@ -227,15 +227,15 @@ const TrainerDashboard = () => {
             {/* LEFT COLUMN: ASSIGNED COURSES */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, color: '#0f172a' }}>Active Modules</h3>
+                <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, color: 'var(--color-text)' }}>Active Modules</h3>
                 <button onClick={() => navigate('/trainer/courses')} style={{ background: 'none', border: 'none', color: '#4f46e5', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>View All <ChevronRight size={16} /></button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 {courses.length === 0 && (
-                  <div style={{ padding: '4rem 2rem', background: 'white', borderRadius: '2rem', border: '2px dashed #e2e8f0', textAlign: 'center' }}>
+                  <div style={{ padding: '4rem 2rem', background: 'var(--color-surface)', borderRadius: '2rem', border: '2px dashed #e2e8f0', textAlign: 'center' }}>
                     <BookOpen size={48} color="#cbd5e1" style={{ margin: '0 auto 1rem' }} />
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b' }}>No assigned modules</h3>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-text)' }}>No assigned modules</h3>
                     <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.5rem' }}>You have not been assigned any courses yet.</p>
                   </div>
                 )}
@@ -243,15 +243,15 @@ const TrainerDashboard = () => {
                   <motion.div 
                     initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
                     key={course.course_id} 
-                    style={{ padding: '1.5rem', background: 'white', borderRadius: '2rem', border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}
+                    style={{ padding: '1.5rem', background: 'var(--color-surface)', borderRadius: '2rem', border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}
                   >
                     <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-                       <div style={{ width: '80px', height: '60px', borderRadius: '1rem', background: '#0f172a', overflow: 'hidden', flexShrink: 0 }}>
+                       <div style={{ width: '80px', height: '60px', borderRadius: '1rem', background: 'var(--color-text)', overflow: 'hidden', flexShrink: 0 }}>
                          <img src={optimizeImageUrl(course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200')} loading="lazy" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Course Thumbnail" />
                        </div>
                        <div style={{ flex: 1, minWidth: 0 }}>
-                         <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.course_title}</h4>
-                         <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: '#64748b', marginTop: '0.4rem', fontWeight: 600 }}>
+                         <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 900, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.course_title}</h4>
+                         <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.4rem', fontWeight: 600 }}>
                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Users size={14} color="#4f46e5" /> {course.studentCount} Enrolled</span>
                            <span>•</span>
                            <span style={{ 
@@ -266,12 +266,12 @@ const TrainerDashboard = () => {
                        </div>
                     </div>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: '1rem' }}>
-                       <div style={{ flex: 1, background: '#e2e8f0', height: '6px', borderRadius: '10px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1rem', background: 'var(--color-bg)', borderRadius: '1rem' }}>
+                       <div style={{ flex: 1, background: 'var(--color-border-strong)', height: '6px', borderRadius: '10px', overflow: 'hidden' }}>
                          <motion.div initial={{ width: 0 }} animate={{ width: `${course.progress || 0}%` }} transition={{ duration: 1 }} style={{ width: `${course.progress || 0}%`, background: 'linear-gradient(90deg, #4f46e5, #818cf8)', height: '100%', borderRadius: '10px' }} />
                        </div>
                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#4f46e5' }}>{course.progress || 0}% Avg</span>
-                       <button onClick={() => navigate(`/trainer/course/${course.course_id}`)} style={{ background: 'white', border: '1px solid #e2e8f0', color: '#0f172a', padding: '0.5rem 1rem', borderRadius: '0.75rem', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer' }}>Review</button>
+                       <button onClick={() => navigate(`/trainer/course/${course.course_id}`)} style={{ background: 'var(--color-surface)', border: '1px solid #e2e8f0', color: 'var(--color-text)', padding: '0.5rem 1rem', borderRadius: '0.75rem', fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer' }}>Review</button>
                     </div>
                   </motion.div>
                 ))}
@@ -282,7 +282,7 @@ const TrainerDashboard = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 
                 {/* UPCOMING LIVE SESSIONS */}
-                <div style={{ background: 'white', borderRadius: '2rem', padding: '2rem', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                <div style={{ background: 'var(--color-surface)', borderRadius: '2rem', padding: '2rem', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                          <Video size={20} style={{ color: '#ef4444' }} />
@@ -291,15 +291,15 @@ const TrainerDashboard = () => {
                     </div>
                     
                     {liveSessions.length === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '2rem 1rem', background: '#f8fafc', borderRadius: '1.25rem', border: '1px dashed #e2e8f0' }}>
-                        <p style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600 }}>No upcoming broadcasts.</p>
+                      <div style={{ textAlign: 'center', padding: '2rem 1rem', background: 'var(--color-bg)', borderRadius: '1.25rem', border: '1px dashed #e2e8f0' }}>
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>No upcoming broadcasts.</p>
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                          {liveSessions.slice(0, 3).map((session, i) => (
-                           <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} key={session.live_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', borderRadius: '1.25rem', padding: '1.25rem', border: '1px solid #f1f5f9' }}>
+                           <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} key={session.live_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--color-bg)', borderRadius: '1.25rem', padding: '1.25rem', border: '1px solid #f1f5f9' }}>
                               <div>
-                                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.3rem' }}>{session.title || 'Live Broadcast'}</div>
+                                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-text)', marginBottom: '0.3rem' }}>{session.title || 'Live Broadcast'}</div>
                                 <div style={{ fontSize: '0.75rem', color: '#4f46e5', fontWeight: 800 }}>
                                   {session.isActuallyLive ? '🟢 HAPPENING NOW' : new Date(session.start_time).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                 </div>
@@ -314,7 +314,7 @@ const TrainerDashboard = () => {
                 </div>
 
                 {/* RECENT STUDENTS */}
-                <div style={{ background: 'white', borderRadius: '2rem', padding: '2rem', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                <div style={{ background: 'var(--color-surface)', borderRadius: '2rem', padding: '2rem', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <Users size={20} style={{ color: '#0ea5e9' }} />
@@ -325,7 +325,7 @@ const TrainerDashboard = () => {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                       {students.length === 0 ? (
-                        <p style={{ color: '#64748b', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>Awaiting student enrollments...</p>
+                        <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>Awaiting student enrollments...</p>
                       ) : (
                         students.slice(0, 6).map((student, i) => (
                           <motion.div 
@@ -338,8 +338,8 @@ const TrainerDashboard = () => {
                               {(student.name || 'S').charAt(0).toUpperCase()}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{student.name || 'Anonymous'}</div>
-                              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{student.course_title}</div>
+                              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--color-text)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{student.name || 'Anonymous'}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{student.course_title}</div>
                             </div>
                             <div style={{ background: '#f0fdf4', color: '#10b981', padding: '0.3rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.8rem', fontWeight: 800 }}>
                               {student.progress}%
