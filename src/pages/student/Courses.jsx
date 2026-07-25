@@ -345,10 +345,11 @@ const StudentCourses = () => {
                         Review Module
                       </button>
                       <button 
-                        onClick={() => setViewingCertificate(course)}
-                        className="px-4 py-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 font-black text-[10px] md:text-xs rounded-xl cursor-pointer transition-all border border-orange-500/10"
+                        disabled
+                        className="px-4 py-2 bg-gray-500/10 text-gray-400 font-black text-[10px] md:text-xs rounded-xl cursor-not-allowed border border-gray-500/10 opacity-60"
+                        title="Certificate generation is currently disabled."
                       >
-                        Download Certificate
+                        Certificate Coming Soon
                       </button>
                     </div>
                   </div>
