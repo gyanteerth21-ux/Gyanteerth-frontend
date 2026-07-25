@@ -102,12 +102,13 @@ const TpoStudents = () => {
               <tr style={{ backgroundColor: 'var(--color-surface-muted)', textAlign: 'left' }}>
                 <th style={{ padding: '1rem' }}>Student Details</th>
                 <th style={{ padding: '1rem' }}>Branch & Year</th>
+                <th style={{ padding: '1rem' }}>Enrolled Courses</th>
                 <th style={{ padding: '1rem' }}>Avg Progress</th>
               </tr>
             </thead>
             <tbody>
               {filteredStudents.length === 0 ? (
-                <tr><td colSpan="3" style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No students found in your college.</td></tr>
+                <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No students found in your college.</td></tr>
               ) : (
                 filteredStudents.map(student => (
                   <tr key={student.user_id} style={{ borderBottom: '1px solid var(--color-border)' }}>
@@ -118,6 +119,20 @@ const TpoStudents = () => {
                     <td style={{ padding: '1rem' }}>
                       <div style={{ fontSize: '0.9rem' }}>{student.branch || 'N/A'}</div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>{student.year ? `Year ${student.year}` : 'N/A'}</div>
+                    </td>
+                    <td style={{ padding: '1rem', minWidth: '220px' }}>
+                      {student.enrollments && student.enrollments.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                          {student.enrollments.map((course, idx) => (
+                            <div key={idx} style={{ fontSize: '0.75rem', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }} title={course.course_title}>{course.course_title}</span>
+                              <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>{course.progress}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Not Enrolled</span>
+                      )}
                     </td>
                     <td style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
