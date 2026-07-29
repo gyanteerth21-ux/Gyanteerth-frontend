@@ -775,11 +775,15 @@ const AssessmentResultsView = ({ asm, onBack }) => {
               <tbody>
                 {filtered.map((r, i) => {
                   let timeTakenMins = 0;
+                  let displayTime = '';
                   if (r.start_time && r.end_time) {
                     const start = new Date(r.start_time);
                     const end = new Date(r.end_time);
                     const diffMs = end - start;
                     timeTakenMins = Math.max(0, Math.round(diffMs / 60000));
+                    
+                    const fmt = d => d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+                    displayTime = `${fmt(start)} - ${fmt(end)}`;
                   }
                   
                   const isPassed = r.status === 'Passed';
@@ -795,8 +799,15 @@ const AssessmentResultsView = ({ asm, onBack }) => {
                         {r.score}
                       </td>
                       <td style={{ padding: '1.25rem 1rem', textAlign: 'center' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.85rem', borderRadius: '0.85rem', background: 'rgba(0,0,0,0.05)', fontSize: '0.85rem', fontWeight: 900 }}>
-                          <Clock size={12} color="#6366f1" /> {timeTakenMins}m
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.85rem', borderRadius: '0.85rem', background: 'rgba(0,0,0,0.05)', fontSize: '0.85rem', fontWeight: 900 }}>
+                            <Clock size={12} color="#6366f1" /> {timeTakenMins}m
+                          </div>
+                          {displayTime && (
+                            <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                              {displayTime}
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td style={{ padding: '1.25rem 1rem', textAlign: 'center', borderTopRightRadius: '1rem', borderBottomRightRadius: '1rem' }}>

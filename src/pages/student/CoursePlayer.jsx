@@ -473,7 +473,14 @@ function AssessmentPanel({ lesson, onComplete, assessmentStats = {}, onStateChan
 
     const performSubmit = async (attemptNum = 1) => {
       try {
-        const result = await onComplete(selected);
+        let timeTakenSeconds = 0;
+        if (user?.user_id) {
+          const sessionStart = localStorage.getItem(`asm_start_${user.user_id}_${lesson.id}`);
+          if (sessionStart) {
+            timeTakenSeconds = Math.max(0, Math.floor((Date.now() - parseInt(sessionStart)) / 1000));
+          }
+        }
+        const result = await onComplete(selected, timeTakenSeconds);
         setScore(result?.score ?? 0);
         setSubmitted(true);
         setIsStarted(false);
@@ -1395,8 +1402,8 @@ const CoursePlayer = ({ isTrainer = false }) => {
                         <AssessmentPanel
                           lesson={currentLesson}
                           assessmentStats={assessmentStats}
-                          onComplete={async (answers) => {
-                            const res = await submitAssessment(courseId, currentLesson.moduleId, currentLesson.id, answers);
+                          onComplete={async (answers, timeTakenSeconds = 0) => {
+                            const res = await submitAssessment(courseId, currentLesson.moduleId, currentLesson.id, answers, timeTakenSeconds);
                             if (res?.passed) markLessonComplete(courseId, currentLesson.id, totalLessons);
                             return res;
                           }}
