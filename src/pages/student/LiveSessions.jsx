@@ -5,6 +5,7 @@ import { useEnrollment } from '../../shared/EnrollmentContext';
 import { Video, Calendar, Clock, Activity, ShieldCheck, PlayCircle, Archive, ExternalLink, ChevronRight, Monitor, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API } from '../../config';
+import LiveSessionCard from '../../components/shared/LiveSessionCard';
 
 const StudentLiveSessions = () => {
   const { user, smartFetch } = useAuth();
@@ -97,90 +98,7 @@ const StudentLiveSessions = () => {
     }
   }, [loading, liveSessions.length, upcomingSessions.length, passedSessions.length]);
 
-  const SessionCard = ({ session, type, idx }) => {
-    const isLive = type === 'live';
-    const isHistory = type === 'history';
-    const accent = isLive ? '#ef4444' : (isHistory ? '#64748b' : '#6366f1');
 
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 15 }} 
-        animate={{ opacity: 1, y: 0 }} 
-        transition={{ delay: idx * 0.05 }}
-        style={{ 
-          background: 'var(--color-surface)', 
-          borderRadius: '1.5rem', 
-          padding: '1.25rem 1.5rem', 
-          border: `1px solid ${isLive ? 'rgba(239,68,68,0.15)' : 'var(--color-border)'}`,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'stretch',
-          gap: '1.5rem',
-          boxShadow: isLive ? '0 10px 30px rgba(239,68,68,0.08)' : 'var(--shadow-sm)',
-          position: 'relative',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-        className="flex-col md:flex-row md:items-center md:gap-8"
-        onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-        }}
-        onMouseLeave={e => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = isLive ? '0 10px 30px rgba(239,68,68,0.08)' : 'var(--shadow-sm)';
-        }}
-      >
-        <div className="flex-1 min-w-0">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
-            <span style={{ 
-              padding: '0.2rem 0.6rem', borderRadius: '99px', fontSize: '0.65rem', fontWeight: 900,
-              background: `${accent}15`, color: accent, textTransform: 'uppercase', letterSpacing: '0.05em'
-            }}>
-              {isLive ? 'Live Now' : (isHistory ? 'Completed' : 'Upcoming')}
-            </span>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <ShieldCheck size={14} color="#059669" /> {session.course_title}
-            </div>
-          </div>
-          <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: 'var(--color-text)' }}>{session.title}</h3>
-        </div>
-
-        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-12">
-          <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-              <Calendar size={15} color={accent} /> {new Date(session.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-            </div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Clock size={15} /> {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(session.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-2 md:mt-0">
-           <button 
-             onClick={() => navigate(`/student/course/${session.course_id}`)}
-             style={{ 
-               display: 'inline-flex', alignItems: 'center', gap: '0.75rem',
-               padding: '0.75rem 1.5rem', borderRadius: '1rem', border: 'none',
-               background: isLive ? '#ef4444' : (isHistory ? 'var(--color-surface-muted)' : 'var(--color-text)'),
-               color: isHistory ? 'var(--color-text-muted)' : 'var(--color-bg)',
-               fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer',
-               boxShadow: isLive ? '0 8px 20px rgba(239,68,68,0.25)' : 'none',
-               transition: 'all 0.2s'
-             }}
-             onMouseEnter={e => {
-                if (!isHistory) e.currentTarget.style.transform = 'scale(1.05)';
-             }}
-             onMouseLeave={e => {
-                if (!isHistory) e.currentTarget.style.transform = 'none';
-             }}
-           >
-             {isLive ? <><Video size={18} /> Join Session</> : (isHistory ? <><Archive size={18} /> Watch Recording</> : <><Monitor size={18} /> Open Classroom</>)}
-           </button>
-        </div>
-      </motion.div>
-    );
-  };
 
   const currentList = activeTab === 'live' ? liveSessions : (activeTab === 'upcoming' ? upcomingSessions : passedSessions);
 
@@ -251,7 +169,7 @@ const StudentLiveSessions = () => {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {currentList.map((s, i) => (
-            <SessionCard key={s.live_id} session={s} type={activeTab} idx={i} />
+            <LiveSessionCard key={s.live_id} session={s} type={activeTab} idx={i} role="student" />
           ))}
         </div>
       )}

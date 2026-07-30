@@ -4,6 +4,7 @@ import { useAuth } from '../../shared/AuthContext';
 import { Video, Calendar, Clock, PlusCircle, Activity, ShieldCheck, PlayCircle, Archive, Monitor, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API, TRAINER_API } from '../../config';
+import LiveSessionCard from '../../components/shared/LiveSessionCard';
 
 const LiveSessions = () => {
   const { user, smartFetch } = useAuth();
@@ -98,105 +99,7 @@ const LiveSessions = () => {
     }
   }, [loading, liveSessions.length, upcomingSessions.length, passedSessions.length]);
 
-  const SessionCard = ({ session, type, idx }) => {
-    const isLive = type === 'live';
-    const isHistory = type === 'history';
-    const accent = isLive ? '#ef4444' : (isHistory ? '#64748b' : '#4f46e5');
 
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 15 }} 
-        animate={{ opacity: 1, y: 0 }} 
-        transition={{ delay: idx * 0.05 }}
-        style={{ 
-          background: 'var(--color-surface)', 
-          borderRadius: '1.5rem', 
-          padding: '1.5rem 2rem', 
-          border: `1px solid ${isLive ? 'rgba(239,68,68,0.15)' : 'var(--color-border)'}`,
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: '2rem',
-          boxShadow: isLive ? '0 10px 30px rgba(239,68,68,0.08)' : 'var(--shadow-sm)',
-          position: 'relative',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-        onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-        }}
-        onMouseLeave={e => {
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = isLive ? '0 10px 30px rgba(239,68,68,0.08)' : 'var(--shadow-sm)';
-        }}
-      >
-        <div style={{ flex: '2 1 300px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
-            <span style={{ 
-              padding: '0.2rem 0.6rem', borderRadius: '99px', fontSize: '0.65rem', fontWeight: 900,
-              background: `${accent}15`, color: accent, textTransform: 'uppercase', letterSpacing: '0.05em'
-            }}>
-              {isLive ? 'Live Now' : (isHistory ? 'Completed' : 'Upcoming')}
-            </span>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <ShieldCheck size={14} color="#4f46e5" /> {session.course_title}
-            </div>
-          </div>
-          <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: 'var(--color-text)' }}>{session.title}</h3>
-        </div>
-
-        <div style={{ flex: '1 1 200px', display: 'flex', alignItems: 'center', gap: '2rem' }}>
-          <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-              <Calendar size={15} color={accent} /> {new Date(session.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-            </div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Clock size={15} /> {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(session.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ flex: '0 0 auto', textAlign: 'right' }}>
-          {isLive || !isHistory ? (
-            <a href={session.meeting_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-              <button
-                style={{ 
-                  display: 'inline-flex', alignItems: 'center', gap: '0.75rem',
-                  padding: '0.75rem 1.5rem', borderRadius: '1rem', border: 'none',
-                  background: isLive ? '#ef4444' : '#4f46e5',
-                  color: 'white',
-                  fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer',
-                  boxShadow: isLive ? '0 8px 20px rgba(239,68,68,0.25)' : '0 8px 20px rgba(79,70,229,0.2)',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-              >
-                {isLive ? <><Video size={18} /> Start Session</> : <><Monitor size={18} /> Open Lobby</>}
-              </button>
-            </a>
-          ) : (
-            <button 
-              onClick={() => navigate(`/trainer/course/${session.course_id}`)}
-              style={{ 
-                display: 'inline-flex', alignItems: 'center', gap: '0.75rem',
-                padding: '0.75rem 1.5rem', borderRadius: '1rem', 
-                border: 'none',
-                background: 'var(--color-surface-muted)',
-                color: 'var(--color-text-muted)',
-                fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-border)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-surface-muted)'; }}
-            >
-              <Archive size={18} /> View Details
-            </button>
-          )}
-        </div>
-      </motion.div>
-    );
-  };
 
   const currentList = activeTab === 'live' ? liveSessions : (activeTab === 'upcoming' ? upcomingSessions : passedSessions);
 
@@ -282,7 +185,7 @@ const LiveSessions = () => {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {currentList.map((s, i) => (
-            <SessionCard key={s.live_id} session={s} type={activeTab} idx={i} />
+            <LiveSessionCard key={s.live_id} session={s} type={activeTab} idx={i} role="trainer" />
           ))}
         </div>
       )}

@@ -11,6 +11,8 @@ import { useAuth } from '../../shared/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { ADMIN_API } from '../../config';
+import { SubTab, ContentItem, AMInput, AMTextarea, AMSelect, EmptyPlaceholder } from '../../components/admin/CurriculumComponents';
+import { CurriculumSidebar } from '../../components/admin/CurriculumSidebar';
 
 const AdminCurriculum = () => {
   const { courseId } = useParams();
@@ -280,51 +282,17 @@ const AdminCurriculum = () => {
 
       <div style={{ flex: 1, display: 'flex', position: 'relative', overflow: 'hidden' }}>
 
-        <AnimatePresence>
-          {isSidebarOpen && (
-            <motion.aside
-              initial={{ x: -240 }} animate={{ x: 0 }} exit={{ x: -240 }}
-              style={{ width: '240px', backgroundColor: 'var(--color-surface)', borderRight: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 50 }}
-              className="curriculum-sidebar"
-            >
-              <div style={{ padding: '2rem', flex: 1, overflowY: 'auto' }} className="no-scrollbar">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem' }}>
-                  <h3 style={{ fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Grid size={12} /> Chapters</h3>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {modules.map((m, idx) => (
-                    <motion.div
-                      key={m.module_id}
-                      onClick={() => { setActiveModule(m); if (window.innerWidth < 1024) setIsSidebarOpen(false); }}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      style={{
-                        padding: '1rem', borderRadius: '1.25rem', cursor: 'pointer', transition: 'all 0.2s',
-                        backgroundColor: activeModule?.module_id === m.module_id ? 'var(--color-bg)' : 'transparent',
-                        border: '1px solid',
-                        borderColor: activeModule?.module_id === m.module_id ? 'var(--color-primary-light)20' : 'transparent',
-                        display: 'flex', alignItems: 'center', gap: '0.85rem'
-                      }}
-                    >
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                        <button onClick={(e) => { e.stopPropagation(); swapPositions('swap-module-position', m.module_id, modules[idx - 1].module_id); }} disabled={idx === 0} style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer' }}><ArrowUp size={12} /></button>
-                        <button onClick={(e) => { e.stopPropagation(); swapPositions('swap-module-position', m.module_id, modules[idx + 1].module_id); }} disabled={idx === modules.length - 1} style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer' }}><ArrowDown size={12} /></button>
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 950, color: activeModule?.module_id === m.module_id ? 'var(--color-primary)' : 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</p>
-                        <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.55rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>{m.video?.length || 0} Lessons • {m.assessments?.length || 0} Exams</p>
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.4rem', opacity: activeModule?.module_id === m.module_id ? 1 : 0.4 }}>
-                        <button onClick={(e) => { e.stopPropagation(); setModuleForm({ Title: m.title, Description: m.description, Position: m.position, editingId: m.module_id }); setShowModuleForm(true); }} style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}><Settings size={14} /></button>
-                        <button onClick={(e) => { e.stopPropagation(); deleteModule(m.module_id); }} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash size={14} /></button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </motion.aside>
-          )}
-        </AnimatePresence>
+        <CurriculumSidebar
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+          modules={modules}
+          activeModule={activeModule}
+          setActiveModule={setActiveModule}
+          swapPositions={swapPositions}
+          setModuleForm={setModuleForm}
+          setShowModuleForm={setShowModuleForm}
+          deleteModule={deleteModule}
+        />
 
         <main style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--color-surface)', padding: 'clamp(1rem, 5vw, 3.5rem)', position: 'relative' }}>
           <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".xlsx, .xls" onChange={handleBulkImportQuestions} />
@@ -589,7 +557,7 @@ const AdminCurriculum = () => {
               <button onClick={() => setShowQuestionForm(false)} style={{ position: 'absolute', top: '2.5rem', right: '2.5rem', background: 'var(--color-surface-muted)', border: 'none', color: 'var(--color-text-muted)', padding: '0.75rem', borderRadius: '1.25rem' }}><X size={24} /></button>
               <h2 style={{ margin: '0 0 3rem 0' }}>Forge Evaluation Node</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-                <AMInput label="Question Premise" value={questionForm.Question_Txt} onChange={e => setQuestionForm({ ...questionForm, Question_Txt: e.target.value })} placeholder="What is being evaluated?" />
+                <AMTextarea label="Question Premise" value={questionForm.Question_Txt} onChange={e => setQuestionForm({ ...questionForm, Question_Txt: e.target.value })} placeholder="What is being evaluated?" />
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
                   <AMSelect label="Evaluation Model" value={questionForm.Question_Type} onChange={e => {
                     const type = e.target.value;
@@ -599,14 +567,13 @@ const AdminCurriculum = () => {
                   }} options={['MCQ', 'True/False']} />
                   <AMInput label="Point Value" type="number" value={questionForm.Mark} onChange={e => setQuestionForm({ ...questionForm, Mark: e.target.value })} />
                 </div>
-                <AMInput label="Enlightenment Context (Optional)" value={questionForm.Explanation} onChange={e => setQuestionForm({ ...questionForm, Explanation: e.target.value })} placeholder="Explain the correct answer..." />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   <label style={{ fontSize: '0.7rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Option nodes</label>
                   {options.map((opt, idx) => (
                     <div key={idx} style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
                       <input type="radio" checked={opt.Is_Correct} onChange={() => setOptions(options.map((o, i) => ({ ...o, Is_Correct: i === idx })))} style={{ accentColor: 'var(--color-primary)', width: '1.5rem', height: '1.5rem' }} />
-                      <input placeholder={`Option ${idx + 1}`} value={opt.Option_Txt} onChange={e => setOptions(options.map((o, i) => i === idx ? { ...o, Option_Txt: e.target.value } : o))} style={{ flex: 1, padding: '1rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--color-border-strong)', background: 'var(--color-bg)', fontWeight: 800, color: 'var(--color-text)', outline: 'none' }} />
+                      <textarea placeholder={`Option ${idx + 1}`} value={opt.Option_Txt} onChange={e => setOptions(options.map((o, i) => i === idx ? { ...o, Option_Txt: e.target.value } : o))} style={{ flex: 1, padding: '1rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--color-border-strong)', background: 'var(--color-bg)', fontWeight: 800, color: 'var(--color-text)', outline: 'none', resize: 'vertical', minHeight: '60px', fontFamily: 'inherit' }} />
                       {options.length > 2 && <button onClick={() => setOptions(options.filter((_, i) => i !== idx))} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash size={18} /></button>}
                     </div>
                   ))}
@@ -702,51 +669,5 @@ const AdminCurriculum = () => {
     </div>
   );
 };
-
-const SubTab = ({ active, icon, label, onClick, color }) => (
-  <button onClick={onClick} style={{ padding: '0.55rem 1.15rem', border: 'none', borderRadius: '1.15rem', backgroundColor: active ? 'var(--color-surface)' : 'transparent', color: active ? 'var(--color-text)' : 'var(--color-text-muted)', fontWeight: 950, fontSize: '0.75rem', cursor: 'pointer', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '0.55rem', boxShadow: active ? 'var(--shadow-sm)' : 'none' }}>
-    <span style={{ color: active ? color : 'inherit' }}>{icon}</span> {label}
-  </button>
-);
-
-const ContentItem = ({ icon, title, sub, color, onEdit, onDelete, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
-    style={{ padding: '0.85rem 1.25rem', borderRadius: '1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '1rem', boxShadow: 'var(--shadow-sm)' }}
-    className="premium-card"
-  >
-    <div style={{ width: '2rem', height: '2rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: 950, color: 'var(--color-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.25rem' }}>
-        <p style={{ margin: 0, fontSize: '0.6rem', color: 'var(--color-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</p>
-      </div>
-    </div>
-    <div style={{ display: 'flex', gap: '0.5rem' }}>
-      <button onClick={onEdit} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-surface-muted)', border: '1px solid var(--color-border-strong)', color: 'var(--color-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Settings size={14} /></button>
-      <button onClick={onDelete} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.75rem', backgroundColor: '#fff1f2', border: '1px solid #fee2e2', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash size={14} /></button>
-    </div>
-  </motion.div>
-);
-
-const AMInput = ({ label, ...props }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-    <label style={{ fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</label>
-    <input {...props} style={{ padding: '0.85rem 1.5rem', borderRadius: '1rem', border: '1px solid var(--color-border-strong)', backgroundColor: 'var(--color-bg)', outline: 'none', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-text)', transition: 'all 0.2s' }} />
-  </div>
-);
-
-const AMSelect = ({ label, value, onChange, options }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-    <label style={{ fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</label>
-    <select value={value} onChange={onChange} style={{ padding: '0.85rem 1.5rem', borderRadius: '1rem', border: '1px solid var(--color-border-strong)', background: 'var(--color-bg)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-text)', outline: 'none', cursor: 'pointer' }}>
-      {options.map(o => typeof o === 'string' ? <option key={o}>{o}</option> : <option key={o.val} value={o.val}>{o.label}</option>)}
-    </select>
-  </div>
-);
-
-const EmptyPlaceholder = ({ label }) => (
-  <div style={{ padding: '6rem 2rem', textAlign: 'center', backgroundColor: 'var(--color-surface)', borderRadius: '3rem', border: '2px dashed var(--color-border)', color: 'var(--color-text-muted)', fontWeight: 950, fontSize: '0.9rem', letterSpacing: '0.05em' }}>{label?.toUpperCase()}</div>
-);
 
 export default AdminCurriculum;
