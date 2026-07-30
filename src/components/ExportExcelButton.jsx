@@ -9,12 +9,24 @@ const ExportExcelButton = ({ data, filename = 'export', sheetName = 'Sheet1', cl
       return;
     }
 
+    // omit sensitive contact details
+    const cleanData = data.map(item => {
+      const newItem = { ...item };
+      delete newItem.phone;
+      delete newItem.mobile;
+      delete newItem.number;
+      delete newItem.mobile_number;
+      delete newItem.phone_number;
+      delete newItem.password;
+      return newItem;
+    });
+
     // Create a new workbook and a worksheet
-    const worksheet = XLSX.utils.json_to_sheet(data);
+    const worksheet = XLSX.utils.json_to_sheet(cleanData);
     const workbook = XLSX.utils.book_new();
     
     // Auto-size columns based on header keys
-    const keys = Object.keys(data[0] || {});
+    const keys = Object.keys(cleanData[0] || {});
     const wscols = keys.map(key => ({ wch: Math.max(key.length, 15) }));
     worksheet['!cols'] = wscols;
 

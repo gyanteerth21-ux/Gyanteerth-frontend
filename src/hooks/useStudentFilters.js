@@ -6,6 +6,7 @@ const useStudentFilters = (students, uniqueStudents = []) => {
   const [progressFilter, setProgressFilter] = useState('All');
   const [collegeFilter, setCollegeFilter] = useState('All');
   const [branchFilter, setBranchFilter] = useState('All');
+  const [degreeFilter, setDegreeFilter] = useState('All');
   const [yearFilter, setYearFilter] = useState('All');
 
   // We primarily use uniqueStudents for filters like Colleges, Branches, Years
@@ -22,6 +23,11 @@ const useStudentFilters = (students, uniqueStudents = []) => {
     return ['All Branches', ...Array.from(new Set(branches))];
   }, [filterSource]);
 
+  const uniqueDegrees = useMemo(() => {
+    const degrees = filterSource.map(s => s.degree).filter(Boolean);
+    return ['All Degrees', ...Array.from(new Set(degrees))];
+  }, [filterSource]);
+
   const uniqueYears = useMemo(() => {
     const years = filterSource.map(s => s.year).filter(Boolean);
     return ['All Years', ...Array.from(new Set(years))];
@@ -36,6 +42,7 @@ const useStudentFilters = (students, uniqueStudents = []) => {
       const matchesCourse = courseFilter === 'All' || st.course_id === courseFilter;
       const matchesCollege = collegeFilter === 'All' || st.college === collegeFilter;
       const matchesBranch = branchFilter === 'All' || st.branch === branchFilter;
+      const matchesDegree = degreeFilter === 'All' || st.degree === degreeFilter;
       const matchesYear = yearFilter === 'All' || st.year === yearFilter;
 
       let matchesProgress = true;
@@ -43,9 +50,9 @@ const useStudentFilters = (students, uniqueStudents = []) => {
       else if (progressFilter === 'InProgress') matchesProgress = st.progress > 0 && st.progress < 100;
       else if (progressFilter === 'NotStarted') matchesProgress = st.progress === 0;
 
-      return matchesSearch && matchesCourse && matchesCollege && matchesBranch && matchesYear && matchesProgress;
+      return matchesSearch && matchesCourse && matchesCollege && matchesBranch && matchesDegree && matchesYear && matchesProgress;
     });
-  }, [students, searchQuery, courseFilter, collegeFilter, branchFilter, yearFilter, progressFilter]);
+  }, [students, searchQuery, courseFilter, collegeFilter, branchFilter, degreeFilter, yearFilter, progressFilter]);
 
   const filteredUniqueStudents = useMemo(() => {
     return uniqueStudents.filter(st => {
@@ -54,6 +61,7 @@ const useStudentFilters = (students, uniqueStudents = []) => {
         (st.email || '').toLowerCase().includes(q);
       const matchesCollege = collegeFilter === 'All' || st.college === collegeFilter;
       const matchesBranch = branchFilter === 'All' || st.branch === branchFilter;
+      const matchesDegree = degreeFilter === 'All' || st.degree === degreeFilter;
       const matchesYear = yearFilter === 'All' || st.year === yearFilter;
 
       let matchesProgress = true;
@@ -61,9 +69,9 @@ const useStudentFilters = (students, uniqueStudents = []) => {
       else if (progressFilter === 'InProgress') matchesProgress = st.avgProgress > 0 && st.avgProgress < 100;
       else if (progressFilter === 'NotStarted') matchesProgress = st.avgProgress === 0;
 
-      return matchesSearch && matchesCollege && matchesBranch && matchesYear && matchesProgress;
+      return matchesSearch && matchesCollege && matchesBranch && matchesDegree && matchesYear && matchesProgress;
     });
-  }, [uniqueStudents, searchQuery, collegeFilter, branchFilter, yearFilter, progressFilter]);
+  }, [uniqueStudents, searchQuery, collegeFilter, branchFilter, degreeFilter, yearFilter, progressFilter]);
 
   return {
     searchQuery, setSearchQuery,
@@ -71,8 +79,9 @@ const useStudentFilters = (students, uniqueStudents = []) => {
     progressFilter, setProgressFilter,
     collegeFilter, setCollegeFilter,
     branchFilter, setBranchFilter,
+    degreeFilter, setDegreeFilter,
     yearFilter, setYearFilter,
-    uniqueColleges, uniqueBranches, uniqueYears,
+    uniqueColleges, uniqueBranches, uniqueDegrees, uniqueYears,
     filteredStudents, filteredUniqueStudents
   };
 };
