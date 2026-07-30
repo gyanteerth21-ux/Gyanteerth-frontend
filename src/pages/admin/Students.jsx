@@ -28,6 +28,10 @@ const AdminStudents = () => {
 
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
+  
+  const [globalColleges, setGlobalColleges] = useState([]);
+  const [globalBranches, setGlobalBranches] = useState([]);
+  const [globalDegrees, setGlobalDegrees] = useState([]);
 
   const {
     searchQuery, setSearchQuery,
@@ -35,8 +39,9 @@ const AdminStudents = () => {
     progressFilter, setProgressFilter,
     collegeFilter, setCollegeFilter,
     branchFilter, setBranchFilter,
+    degreeFilter, setDegreeFilter,
     yearFilter, setYearFilter,
-    uniqueColleges, uniqueBranches, uniqueYears,
+    uniqueColleges, uniqueBranches, uniqueDegrees, uniqueYears,
     filteredStudents, filteredUniqueStudents
   } = useStudentFilters(students, uniqueStudents);
 
@@ -46,7 +51,11 @@ const AdminStudents = () => {
 
     try {
       // Fetch colleges to map IDs to Names
-      const { colMap, brMap } = await fetchCollegesAndBranchesMap(authFetch, ADMIN_API);
+      const { colMap, brMap, degMap } = await fetchCollegesAndBranchesMap(authFetch, ADMIN_API);
+      
+      setGlobalColleges(Object.values(colMap));
+      setGlobalBranches(Object.values(brMap));
+      setGlobalDegrees(Object.values(degMap));
 
       const response = await smartFetch(`${ADMIN_API}/students`, { cacheKey: 'admin_students_data', forceRefresh: true });
 
@@ -59,6 +68,7 @@ const AdminStudents = () => {
           // Map IDs to Names
           st.college = colMap[st.college] || st.college;
           st.branch = brMap[st.branch] || st.branch;
+          st.degree = degMap[st.degree] || st.degree;
 
           if (st.enrollments) {
             st.enrollments.forEach(enr => {
@@ -71,6 +81,7 @@ const AdminStudents = () => {
                 course_title: enr.course_title,
                 college: st.college || '',
                 branch: st.branch || '',
+                degree: st.degree || '',
                 year: st.year || ''
               });
 
@@ -291,10 +302,11 @@ const AdminStudents = () => {
             <select
               value={collegeFilter}
               onChange={(e) => setCollegeFilter(e.target.value)}
-              style={{ appearance: 'none', padding: '0.85rem 2.85rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '160px', maxWidth: '200px', textOverflow: 'ellipsis' }}
+              style={{ appearance: 'none', padding: '0.75rem 2.25rem 0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '130px', maxWidth: '180px', textOverflow: 'ellipsis' }}
             >
-              {uniqueColleges.map(c => (
-                <option key={c} value={c === 'All Colleges' ? 'All' : c}>{c}</option>
+              <option value="All">All Colleges</option>
+              {globalColleges.map(c => (
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
             <ChevronDown size={14} style={{ position: 'absolute', right: '1.15rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
@@ -304,10 +316,25 @@ const AdminStudents = () => {
             <select
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
-              style={{ appearance: 'none', padding: '0.85rem 2.85rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '160px', maxWidth: '200px', textOverflow: 'ellipsis' }}
+              style={{ appearance: 'none', padding: '0.75rem 2.25rem 0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '130px', maxWidth: '180px', textOverflow: 'ellipsis' }}
             >
-              {uniqueBranches.map(b => (
-                <option key={b} value={b === 'All Branches' ? 'All' : b}>{b}</option>
+              <option value="All">All Branches</option>
+              {globalBranches.map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+            <ChevronDown size={14} style={{ position: 'absolute', right: '1.15rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <select
+              value={degreeFilter}
+              onChange={(e) => setDegreeFilter(e.target.value)}
+              style={{ appearance: 'none', padding: '0.75rem 2.25rem 0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '140px', maxWidth: '180px', textOverflow: 'ellipsis' }}
+            >
+              <option value="All">All Degrees</option>
+              {globalDegrees.map(d => (
+                <option key={d} value={d}>{d}</option>
               ))}
             </select>
             <ChevronDown size={14} style={{ position: 'absolute', right: '1.15rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
@@ -317,7 +344,7 @@ const AdminStudents = () => {
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
-              style={{ appearance: 'none', padding: '0.85rem 2.85rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '130px' }}
+              style={{ appearance: 'none', padding: '0.75rem 2.25rem 0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '110px' }}
             >
               {uniqueYears.map(y => (
                 <option key={y} value={y === 'All Years' ? 'All' : y}>{y}</option>
@@ -362,9 +389,10 @@ const AdminStudents = () => {
                   </div>
                 </div>
 
-                {(selectedUser.college || selectedUser.branch || selectedUser.year) && (
+                {(selectedUser.college || selectedUser.degree || selectedUser.branch || selectedUser.year) && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', padding: '1.5rem', backgroundColor: 'var(--color-surface-muted)', borderRadius: '1.75rem', border: '1px solid var(--color-border)', textAlign: 'left', marginBottom: '2rem', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)' }}>
                     {selectedUser.college && <VItem icon={<GraduationCap size={14} />} label="College" value={selectedUser.college} />}
+                    {selectedUser.degree && <VItem icon={<FileText size={14} />} label="Degree" value={selectedUser.degree} />}
                     {selectedUser.branch && <VItem icon={<BookOpen size={14} />} label="Branch" value={selectedUser.branch} />}
                     {selectedUser.year && <VItem icon={<Calendar size={14} />} label="Year" value={selectedUser.year} />}
                   </div>
@@ -441,10 +469,10 @@ const AdminStudents = () => {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 600, marginTop: '0.2rem' }}>
                                 <Mail size={12} /> {st.email.length > 25 ? st.email.slice(0, 25) + '...' : st.email}
                               </div>
-                              {(st.college || st.branch || st.year) && (
+                              {(st.college || st.degree || st.branch || st.year) && (
                                 <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                   <GraduationCap size={12} style={{ color: 'var(--color-primary)' }} />
-                                  <span>{[st.college, st.branch, st.year].filter(Boolean).join(' • ')}</span>
+                                  <span>{[st.college, st.degree, st.branch, st.year].filter(Boolean).join(' • ')}</span>
                                 </div>
                               )}
                             </div>
