@@ -4,7 +4,7 @@ import { useAuth } from '../shared/AuthContext';
 import { useTheme } from '../shared/ThemeContext';
 import Logo from '../components/Logo';
 import ThemeToggle from '../components/ThemeToggle';
-import { LayoutDashboard, Book, Users, Video, FileText, MessageSquare, LogOut, Menu, X, Compass, UserCog, ChevronUp, Folder, Search, Bell, Clock, Building, Network } from 'lucide-react';
+import { LayoutDashboard, Book, Users, Video, FileText, MessageSquare, LogOut, Menu, X, Compass, UserCog, ChevronUp, Folder, Search, Bell, Clock, Building, Network, Award } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { optimizeImageUrl } from '../config';
@@ -118,7 +118,7 @@ const DashboardLayout = () => {
           { index: 0, to: '/admin', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
           { index: 1, to: '/admin/categories', icon: <Folder size={20} />, label: 'Categories' },
           { index: 2, to: '/admin/colleges', icon: <Building size={20} />, label: 'Colleges & TPO' },
-          { index: 2.5, to: '/admin/branches', icon: <Network size={20} />, label: 'Branches' },
+          { index: 2.5, to: '/admin/academics', icon: <Award size={20} />, label: 'Degrees & Branches' },
           { index: 3, to: '/admin/users', icon: <Users size={20} />, label: 'Trainers' },
           { index: 4, to: '/admin/students', icon: <Users size={20} />, label: 'Students' },
           { index: 5, to: '/admin/assessments', icon: <FileText size={20} />, label: 'Assessments' },

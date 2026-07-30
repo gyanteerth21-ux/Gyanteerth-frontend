@@ -15,6 +15,7 @@ const Profile = () => {
   const [fetching, setFetching] = useState(true);
   const [colleges, setColleges] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [degrees, setDegrees] = useState([]);
   const [toast, setToast] = useState(null);
   const [form, setForm] = useState({
     name: '',
@@ -26,6 +27,7 @@ const Profile = () => {
     state: '',
     college: '', // for students
     branch: '', // for students
+    degree: '', // for students
     year: '', // for students
     expertise: '', // for trainers
     pic: null
@@ -54,6 +56,7 @@ const Profile = () => {
             state: data.user_state || data.trainer_state || '',
             college: data.user_college || '',
             branch: data.user_branch || '',
+            degree: data.user_degree || '',
             year: data.user_year || '',
             expertise: data.trainer_expertise || '',
             pic: data.user_pic || data.pic || user.pic || null
@@ -90,11 +93,24 @@ const Profile = () => {
       }
     };
 
+    const fetchDegrees = async () => {
+      try {
+        const res = await fetch(`${USER_API}/degrees`);
+        if (res.ok) {
+          const data = await res.json();
+          setDegrees(data.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch degrees:", err);
+      }
+    };
+
     if (user) {
       fetchProfile();
       if (user.role === 'student') {
         fetchColleges();
         fetchBranches();
+        fetchDegrees();
       }
     }
   }, [user, authFetch]);
@@ -142,6 +158,7 @@ const Profile = () => {
         formData.append('user_state', form.state);
         formData.append('user_college', form.college);
         formData.append('user_branch', form.branch);
+        formData.append('user_degree', form.degree);
         formData.append('user_year', form.year);
         
         // Include picture if it's a URL or string
@@ -356,6 +373,19 @@ const Profile = () => {
                     <BookOpen size={18} style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
                   </div>
                 </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
+                      Degree
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <select name="degree" value={form.degree} onChange={handleChange} style={{ width: '100%', padding: '0.85rem 3rem 0.85rem 1rem', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', color: 'var(--color-text)', fontSize: '0.9rem', outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                        <option value="" disabled>Select your degree</option>
+                        {degrees.map(d => <option key={d.degree_id} value={d.degree_id}>{d.degree_name}</option>)}
+                      </select>
+                      <GraduationCap size={18} style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                    </div>
+                  </div>
+
                   <div>
                     <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
                       Specialization / Branch

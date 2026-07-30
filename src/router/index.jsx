@@ -37,7 +37,7 @@ import AdminFeedbacks from '../pages/admin/Feedbacks';
 import AdminStudents from '../pages/admin/Students';
 import ResetRequests from '../pages/admin/ResetRequests';
 import AdminColleges from '../pages/admin/Colleges';
-import AdminBranches from '../pages/admin/Branches';
+import AdminAcademics from '../pages/admin/Academics';
 
 // TPO
 import TpoDashboard from '../pages/tpo/Dashboard';
@@ -140,7 +140,7 @@ export const router = createBrowserRouter([
           { index: true, element: <AdminDashboard /> },
           { path: 'categories', element: <AdminCategories /> },
           { path: 'colleges', element: <AdminColleges /> },
-          { path: 'branches', element: <AdminBranches /> },
+          { path: 'academics', element: <AdminAcademics /> },
           { path: 'courses', element: <AdminCourses /> },
           { path: 'users', element: <AdminUsers /> },
           { path: 'students', element: <AdminStudents /> },
