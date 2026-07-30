@@ -9,82 +9,11 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API, TRAINER_API, USER_API } from '../../config';
 
+import BulkImportModal from '../../components/shared/BulkImportModal';
+import TableSkeleton from '../../components/shared/TableSkeleton';
+import useStudentFilters from '../../hooks/useStudentFilters';
+import { fetchCollegesAndBranchesMap } from '../../utils/mappingUtils';
 
-const BulkImportModal = ({ onClose, onImport, loading }) => {
-  const [file, setFile] = useState(null);
-  const [error, setError] = useState(null);
-  const [vibrate, setVibrate] = useState(false);
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
-        setFile(selectedFile);
-        setError(null);
-      } else {
-        setError('Please upload a valid Excel file (.xlsx or .xls)');
-        setFile(null);
-      }
-    }
-  };
-
-  const handleProcessFile = () => {
-    if (!file) return;
-    onImport(file);
-  };
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'auto'; };
-  }, []);
-
-  return createPortal(
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(12px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={onClose}>
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        style={{ width: 'min(95vw, 500px)', backgroundColor: 'var(--color-surface)', borderRadius: '2rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #e2e8f0', padding: '2rem' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, color: 'var(--color-text)' }}>Bulk Import Students</h2>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginTop: '0.25rem', fontWeight: 500 }}>Add multiple students to your registry via Excel.</p>
-          </div>
-          <button onClick={onClose} style={{ width: '2rem', height: '2rem', borderRadius: '50%', border: 'none', backgroundColor: 'var(--color-border)', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18}/></button>
-        </div>
-
-        <div 
-          style={{ 
-            width: '100%', border: `2px dashed ${error ? '#ef4444' : 'var(--color-text-light)'}`, borderRadius: '1.5rem', padding: '2.5rem 1.5rem', textAlign: 'center', backgroundColor: 'var(--color-bg)', cursor: 'pointer', marginBottom: '1.5rem', position: 'relative', transition: 'all 0.2s'
-          }}
-        >
-          <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
-          <Upload size={32} color={error ? '#ef4444' : '#6366f1'} style={{ marginBottom: '1rem' }} />
-          <p style={{ margin: 0, fontWeight: 700, fontSize: '0.95rem', color: error ? '#ef4444' : 'var(--color-text)' }}>{file ? file.name : 'Click or drop Excel file'}</p>
-        </div>
-
-        {error && <div style={{ marginBottom: '1.5rem', color: '#ef4444', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}><AlertCircle size={14}/> {error}</div>}
-
-        <motion.button 
-          animate={vibrate ? { x: [-10, 10, -10, 10, 0] } : {}}
-          onClick={handleProcessFile}
-          disabled={loading || !file}
-          style={{ 
-            width: '100%', padding: '1rem', borderRadius: '1rem', border: 'none', 
-            backgroundColor: error ? '#ef4444' : 'var(--color-text)', color: 'var(--color-surface)', fontWeight: 900, 
-            fontSize: '1rem', cursor: loading || !file ? 'not-allowed' : 'pointer', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', opacity: loading ? 0.7 : 1
-          }}
-        >
-          {loading ? <Loader2 size={20} className="animate-spin" /> : <Database size={20} />}
-          {loading ? 'Processing...' : 'Start Import'}
-        </motion.button>
-      </motion.div>
-    </div>,
-    document.body
-  );
-};
 
 const TrainerStudents = () => {
   const { user, smartFetch, authFetch, cacheSyncToken } = useAuth();
@@ -101,56 +30,24 @@ const TrainerStudents = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
-  /* ── Skeleton Loader ── */
-  const TableSkeleton = () => (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} style={{ display: 'flex', padding: '1.5rem 2rem', borderBottom: '1px solid #f1f5f9', gap: '2rem', alignItems: 'center' }}>
-          <div style={{ flex: 1.5, display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '1rem', background: 'var(--color-border)', animation: 'pulse 1.5s infinite ease-in-out' }} />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ height: '16px', width: '60%', background: 'var(--color-border)', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} />
-              <div style={{ height: '12px', width: '40%', background: 'var(--color-border)', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} />
-            </div>
-          </div>
-          <div style={{ flex: 1 }}><div style={{ height: '16px', width: '80%', background: 'var(--color-border)', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} /></div>
-          <div style={{ flex: 1 }}><div style={{ height: '24px', width: '100%', background: 'var(--color-border)', borderRadius: '8px', animation: 'pulse 1.5s infinite ease-in-out' }} /></div>
-          <div style={{ flex: 0.5, display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '0.85rem', background: 'var(--color-border)', animation: 'pulse 1.5s infinite ease-in-out' }} />
-          </div>
-        </div>
-      ))}
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
-    </div>
-  );
-  
-  // Filter States
-  const [searchQuery, setSearchQuery] = useState('');
-  const [courseFilter, setCourseFilter] = useState('All');
-  const [progressFilter, setProgressFilter] = useState('All'); 
-  const [collegeFilter, setCollegeFilter] = useState('All');
-  const [branchFilter, setBranchFilter] = useState('All');
-  const [yearFilter, setYearFilter] = useState('All');
+
+  const {
+    searchQuery, setSearchQuery,
+    courseFilter, setCourseFilter,
+    progressFilter, setProgressFilter,
+    collegeFilter, setCollegeFilter,
+    branchFilter, setBranchFilter,
+    yearFilter, setYearFilter,
+    uniqueColleges, uniqueBranches, uniqueYears,
+    filteredStudents
+  } = useStudentFilters(students, []);
 
   const fetchStudents = useCallback(async () => {
     const identifier = user?.user_id || user?.id || user?.email;
     if (!identifier) return;
     setLoading(true);
     try {
-      const [colData, branchData] = await Promise.all([
-        smartFetch(`${USER_API}/colleges`, { cacheKey: 'all_colleges' }).catch(() => null),
-        smartFetch(`${USER_API}/branches`, { cacheKey: 'all_branches' }).catch(() => null)
-      ]);
-      
-      let colMap = {};
-      if (colData && colData.data) {
-        (colData.data || []).forEach(c => colMap[c.College_ID] = c.College_Name);
-      }
-      
-      let branchMap = {};
-      if (branchData && branchData.data) {
-        (branchData.data || []).forEach(b => branchMap[b.branch_id] = b.branch_name);
-      }
+      const { colMap, brMap } = await fetchCollegesAndBranchesMap(smartFetch, USER_API);
 
       const data = await smartFetch(`${TRAINER_API}/trainer_course_ids`, { cacheKey: `trainer_course_ids_${identifier}`, forceRefresh: true });
       const ids = data?.course_ids || [];
@@ -217,37 +114,7 @@ const TrainerStudents = () => {
     }
   };
 
-  const uniqueColleges = useMemo(() => {
-    const colleges = students.map(s => s.college).filter(Boolean);
-    return ['All Colleges', ...Array.from(new Set(colleges))];
-  }, [students]);
 
-  const uniqueBranches = useMemo(() => {
-    const branches = students.map(s => s.branch).filter(Boolean);
-    return ['All Branches', ...Array.from(new Set(branches))];
-  }, [students]);
-
-  const uniqueYears = useMemo(() => {
-    const years = students.map(s => s.year).filter(Boolean);
-    return ['All Years', ...Array.from(new Set(years))];
-  }, [students]);
-
-  const filteredStudents = useMemo(() => {
-    return students.filter(st => {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch = (st.name || '').toLowerCase().includes(q) || 
-                            (st.email || '').toLowerCase().includes(q);
-      const matchesCourse = courseFilter === 'All' || st.course_id === courseFilter;
-      const matchesCollege = collegeFilter === 'All' || st.college === collegeFilter;
-      const matchesBranch = branchFilter === 'All' || st.branch === branchFilter;
-      const matchesYear = yearFilter === 'All' || st.year === yearFilter;
-      let matchesProgress = true;
-      if (progressFilter === 'Completed') matchesProgress = st.progress === 100;
-      else if (progressFilter === 'InProgress') matchesProgress = st.progress > 0 && st.progress < 100;
-      else if (progressFilter === 'NotStarted') matchesProgress = st.progress === 0;
-      return matchesSearch && matchesCourse && matchesCollege && matchesBranch && matchesYear && matchesProgress;
-    });
-  }, [students, searchQuery, courseFilter, collegeFilter, branchFilter, yearFilter, progressFilter]);
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1400px', margin: '0 auto', paddingBottom: '4rem' }}>

@@ -11,6 +11,7 @@ import { useAuth } from '../../shared/AuthContext';
 import { useTheme } from '../../shared/ThemeContext';
 import { ADMIN_API, optimizeImageUrl } from '../../config';
 import { motion, AnimatePresence } from 'framer-motion';
+import CourseCard from '../../components/shared/CourseCard';
 
 const CACHE_KEY = 'lms_catalog_cache_v2';
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -343,87 +344,23 @@ const Catalog = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">
           <AnimatePresence>
-            {filteredCourses.map((course, index) => {
-              const st = getStatusStyle(course.type);
-              
-              return (
-                <motion.div 
-                  key={course.id} 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => handleEnrollClick(null, course)} 
-                  style={{ 
-                    background: isDark ? '#1e293b' : 'white', 
-                    borderRadius: '2.5rem',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'}`,
-                    boxShadow: isDark ? 'none' : '0 15px 30px -5px rgba(0,0,0,0.05)',
-                  }}
-                  className="group flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 h-full"
-                >
-                  {/* Image Section - Reduced Height for Square Look */}
-                  <div className="relative h-48 rounded-[2rem] m-2 overflow-hidden shadow-sm">
-                    <img 
-                      src={course.thumbnail} 
-                      alt={course.title} 
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                    />
-                    
-                    {/* Status Badge */}
-                    <div className={`absolute top-3 left-3 px-3 py-1 rounded-xl shadow-lg backdrop-blur-md ${course.type === 'live' ? 'bg-rose-100/90 text-rose-600' : 'bg-white/90 text-emerald-600'}`}>
-                      <span className="text-[9px] font-black tracking-widest uppercase">
-                        {st.label}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Content Section - Compacted Padding */}
-                  <div className="p-6 pt-2 flex-1 flex flex-col">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 rounded-lg text-[10px] font-black tracking-wider uppercase">
-                        {course.category_name || 'Expert'}
-                      </span>
-                      <div className="flex items-center gap-1 text-orange-500 font-black text-xs">
-                        <Star size={14} fill="currentColor" /> 4.9+
-                      </div>
-                    </div>
-                    
-                    <h3 style={{ color: isDark ? 'white' : '#0f172a' }} className="text-lg font-black leading-tight mb-4 line-clamp-2">
-                      {course.title}
-                    </h3>
-                    
-                    <div className="flex items-center gap-4 mb-6 mt-auto">
-                      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-bold text-[11px]">
-                        <Clock size={16} className="text-slate-400" /> 
-                        <span>Unlimited</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-bold text-[11px]">
-                        <Award size={16} className="text-slate-400" /> 
-                        <span>Advanced</span>
-                      </div>
-                    </div>
-
-                    {/* Bottom Action Section */}
-                    <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                      <div style={{ color: isDark ? 'white' : '#0f172a' }} className="text-xl font-black">
-                        {formatPrice(course)}
-                      </div>
-                      <button 
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleEnrollClick(e, course);
-                        }}
-                        className="px-6 py-3 bg-[#ff7a1a] hover:bg-[#e66a12] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-orange-500/20 active:scale-95"
-                      >
-                        Enroll
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {filteredCourses.map((course, index) => (
+              <motion.div
+                key={course.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: index * 0.05 }}
+                className="h-full"
+              >
+                <CourseCard 
+                  course={course}
+                  onEnrollClick={handleEnrollClick}
+                  isEnrolled={isEnrolled(course.id)}
+                  role="student"
+                />
+              </motion.div>
+            ))}
           </AnimatePresence>
         </div>
       )}

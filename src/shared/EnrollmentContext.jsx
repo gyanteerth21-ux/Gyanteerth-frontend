@@ -381,10 +381,11 @@ export const EnrollmentProvider = ({ children }) => {
     }, courseId);
   };
 
-  const submitAssessment = (courseId, moduleId, assessmentId, answers) => {
+  const submitAssessment = (courseId, moduleId, assessmentId, answers, timeTakenSeconds = 0) => {
     return triggerProgressUpdate('submit-assessment', {
       course_id: String(courseId), module_id: String(moduleId),
-      assessment_id: String(assessmentId), answers: answers
+      assessment_id: String(assessmentId), answers: answers,
+      time_taken_seconds: timeTakenSeconds
     }, courseId);
   };
 

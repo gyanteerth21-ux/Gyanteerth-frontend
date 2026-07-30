@@ -5,111 +5,10 @@ import { Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, ChevronDown
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API, TRAINER_API } from '../../config';
 import ExportExcelButton from '../../components/ExportExcelButton';
-
-
-
-const BulkImportModal = ({ onClose, onImport, loading, type = 'student' }) => {
-  const [file, setFile] = useState(null);
-  const [error, setError] = useState(null);
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
-        setFile(selectedFile);
-        setError(null);
-      } else {
-        setError('Please upload a valid Excel file (.xlsx or .xls)');
-        setFile(null);
-      }
-    }
-  };
-
-  const handleProcessFile = () => {
-    if (!file) return;
-    onImport(file);
-  };
-
-
-
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'auto'; };
-  }, []);
-
-  const [vibrate, setVibrate] = useState(false);
-
-  useEffect(() => {
-    if (error) {
-      setVibrate(true);
-      const timer = setTimeout(() => setVibrate(false), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
-
-  return createPortal(
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(2, 6, 23, 0.75)', backdropFilter: 'blur(20px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={onClose}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        style={{ width: 'min(95vw, 550px)', backgroundColor: 'var(--color-surface)', borderRadius: '2.5rem', boxShadow: '0 25px 70px -15px rgba(0, 0, 0, 0.4)', border: '1px solid var(--color-border)', padding: '2.5rem' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 950 }}>Bulk Import {type === 'student' ? 'Students' : 'Faculty'}</h2>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>Upload an Excel (.xlsx) file to create multiple accounts</p>
-          </div>
-          <button onClick={onClose} style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', border: 'none', backgroundColor: 'var(--color-surface-muted)', color: 'var(--color-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
-        </div>
-
-        <div style={{ marginBottom: '2rem' }}>
-          <div
-            style={{
-              width: '100%', border: `2px ${error ? 'solid' : 'dashed'} ${error ? '#ef4444' : 'var(--color-border)'}`, borderRadius: '2rem', padding: '3rem 2rem', textAlign: 'center', backgroundColor: error ? 'rgba(239, 68, 68, 0.05)' : 'var(--color-surface-muted)', cursor: 'pointer', transition: 'all 0.3s', position: 'relative'
-            }}
-            onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
-            onDragLeave={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = error ? '#ef4444' : 'var(--color-border)'; }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.currentTarget.style.borderColor = 'var(--color-border)';
-              const droppedFile = e.dataTransfer.files[0];
-              if (droppedFile && (droppedFile.name.endsWith('.xlsx') || droppedFile.name.endsWith('.xls'))) { setFile(droppedFile); setError(null); }
-              else setError('Only .xlsx files are supported');
-            }}
-          >
-            <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ width: '4rem', height: '4rem', borderRadius: '1.25rem', backgroundColor: error ? 'rgba(239, 68, 68, 0.1)' : 'var(--color-primary-bg)', color: error ? '#ef4444' : 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Upload size={32} />
-              </div>
-              <div>
-                <p style={{ margin: 0, fontWeight: 800, fontSize: '1rem', color: error ? '#ef4444' : 'var(--color-text)' }}>{file ? file.name : 'Select Excel File'}</p>
-                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Drag and drop or click to browse</p>
-              </div>
-            </div>
-          </div>
-
-
-
-          {error && <div style={{ marginTop: '1.25rem', color: '#ef4444', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}><AlertCircle size={14} /> {error}</div>}
-        </div>
-
-        <motion.button
-          animate={vibrate ? { x: [-5, 5, -5, 5, 0] } : {}}
-          onClick={handleProcessFile}
-          disabled={loading || !file}
-          className="btn btn-primary"
-          style={{ width: '100%', padding: '1.15rem', borderRadius: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', boxShadow: 'var(--shadow-lg)', backgroundColor: error ? '#ef4444' : undefined, borderColor: error ? '#ef4444' : undefined }}
-        >
-          {loading ? <Loader2 size={18} className="animate-spin" /> : <Database size={18} />}
-          {loading ? 'Initializing Nodes...' : error ? 'Retry Import' : 'Begin Bulk Upload'}
-        </motion.button>
-      </motion.div>
-    </div>,
-    document.body
-  );
-};
+import BulkImportModal from '../../components/shared/BulkImportModal';
+import TableSkeleton from '../../components/shared/TableSkeleton';
+import useStudentFilters from '../../hooks/useStudentFilters';
+import { fetchCollegesAndBranchesMap } from '../../utils/mappingUtils';
 
 const AdminStudents = () => {
   const { user, smartFetch, authFetch, clearCache } = useAuth();
@@ -126,38 +25,20 @@ const AdminStudents = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
-  /* ── Skeleton Loader ── */
-  const TableSkeleton = () => (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} style={{ display: 'flex', padding: '1.5rem 2rem', borderBottom: '1px solid #f1f5f9', gap: '2rem', alignItems: 'center' }}>
-          <div style={{ flex: 1.5, display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '1rem', background: '#f1f5f9', animation: 'pulse 1.5s infinite ease-in-out' }} />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ height: '16px', width: '60%', background: '#f1f5f9', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} />
-              <div style={{ height: '12px', width: '40%', background: '#f1f5f9', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} />
-            </div>
-          </div>
-          <div style={{ flex: 1 }}><div style={{ height: '16px', width: '80%', background: '#f1f5f9', borderRadius: '4px', animation: 'pulse 1.5s infinite ease-in-out' }} /></div>
-          <div style={{ flex: 1 }}><div style={{ height: '24px', width: '100%', background: '#f1f5f9', borderRadius: '8px', animation: 'pulse 1.5s infinite ease-in-out' }} /></div>
-          <div style={{ flex: 0.5, display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '0.85rem', background: '#f1f5f9', animation: 'pulse 1.5s infinite ease-in-out' }} />
-          </div>
-        </div>
-      ))}
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
-    </div>
-  );
 
-  // Filter States
-  const [searchQuery, setSearchQuery] = useState('');
-  const [courseFilter, setCourseFilter] = useState('All');
-  const [progressFilter, setProgressFilter] = useState('All');
-  const [collegeFilter, setCollegeFilter] = useState('All');
-  const [branchFilter, setBranchFilter] = useState('All');
-  const [yearFilter, setYearFilter] = useState('All');
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const {
+    searchQuery, setSearchQuery,
+    courseFilter, setCourseFilter,
+    progressFilter, setProgressFilter,
+    collegeFilter, setCollegeFilter,
+    branchFilter, setBranchFilter,
+    yearFilter, setYearFilter,
+    uniqueColleges, uniqueBranches, uniqueYears,
+    filteredStudents, filteredUniqueStudents
+  } = useStudentFilters(students, uniqueStudents);
 
   const fetchStudents = useCallback(async () => {
     if (!user) return;
@@ -165,24 +46,7 @@ const AdminStudents = () => {
 
     try {
       // Fetch colleges to map IDs to Names
-      let colMap = {};
-      try {
-        const colRes = await authFetch(`${ADMIN_API}/colleges`);
-        if (colRes.ok) {
-          const colData = await colRes.json();
-          (colData.data || []).forEach(c => colMap[c.College_ID] = c.College_Name);
-        }
-      } catch (e) { console.error("Failed to fetch colleges mapping", e); }
-
-      // Fetch branches to map IDs to Names
-      let brMap = {};
-      try {
-        const brRes = await authFetch(`${ADMIN_API}/branches`);
-        if (brRes.ok) {
-          const brData = await brRes.json();
-          (brData.data || []).forEach(b => brMap[b.branch_id] = b.branch_name);
-        }
-      } catch (e) { console.error("Failed to fetch branches mapping", e); }
+      const { colMap, brMap } = await fetchCollegesAndBranchesMap(authFetch, ADMIN_API);
 
       const response = await smartFetch(`${ADMIN_API}/students`, { cacheKey: 'admin_students_data', forceRefresh: true });
 
@@ -264,58 +128,6 @@ const AdminStudents = () => {
     }
   };
 
-  const uniqueColleges = useMemo(() => {
-    const colleges = uniqueStudents.map(s => s.college).filter(Boolean);
-    return ['All Colleges', ...Array.from(new Set(colleges))];
-  }, [uniqueStudents]);
-
-  const uniqueBranches = useMemo(() => {
-    const branches = uniqueStudents.map(s => s.branch).filter(Boolean);
-    return ['All Branches', ...Array.from(new Set(branches))];
-  }, [uniqueStudents]);
-
-  const uniqueYears = useMemo(() => {
-    const years = uniqueStudents.map(s => s.year).filter(Boolean);
-    return ['All Years', ...Array.from(new Set(years))];
-  }, [uniqueStudents]);
-
-  const filteredStudents = useMemo(() => {
-    return students.filter(st => {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch = (st.name || '').toLowerCase().includes(q) ||
-        (st.email || '').toLowerCase().includes(q) ||
-        (st.course_title || '').toLowerCase().includes(q);
-      const matchesCourse = courseFilter === 'All' || st.course_id === courseFilter;
-      const matchesCollege = collegeFilter === 'All' || st.college === collegeFilter;
-      const matchesBranch = branchFilter === 'All' || st.branch === branchFilter;
-      const matchesYear = yearFilter === 'All' || st.year === yearFilter;
-
-      let matchesProgress = true;
-      if (progressFilter === 'Completed') matchesProgress = st.progress === 100;
-      else if (progressFilter === 'InProgress') matchesProgress = st.progress > 0 && st.progress < 100;
-      else if (progressFilter === 'NotStarted') matchesProgress = st.progress === 0;
-
-      return matchesSearch && matchesCourse && matchesCollege && matchesBranch && matchesYear && matchesProgress;
-    });
-  }, [students, searchQuery, courseFilter, collegeFilter, branchFilter, yearFilter, progressFilter]);
-
-  const filteredUniqueStudents = useMemo(() => {
-    return uniqueStudents.filter(st => {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch = (st.name || '').toLowerCase().includes(q) ||
-        (st.email || '').toLowerCase().includes(q);
-      const matchesCollege = collegeFilter === 'All' || st.college === collegeFilter;
-      const matchesBranch = branchFilter === 'All' || st.branch === branchFilter;
-      const matchesYear = yearFilter === 'All' || st.year === yearFilter;
-
-      let matchesProgress = true;
-      if (progressFilter === 'Completed') matchesProgress = st.avgProgress === 100;
-      else if (progressFilter === 'InProgress') matchesProgress = st.avgProgress > 0 && st.avgProgress < 100;
-      else if (progressFilter === 'NotStarted') matchesProgress = st.avgProgress === 0;
-
-      return matchesSearch && matchesCollege && matchesBranch && matchesYear && matchesProgress;
-    });
-  }, [uniqueStudents, searchQuery, collegeFilter, branchFilter, yearFilter, progressFilter]);
 
   return (
     <div className="animate-fade-in" style={{ maxWidth: '1400px', margin: '0 auto', paddingBottom: '4rem' }}>

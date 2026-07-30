@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Video, Star, Users, Clock, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import CourseCard from '../../components/shared/CourseCard';
 
 import { ADMIN_API, optimizeImageUrl } from '../../config';
 
@@ -152,34 +153,8 @@ export default function Courses() {
         {/* Grid */}
         <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredCourses.map((course) => (
-            <motion.div key={course.id} variants={itemVariants} className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_10px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col">
-              <div className="relative h-52 overflow-hidden">
-                <div className="absolute top-3 left-3 z-10">
-                   <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm backdrop-blur-md flex items-center gap-1.5 ${course.type?.toLowerCase() === 'live' ? 'bg-rose-500/95 text-white' : 'bg-white/95 text-slate-800'}`}>
-                    {course.type?.toLowerCase() === 'live' ? <><span className="w-2 h-2 rounded-full bg-white animate-pulse" /> Live Session</> : '▶ Recorded'}
-                  </span>
-                </div>
-                <img src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'} alt={course.title} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-              </div>
-              <div className="p-6 flex flex-col flex-1">
-                 <div className="flex items-center gap-4 text-sm text-slate-500 mb-3 font-medium border-b border-slate-100 pb-3">
-                  <span className="flex items-center gap-1"><Star className="w-4 h-4 text-amber-400 fill-amber-400"/> {course.rating || '0'}</span>
-                  <span className="flex items-center gap-1"><Users className="w-4 h-4"/> {course.students || '0'}</span>
-                  <span className="flex items-center gap-1 ml-auto"><Clock className="w-4 h-4"/> {course.duration}</span>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">{course.title}</h3>
-                 <div className="mt-auto pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-emerald-600">₹{course.price?.discount || course.price?.original}</span>
-                    {course.price?.discount && (
-                      <span className="text-xs text-slate-400 line-through">₹{course.price?.original}</span>
-                    )}
-                  </div>
-                  <Link to="/login" className="w-full sm:w-auto text-center !text-white font-bold text-sm bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg">
-                    Enroll Now
-                  </Link>
-                </div>
-              </div>
+            <motion.div key={course.id} variants={itemVariants} className="h-full">
+              <CourseCard course={course} role="public" />
             </motion.div>
           ))}
         </motion.div>
