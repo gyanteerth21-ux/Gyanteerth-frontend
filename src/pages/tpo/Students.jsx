@@ -122,7 +122,15 @@ const TpoStudents = () => {
               style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.75rem', borderRadius: '1.25rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)', outline: 'none' }}
             />
           </div>
-          <ExportExcelButton data={filteredUniqueStudents} filename="TPO_Students_List" sheetName="Students" omitPhone={true} />
+          <ExportExcelButton 
+            data={filteredUniqueStudents.map(st => ({
+              ...st,
+              enrollments: st.enrollments ? st.enrollments.map(e => `${e.course_title} (${e.progress}%)`).join(', ') : ''
+            }))} 
+            filename="TPO_Students_List" 
+            sheetName="Students" 
+            omitPhone={true} 
+          />
         </div>
 
         {/* FILTERS */}
