@@ -16,6 +16,7 @@ const ExportExcelButton = ({ data, filename = 'export', sheetName = 'Sheet1', cl
         delete newItem.phone;
         delete newItem.mobile;
         delete newItem.number;
+        delete newItem.user_number;
         delete newItem.mobile_number;
         delete newItem.phone_number;
       }
