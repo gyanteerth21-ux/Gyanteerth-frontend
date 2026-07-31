@@ -2,7 +2,7 @@ import React from 'react';
 import { Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-const ExportExcelButton = ({ data, filename = 'export', sheetName = 'Sheet1', className = "btn btn-primary" }) => {
+const ExportExcelButton = ({ data, filename = 'export', sheetName = 'Sheet1', className = "btn btn-primary", omitPhone = false }) => {
   const handleExport = () => {
     if (!data || data.length === 0) {
       alert("No data available to export");
@@ -12,11 +12,13 @@ const ExportExcelButton = ({ data, filename = 'export', sheetName = 'Sheet1', cl
     // omit sensitive contact details
     const cleanData = data.map(item => {
       const newItem = { ...item };
-      delete newItem.phone;
-      delete newItem.mobile;
-      delete newItem.number;
-      delete newItem.mobile_number;
-      delete newItem.phone_number;
+      if (omitPhone) {
+        delete newItem.phone;
+        delete newItem.mobile;
+        delete newItem.number;
+        delete newItem.mobile_number;
+        delete newItem.phone_number;
+      }
       delete newItem.password;
       return newItem;
     });
