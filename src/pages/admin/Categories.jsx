@@ -15,6 +15,9 @@ import { ADMIN_API, optimizeImageUrl } from '../../config';
 import CategoryModal from '../../components/admin/CategoryModal';
 import { CreateCourseModal } from '../../components/admin/CourseModals';
 import { PremiumCategoryCard, PremiumCategoryListRow } from '../../components/admin/CategoryCards';
+import { useSearchFilter } from '../../hooks/useSearchFilter';
+import { useViewMode } from '../../hooks/useViewMode';
+
 
 const AdminCategories = () => {
   const { user, authFetch, smartFetch, clearCache } = useAuth();
@@ -23,8 +26,8 @@ const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
   const [liveCount, setLiveCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const { searchQuery, setSearchQuery, filteredData: filteredCategories } = useSearchFilter(categories, 'Category_Name');
+  const { viewMode, setViewMode } = useViewMode('admin_categories_view_mode', 'grid');
   const [toast, setToast] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,10 +102,6 @@ const AdminCategories = () => {
       }
     } catch (err) { showToast('Network Error', 'error'); }
   };
-
-  const filteredCategories = categories.filter(cat => 
-    cat.Category_Name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-surface-muted)', fontFamily: "'Outfit', sans-serif", color: 'var(--color-text)', paddingBottom: '10rem' }}>

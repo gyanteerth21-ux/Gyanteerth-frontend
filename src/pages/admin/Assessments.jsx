@@ -3,13 +3,16 @@ import {
   Loader2, AlertCircle, CheckCircle2, Filter, X, Save, Calendar,
   ChevronRight, Bookmark, BarChart3, Settings2, Layout, BookOpen, Grid, List, Globe, Download, FileUp
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../shared/AuthContext';
 import { ADMIN_API, TRAINER_API } from '../../config';
 import EditAssessmentModal from '../../components/admin/EditAssessmentModal';
 import { PremiumAssessmentCard, PremiumAssessmentListRow } from '../../components/admin/AssessmentCards';
+import { useSearchFilter } from '../../hooks/useSearchFilter';
+import { useViewMode } from '../../hooks/useViewMode';
+
 
 const AdminAssessments = () => {
   const { user, authFetch, smartFetch } = useAuth();
@@ -17,10 +20,12 @@ const AdminAssessments = () => {
   const [assessments, setAssessments] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('grid');
+  const { viewMode, setViewMode } = useViewMode('admin_assessments_view_mode', 'grid');
   const [toast, setToast] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState('all');
+
+  const filteredByCourse = useMemo(() => assessments.filter(a => selectedCourse === 'all' || a.course_id === selectedCourse), [assessments, selectedCourse]);
+  const { searchQuery, setSearchQuery, filteredData: filteredAssessments } = useSearchFilter(filteredByCourse, ['title', 'Title', 'course_title']);
   const [editingAsm, setEditingAsm] = useState(null);
   const [viewingResults, setViewingResults] = useState(null);
 
@@ -125,12 +130,9 @@ const AdminAssessments = () => {
     } catch (err) { showToast('Network fail', 'error'); }
   };
 
-  const filteredAssessments = assessments.filter(a => {
-    const title = (a.title || a.Title || '').toLowerCase();
-    const courseTitle = (a.course_title || '').toLowerCase();
-    const matchesSearch = title.includes(searchQuery.toLowerCase()) || courseTitle.includes(searchQuery.toLowerCase());
-    return (selectedCourse === 'all' || a.course_id === selectedCourse) && matchesSearch;
-  });
+  const handleCourseFilter = (courseId) => {
+    setSelectedCourse(courseId);
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)', fontFamily: "'Outfit', sans-serif", color: 'var(--color-text)', paddingBottom: '10rem' }}>

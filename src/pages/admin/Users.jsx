@@ -14,16 +14,18 @@ import { ADMIN_API, getHeaders } from '../../config';
 import ViewTrainerModal from '../../components/admin/ViewTrainerModal';
 import TrainerFormModal from '../../components/admin/TrainerFormModal';
 import { PremiumUserCard, PremiumUserListRow } from '../../components/admin/UserCards';
-
 import BulkImportModal from '../../components/shared/BulkImportModal';
+import { useSearchFilter } from '../../hooks/useSearchFilter';
+import { useViewMode } from '../../hooks/useViewMode';
+
 
 const AdminUsers = () => {
   const { authFetch, smartFetch, clearCache } = useAuth();
   const navigate = useNavigate();
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('grid');
+  const { searchQuery, setSearchQuery, filteredData: filteredTrainers } = useSearchFilter(trainers, ['user_name', 'trainer_name', 'email', 'trainer_email']);
+  const { viewMode, setViewMode } = useViewMode('admin_users_view_mode', 'grid');
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -199,13 +201,6 @@ const AdminUsers = () => {
     } catch (err) { showToast('Sync protocol failure', 'error'); }
     finally { setActionLoading(false); }
   };
-
-  const filteredTrainers = trainers.filter(t => {
-    const q = searchQuery.toLowerCase();
-    const name = (t.user_name || t.trainer_name || '').toLowerCase();
-    const email = (t.email || t.trainer_email || '').toLowerCase();
-    return name.includes(q) || email.includes(q);
-  });
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-surface-muted)', fontFamily: "'Outfit', sans-serif", color: 'var(--color-text)', paddingBottom: '10rem' }}>
