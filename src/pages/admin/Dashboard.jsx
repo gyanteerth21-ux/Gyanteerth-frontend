@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   Layout, Zap, Clock, Users, BookOpen, Layers, 
   TrendingUp, ArrowUpRight, Plus, Activity,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { ADMIN_API } from '../../config';
 import { useAuth } from '../../shared/AuthContext';
 
@@ -85,63 +86,69 @@ const QuickAction = ({ label, icon, onClick, sublabel }) => (
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, smartFetch } = useAuth();
-  const [stats, setStats] = useState({ courses: 0, students: 0, trainers: 0, assessments: 0 });
-  const [loading, setLoading] = useState(true);
+  const { user, authFetch } = useAuth();
 
-  useEffect(() => {
-    const fetchEverything = async () => {
-      if (!user) return;
-      try {
-        const [courseData, tData, statData] = await Promise.all([
-          smartFetch(`${ADMIN_API}/courses/ids-by-status`, { cacheKey: 'admin_course_ids' }),
-          smartFetch(`${ADMIN_API}/all_trainer`, { cacheKey: 'admin_all_trainers' }),
-          smartFetch(`${ADMIN_API}/enrollment-stats`, { cacheKey: 'admin_enrollment_stats' })
-        ]);
-        
-        let courseCount = 0;
-        let trainerCount = 0;
-        let studentCount = 0;
-        
-        let assessmentCount = 0;
-        
-        if (courseData) {
-          const { active, draft, inactive } = courseData.courses || {};
-          const allIds = [...(active || []), ...(draft || []), ...(inactive || [])];
-          courseCount = allIds.length;
-          
-          // Fetch course details dynamically to count assessments
-          const coursePromises = allIds.map(id => smartFetch(`${ADMIN_API}/course/${id}/full-details`, { cacheKey: `details_${id}` }).catch(() => null));
-          const coursesRes = await Promise.all(coursePromises);
-          
-          coursesRes.forEach(res => {
-            if (res) {
-              const c = res.course || res;
-              (c.modules || []).forEach(m => {
-                const relevantAsms = m.content?.assessments || m.assessments || [];
-                assessmentCount += relevantAsms.length;
-              });
-            }
-          });
-        }
-        
-        if (tData) {
-          trainerCount = (tData.active_trainer_email?.length || 0) + (tData.inactive_trainer_email?.length || 0);
-        }
+  const { data: courseData, isLoading: loadingCourses } = useQuery({
+    queryKey: ['admin_courses'],
+    queryFn: async () => {
+      const res = await authFetch(`${ADMIN_API}/courses/ids-by-status`);
+      if (!res.ok) throw new Error('Failed to fetch courses');
+      return res.json();
+    },
+    enabled: !!user,
+  });
 
-        if (statData && statData.data) {
-          studentCount = statData.data.reduce((sum, course) => sum + (course.enrolled_students || 0), 0);
-        }
+  const { data: tData, isLoading: loadingTrainers } = useQuery({
+    queryKey: ['admin_trainers'],
+    queryFn: async () => {
+      const res = await authFetch(`${ADMIN_API}/all_trainer`);
+      if (!res.ok) throw new Error('Failed to fetch trainers');
+      return res.json();
+    },
+    enabled: !!user,
+  });
 
-        setStats({ courses: courseCount, trainers: trainerCount, students: studentCount, assessments: assessmentCount });
-      } catch (err) {
-        console.error("Dashboard sync error", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEverything();
-  }, [user, smartFetch]);
+  const { data: statData, isLoading: loadingStats } = useQuery({
+    queryKey: ['admin_stats'],
+    queryFn: async () => {
+      const res = await authFetch(`${ADMIN_API}/enrollment-stats`);
+      if (!res.ok) throw new Error('Failed to fetch stats');
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
+  const allIds = courseData ? [...(courseData.courses?.active || []), ...(courseData.courses?.draft || []), ...(courseData.courses?.inactive || [])] : [];
+
+  const courseDetailsQueries = useQueries({
+    queries: allIds.map(id => ({
+      queryKey: ['course_details', id],
+      queryFn: async () => {
+        const res = await authFetch(`${ADMIN_API}/course/${id}/full-details`);
+        if (!res.ok) throw new Error('Failed to fetch course details');
+        return res.json();
+      },
+      enabled: !!user && allIds.length > 0,
+    }))
+  });
+
+  let courseCount = allIds.length;
+  let trainerCount = (tData?.active_trainer_email?.length || 0) + (tData?.inactive_trainer_email?.length || 0);
+  let studentCount = statData?.data?.reduce((sum, course) => sum + (course.enrolled_students || 0), 0) || 0;
+
+  let assessmentCount = 0;
+  courseDetailsQueries.forEach(query => {
+    if (query.data) {
+      const c = query.data.course || query.data;
+      (c.modules || []).forEach(m => {
+        const relevantAsms = m.content?.assessments || m.assessments || [];
+        assessmentCount += relevantAsms.length;
+      });
+    }
+  });
+
+  const loading = loadingCourses || loadingTrainers || loadingStats || courseDetailsQueries.some(q => q.isLoading);
+  const stats = { courses: courseCount, trainers: trainerCount, students: studentCount, assessments: assessmentCount };
 
   return (
     <div style={{ padding: 'var(--page-padding)', maxWidth: '1600px', margin: '0 auto' }} className="animate-fade-in">
