@@ -60,6 +60,7 @@ const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const scrollRef = useRef(null);
@@ -157,7 +158,7 @@ const DashboardLayout = () => {
       <ScrollRestoration />
       
       {/* Sidebar - Responsive */}
-      <aside className={`dashboard-sidebar ${mobileMenuOpen ? 'mobile-open' : 'mobile-closed'}`}>
+      <aside className={`dashboard-sidebar ${mobileMenuOpen ? 'mobile-open' : 'mobile-closed'} ${desktopCollapsed ? 'desktop-collapsed' : ''}`}>
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Logo scale={0.65} showTagline={false} isDark={useTheme().isDark} />
         </div>
@@ -313,6 +314,13 @@ const DashboardLayout = () => {
         <header className="dashboard-header-desktop">
           <div style={{ maxWidth: '2400px', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+              <button 
+                onClick={() => setDesktopCollapsed(!desktopCollapsed)}
+                style={{ background: 'var(--color-surface-muted)', border: '1px solid var(--color-border)', color: 'var(--color-text)', cursor: 'pointer', display: 'flex', padding: '0.65rem', borderRadius: '0.75rem' }}
+                title="Toggle Sidebar"
+              >
+                <Menu size={20} />
+              </button>
               <div style={{ position: 'relative', maxWidth: '400px', width: '100%' }}>
                 <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-light)' }} />
                 <input 
