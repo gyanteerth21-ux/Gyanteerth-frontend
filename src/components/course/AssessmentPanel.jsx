@@ -300,20 +300,20 @@ export function AssessmentPanel({ lesson, onComplete, assessmentStats = {}, onSt
           ) : (
             <>
               {(lesson.questions || []).map((q, qi) => (
-                <div key={q.question_id} style={{ background: 'white', borderRadius: '20px', padding: '2rem', border: '1px solid #f1f5f9', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+                <div key={q.question_id} className="p-4 sm:p-8" style={{ background: 'white', borderRadius: '20px', border: '1px solid #f1f5f9', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
                   <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
                     <span style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: 'white', fontSize: '0.9rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{qi + 1}</span>
-                    <p style={{ fontWeight: 800, fontSize: '1.1rem', lineHeight: 1.5, margin: 0, color: '#1e293b' }}>{q.question_text}</p>
+                    <p style={{ fontWeight: 800, fontSize: '1.1rem', lineHeight: 1.5, margin: 0, color: '#1e293b', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{q.question_text}</p>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginLeft: '3rem' }}>
+                  <div className="ml-0 sm:ml-12 mt-2 sm:mt-0" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {(q.options || []).map(opt => {
                       const isSel = selected[q.question_id] === opt.option_id;
                       return (
-                        <button key={opt.option_id} onClick={() => setSelected(p => ({ ...p, [q.question_id]: opt.option_id }))} style={{ textAlign: 'left', padding: '1rem 1.25rem', borderRadius: '12px', cursor: 'pointer', border: `2px solid ${isSel ? '#6366f1' : '#f1f5f9'}`, background: isSel ? '#f5f3ff' : 'white', color: isSel ? '#4338ca' : '#475569', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'all 0.2s' }}>
-                          <div style={{ width: '20px', height: '20px', borderRadius: '6px', border: `2px solid ${isSel ? '#6366f1' : '#d1d5db'}`, background: isSel ? '#6366f1' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                        <button key={opt.option_id} onClick={() => setSelected(p => ({ ...p, [q.question_id]: opt.option_id }))} className="p-3 sm:px-5 sm:py-4" style={{ textAlign: 'left', borderRadius: '12px', cursor: 'pointer', border: `2px solid ${isSel ? '#6366f1' : '#f1f5f9'}`, background: isSel ? '#f5f3ff' : 'white', color: isSel ? '#4338ca' : '#475569', display: 'flex', alignItems: 'flex-start', gap: '0.75rem', transition: 'all 0.2s' }}>
+                          <div style={{ width: '20px', height: '20px', borderRadius: '6px', border: `2px solid ${isSel ? '#6366f1' : '#d1d5db'}`, background: isSel ? '#6366f1' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0, marginTop: '0.15rem' }}>
                             {isSel && <Check size={14} color="white" />}
                           </div>
-                          <span style={{ fontWeight: 700 }}>{opt.text}</span>
+                          <span style={{ fontWeight: 700, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{opt.text}</span>
                         </button>
                       );
                     })}

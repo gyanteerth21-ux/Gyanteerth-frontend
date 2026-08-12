@@ -163,7 +163,14 @@ const AdminStudents = () => {
               style={{ width: '300px', padding: '0.85rem 1rem 0.85rem 2.75rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, outline: 'none' }}
             />
           </div>
-          <ExportExcelButton data={uniqueStudents} filename="Admin_Students_List" sheetName="Students" />
+          <ExportExcelButton 
+            data={filteredUniqueStudents.map(st => ({
+              ...st,
+              enrollments: st.enrollments ? st.enrollments.map(e => `${e.course_title} (${e.progress}%)`).join(', ') : ''
+            }))} 
+            filename="Admin_Students_List" 
+            sheetName="Students" 
+          />
           <button
             onClick={() => setShowImportModal(true)}
             className="btn btn-primary"
