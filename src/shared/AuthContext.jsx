@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 const AuthContext = createContext(null);
 
@@ -17,6 +18,7 @@ const deobfuscate = (str) => {
 };
 
 export const AuthProvider = ({ children }) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cacheSyncToken, setCacheSyncToken] = useState(0); // 🚀 REVALIDATION ENGINE
@@ -96,86 +98,51 @@ export const AuthProvider = ({ children }) => {
     }
   }, [logout]);
 
-  // 🚀 PERFORMANCE + SECURITY: Universal Smart Fetcher (SWR + De-duplication)
-  const activeRequests = useRef({});
-
+  // 🚀 PERFORMANCE + SECURITY: Universal Smart Fetcher (Powered by TanStack Query)
   const smartFetch = useCallback(async (url, options = {}) => {
     const { 
       cacheKey = btoa(url).slice(0, 16), 
       forceRefresh = false, 
-      ttl = CACHE_TTL,
-      swr = true // 🔄 Enable Stale-While-Revalidate by default
+      swr = true 
     } = options;
 
-    const storageKey = `${CACHE_PREFIX}${cacheKey}`;
+    const queryKey = [cacheKey];
 
-    // 1. Instant Cache Retrieval (Deobfuscated)
-    const getCachedEntry = () => {
-      const item = localStorage.getItem(storageKey);
-      if (!item) return null;
-      const dec = deobfuscate(item);
-      if (!dec) return null;
-      try {
-        return JSON.parse(dec);
-      } catch (e) { return null; }
+    const fetchFn = async () => {
+      const res = await authFetch(url, options);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      
+      // Keep legacy signaling active for contexts that still rely on cacheSyncToken
+      setCacheSyncToken(v => v + 1); 
+      return data;
     };
 
-    const entry = getCachedEntry();
-    const cachedData = entry?.data;
-    const isExpired = entry ? (Date.now() - entry.ts > ttl) : true;
-
-    // 2. De-duplication: Return existing in-flight promise if identical URL
-    if (activeRequests.current[storageKey]) {
-      return activeRequests.current[storageKey];
+    if (forceRefresh) {
+      return queryClient.fetchQuery({ queryKey, queryFn: fetchFn, staleTime: 0 });
     }
 
-    // 3. Stale-While-Revalidate Logic
-    const performFetch = async (currentData = null) => {
-      try {
-        const res = await authFetch(url, options);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const freshData = await res.json();
+    const cachedData = queryClient.getQueryData(queryKey);
 
-        // Only trigger update if data actually changed to prevent render loops
-        const dataChanged = JSON.stringify(freshData) !== JSON.stringify(currentData);
-        
-        // 🛡️ SECURITY: Store obfuscated with integrity TS
-        const newEntry = JSON.stringify({ data: freshData, ts: Date.now() });
-        localStorage.setItem(storageKey, obfuscate(newEntry));
-
-        if (dataChanged) {
-          setCacheSyncToken(v => v + 1); // 🔔 Signal all listeners to re-sync
-        }
-
-        return freshData;
-      } catch (err) {
-        console.error("SmartFetch sync failed:", err);
-        return currentData; // Fallback to stale on error
-      } finally {
-        delete activeRequests.current[storageKey];
-      }
-    };
-
-    // 4. Return Strategy
-    if (cachedData && !forceRefresh && !isExpired) {
-      if (swr) {
-        // Background refresh: Fire and forget (or rather, store in activeRequests)
-        activeRequests.current[storageKey] = performFetch(cachedData);
-      }
+    if (cachedData && swr) {
+      // SWR: return cache instantly, trigger background fetch
+      queryClient.prefetchQuery({ queryKey, queryFn: fetchFn });
       return cachedData;
     }
 
-    // No cache or forced: Await the fresh data
-    const fetchPromise = performFetch(cachedData);
-    activeRequests.current[storageKey] = fetchPromise;
-    return fetchPromise;
-  }, [authFetch]);
+    if (cachedData) {
+      return cachedData;
+    }
+
+    // No cache: fetch and wait
+    return queryClient.fetchQuery({ queryKey, queryFn: fetchFn });
+  }, [authFetch, queryClient]);
 
   // 🧹 CACHE MANAGEMENT
   const clearCache = useCallback((key) => {
-    localStorage.removeItem(`${CACHE_PREFIX}${key}`);
+    queryClient.removeQueries({ queryKey: [key] });
     setCacheSyncToken(v => v + 1);
-  }, []);
+  }, [queryClient]);
 
   // 🔄 Force a global re-sync (useful on page transitions)
   const revalidateAll = useCallback(() => {
