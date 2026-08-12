@@ -421,13 +421,13 @@ const AssessmentResultsView = ({ asm, onBack }) => {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.25rem', borderRadius: '1rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)', fontWeight: 800, cursor: 'pointer' }}>
           <ArrowLeft size={16} /> Back to Registry
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
            <div style={{ textAlign: 'right' }}>
-              <h2 style={{ margin: 0, fontSize: '1.25rem' }}>{asm.title || asm.Title}</h2>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', wordBreak: 'break-word', maxWidth: '300px' }}>{asm.title || asm.Title}</h2>
               <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.8rem', fontWeight: 600 }}>Performance Analysis Dashboard</p>
            </div>
            <button 
@@ -466,8 +466,8 @@ const AssessmentResultsView = ({ asm, onBack }) => {
             <p style={{ color: 'var(--color-text-muted)', fontWeight: 600 }}>No results found for this selection.</p>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
+          <div style={{ overflowX: 'auto', paddingBottom: '1rem', width: '100%' }}>
+            <table style={{ width: '100%', minWidth: '900px', borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
               <thead>
                 <tr style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem', fontWeight: 950, textTransform: 'uppercase' }}>
                   <th style={{ textAlign: 'left', padding: '1rem' }}>Student Identity</th>
@@ -509,7 +509,7 @@ const AssessmentResultsView = ({ asm, onBack }) => {
                             <Clock size={12} color="#6366f1" /> {timeTakenMins}m
                           </div>
                           {displayTime && (
-                            <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', fontWeight: 700, maxWidth: '150px' }}>
                               {displayTime}
                             </div>
                           )}

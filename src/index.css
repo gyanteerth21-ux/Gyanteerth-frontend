@@ -423,3 +423,13 @@ select option {
   background-color: var(--color-surface);
   color: var(--color-text);
 }
+
+@media (min-width: 1025px) {
+  .dashboard-sidebar.desktop-collapsed {
+    transform: translateX(-100%);
+    width: 0;
+    opacity: 0;
+    border: none;
+    overflow: hidden;
+  }
+}

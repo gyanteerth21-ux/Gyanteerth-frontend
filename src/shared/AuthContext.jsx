@@ -113,8 +113,13 @@ export const AuthProvider = ({ children }) => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       
+      const currentData = queryClient.getQueryData(queryKey);
+      const dataChanged = JSON.stringify(data) !== JSON.stringify(currentData);
+      
       // Keep legacy signaling active for contexts that still rely on cacheSyncToken
-      setCacheSyncToken(v => v + 1); 
+      if (dataChanged) {
+        setCacheSyncToken(v => v + 1); 
+      }
       return data;
     };
 
