@@ -8,6 +8,7 @@ import {
   ChevronDown, BookOpen, ExternalLink, CheckCircle, Menu, Check, Star, X,
   FileText, CheckCircle2, ShieldAlert, Clock, RefreshCcw
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useEnrollment } from '../../shared/EnrollmentContext';
 import { useAuth } from '../../shared/AuthContext';
 import { ADMIN_API, USER_API } from '../../config';
@@ -75,7 +76,7 @@ const CoursePlayer = ({ isTrainer = false }) => {
   const navigate = useNavigate();
   const enrollment = useEnrollment();
   const { isEnrolled } = enrollment || {};
-  const { user, authFetch, smartFetch, cacheSyncToken } = useAuth(); // <-- Inject Secure Wrapper
+  const { user, authFetch } = useAuth(); // <-- Inject Secure Wrapper
   const [isExamInProgress, setIsExamInProgress] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -173,49 +174,56 @@ const CoursePlayer = ({ isTrainer = false }) => {
     }
   }, [id, enrolledCourses, isTrainer]);
 
+  const { data: queryData, isLoading: queryLoading, error: queryError } = useQuery({
+    queryKey: ['course_details', id],
+    queryFn: async () => {
+      const res = await authFetch(`${ADMIN_API}/course/${id}/full-details`);
+      if (!res.ok) throw new Error('Failed to fetch course');
+      return res.json();
+    },
+    enabled: !!id,
+  });
+
   useEffect(() => {
-    (async () => {
-      try {
-        if (!course) setLoading(true); // Only show full loader if we have NO data at all
-        console.log('CoursePlayer: Fetching details for', id);
-        // 🚀 Use smartFetch with SWR (it will return cache immediately and fetch in back)
-        const data = await smartFetch(`${ADMIN_API}/course/${id}/full-details`, { cacheKey: `details_${id}` });
-        
-        if (data && data.course) {
-          const c = data.course;
-          setCourse(c);
-          const built = buildLessons(c.modules, c.notes);
-          setLessons(built);
+    if (queryData && queryData.course) {
+      const c = queryData.course;
+      setCourse(c);
+      const built = buildLessons(c.modules, c.notes);
+      setLessons(built);
 
-          const typeLower = (c.type || c.course_type || c.course_Type || 'recorded').toLowerCase();
-          const isLive = typeLower === 'live' || typeLower === 'live_course' || typeLower === 'live session';
+      const typeLower = (c.type || c.course_type || c.course_Type || 'recorded').toLowerCase();
+      const isLive = typeLower === 'live' || typeLower === 'live_course' || typeLower === 'live session';
 
-          // Auto-select first ongoing or upcoming live session if live course
-          if (isLive && built.length > 0) {
-            const now = new Date();
-            const liveIdx = built.findIndex(l => {
-              if (l.type !== 'live') return false;
-              const start = l.start_time ? new Date(l.start_time) : null;
-              const end = l.end_time ? new Date(l.end_time) : null;
-              // If live OR starting soon OR in future
-              return (start && end && now >= start && now <= end) || (start && now < start);
-            });
-            if (liveIdx !== -1) setCurrentIdx(liveIdx);
-          }
+      // Auto-select first ongoing or upcoming live session if live course
+      if (isLive && built.length > 0) {
+        const now = new Date();
+        const liveIdx = built.findIndex(l => {
+          if (l.type !== 'live') return false;
+          const start = l.start_time ? new Date(l.start_time) : null;
+          const end = l.end_time ? new Date(l.end_time) : null;
+          // If live OR starting soon OR in future
+          return (start && end && now >= start && now <= end) || (start && now < start);
+        });
+        if (liveIdx !== -1) setCurrentIdx(liveIdx);
+      }
 
-          // Register total so progress % computes correctly on My Learning page
-          if (!isTrainer) {
-            const activeBuilt = built.filter(l => l.type !== 'note' && l.type !== 'resource').length;
-            registerLessonCount(id, activeBuilt);
-          }
-          const exp = {};
-          (c.modules || []).forEach(m => { exp[m.module_id] = true; });
-          setExpandedModules(exp);
-        } else throw new Error('Course not found');
-      } catch (e) { setError(e.message); }
-      finally { setLoading(false); }
-    })();
-  }, [id, isTrainer, authFetch, smartFetch, registerLessonCount, cacheSyncToken]);
+      // Register total so progress % computes correctly on My Learning page
+      if (!isTrainer) {
+        const activeBuilt = built.filter(l => l.type !== 'note' && l.type !== 'resource').length;
+        if (registerLessonCount) registerLessonCount(id, activeBuilt);
+      }
+      
+      const exp = {};
+      (c.modules || []).forEach(m => { exp[m.module_id] = true; });
+      setExpandedModules(exp);
+      setLoading(false);
+    } else if (queryError) {
+      setError(queryError.message);
+      setLoading(false);
+    } else if (queryLoading && !course) {
+      setLoading(true);
+    }
+  }, [queryData, queryError, queryLoading, id, isTrainer, registerLessonCount]);
 
   // Sync progress when course changes
   useEffect(() => {
