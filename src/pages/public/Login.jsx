@@ -1,4 +1,7 @@
 import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, registerSchema } from "../../shared/schemas";
 import { useAuth } from "../../shared/AuthContext";
 import { useTheme } from "../../shared/ThemeContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -20,20 +23,30 @@ const Login = () => {
   // View mode: 'login' | 'register'
   const [mode, setMode] = useState("login");
 
-  // Form states
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register: registerLogin,
+    handleSubmit: handleLoginSubmitForm,
+    formState: { errors: loginErrors, isSubmitting: isLoginSubmitting },
+    setValue: setLoginValue,
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-  const [regName, setRegName] = useState("");
-  const [regEmail, setRegEmail] = useState("");
-  const [regPassword, setRegPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const {
+    register: registerSignup,
+    handleSubmit: handleSignupSubmitForm,
+    formState: { errors: registerErrors, isSubmitting: isRegisterSubmitting },
+    reset: resetSignup,
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+  });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
@@ -96,16 +109,9 @@ const Login = () => {
     [email, login, authFetch, navigate],
   );
 
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-
+  const handleLoginSubmit = async (formData) => {
     setError(null);
     setSuccessMsg(null);
-    setLoading(true);
 
     try {
       const response = await fetch(`${API_BASE}/auth_checkpoint/login`, {
@@ -114,13 +120,13 @@ const Login = () => {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ Email: email.trim(), password }),
+        body: JSON.stringify({ Email: formData.email.trim(), password: formData.password }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.access_token) {
-        await handleAuthSuccess(data);
+        await handleAuthSuccess({ ...data, email: formData.email.trim() });
       } else {
         setError(
           data.message ||
@@ -130,25 +136,12 @@ const Login = () => {
       }
     } catch (err) {
       setError("Failed to connect to the server");
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleRegisterSubmit = async (e) => {
-    e.preventDefault();
-    if (regPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    if (regPassword.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-
+  const handleRegisterSubmit = async (formData) => {
     setError(null);
     setSuccessMsg(null);
-    setLoading(true);
 
     try {
       const response = await fetch(`${API_BASE}/auth_checkpoint/register`, {
@@ -158,10 +151,10 @@ const Login = () => {
           Accept: "application/json",
         },
         body: JSON.stringify({
-          name: regName.trim(),
-          email: regEmail.trim(),
-          password: regPassword,
-          confirm_password: confirmPassword,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          password: formData.password,
+          confirm_password: formData.confirmPassword,
         }),
       });
 
@@ -169,21 +162,16 @@ const Login = () => {
 
       if (response.ok && data.success) {
         setMode("login");
-        setEmail(regEmail.trim());
+        setLoginValue("email", formData.email.trim());
         setSuccessMsg(
           data.message || "Account created successfully. You can now log in.",
         );
-        setRegName("");
-        setRegEmail("");
-        setRegPassword("");
-        setConfirmPassword("");
+        resetSignup();
       } else {
-        setError(data.message || data.detail[0].msg || "Registration failed");
+        setError(data.message || data.detail?.[0]?.msg || "Registration failed");
       }
     } catch (err) {
       setError("Failed to connect to the server");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -284,7 +272,7 @@ const Login = () => {
 
           {/* LOGIN FORM */}
           {mode === "login" && (
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <form onSubmit={handleLoginSubmitForm(handleLoginSubmit)} className="space-y-4">
               <div className="space-y-4 pt-1">
                 <div className="relative group">
                   <label className="text-sm font-semibold text-[var(--color-text)] mb-1 block">
@@ -296,13 +284,12 @@ const Login = () => {
                     </div>
                     <input
                       type="email"
-                      required
                       placeholder="you@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3.5 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm"
+                      {...registerLogin("email")}
+                      className={`w-full pl-10 pr-4 py-3.5 bg-[var(--color-surface-muted)] border ${loginErrors.email ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm`}
                     />
                   </div>
+                  {loginErrors.email && <p className="text-red-500 text-xs mt-1">{loginErrors.email.message}</p>}
                 </div>
 
                 <div className="relative group">
@@ -324,11 +311,9 @@ const Login = () => {
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
-                      required
                       placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-12 py-3.5 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm"
+                      {...registerLogin("password")}
+                      className={`w-full pl-10 pr-12 py-3.5 bg-[var(--color-surface-muted)] border ${loginErrors.password ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm`}
                     />
                     <button
                       type="button"
@@ -342,13 +327,14 @@ const Login = () => {
                       )}
                     </button>
                   </div>
+                  {loginErrors.password && <p className="text-red-500 text-xs mt-1">{loginErrors.password.message}</p>}
                 </div>
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={isLoginSubmitting}
                   style={{
                     background: isDark ? "white" : "#0f172a",
                     color: isDark ? "#0f172a" : "white",
@@ -358,7 +344,7 @@ const Login = () => {
                   }}
                   className="w-full flex items-center justify-center gap-2 py-4 px-4 font-bold rounded-lg hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
-                  {loading ? (
+                  {isLoginSubmitting ? (
                     "Authenticating..."
                   ) : (
                     <>
@@ -382,7 +368,7 @@ const Login = () => {
 
           {/* REGISTER FORM */}
           {mode === "register" && (
-            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            <form onSubmit={handleSignupSubmitForm(handleRegisterSubmit)} className="space-y-4">
               <div className="space-y-4 pt-1">
                 <div className="relative group">
                   <label className="text-sm font-semibold text-[var(--color-text)] mb-1 block">
@@ -394,13 +380,12 @@ const Login = () => {
                     </div>
                     <input
                       type="text"
-                      required
                       placeholder="John Doe"
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3.5 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm"
+                      {...registerSignup("name")}
+                      className={`w-full pl-10 pr-4 py-3.5 bg-[var(--color-surface-muted)] border ${registerErrors.name ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm`}
                     />
                   </div>
+                  {registerErrors.name && <p className="text-red-500 text-xs mt-1">{registerErrors.name.message}</p>}
                 </div>
 
                 <div className="relative group">
@@ -413,13 +398,12 @@ const Login = () => {
                     </div>
                     <input
                       type="email"
-                      required
                       placeholder="you@example.com"
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3.5 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm"
+                      {...registerSignup("email")}
+                      className={`w-full pl-10 pr-4 py-3.5 bg-[var(--color-surface-muted)] border ${registerErrors.email ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm`}
                     />
                   </div>
+                  {registerErrors.email && <p className="text-red-500 text-xs mt-1">{registerErrors.email.message}</p>}
                 </div>
 
                 <div className="relative group">
@@ -432,12 +416,9 @@ const Login = () => {
                     </div>
                     <input
                       type={showRegPassword ? "text" : "password"}
-                      required
                       placeholder="••••••••"
-                      minLength="8"
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      className="w-full pl-10 pr-12 py-3.5 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm"
+                      {...registerSignup("password")}
+                      className={`w-full pl-10 pr-12 py-3.5 bg-[var(--color-surface-muted)] border ${registerErrors.password ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm`}
                     />
                     <button
                       type="button"
@@ -451,6 +432,7 @@ const Login = () => {
                       )}
                     </button>
                   </div>
+                  {registerErrors.password && <p className="text-red-500 text-xs mt-1">{registerErrors.password.message}</p>}
                 </div>
 
                 <div className="relative group">
@@ -463,12 +445,9 @@ const Login = () => {
                     </div>
                     <input
                       type={showConfirmPassword ? "text" : "password"}
-                      required
                       placeholder="••••••••"
-                      minLength="8"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full pl-10 pr-12 py-3.5 bg-[var(--color-surface-muted)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm"
+                      {...registerSignup("confirmPassword")}
+                      className={`w-full pl-10 pr-12 py-3.5 bg-[var(--color-surface-muted)] border ${registerErrors.confirmPassword ? 'border-red-500' : 'border-[var(--color-border)]'} rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all shadow-sm`}
                     />
                     <button
                       type="button"
@@ -484,13 +463,14 @@ const Login = () => {
                       )}
                     </button>
                   </div>
+                  {registerErrors.confirmPassword && <p className="text-red-500 text-xs mt-1">{registerErrors.confirmPassword.message}</p>}
                 </div>
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={isRegisterSubmitting}
                   style={{
                     background: isDark ? "white" : "#0f172a",
                     color: isDark ? "#0f172a" : "white",
@@ -500,7 +480,7 @@ const Login = () => {
                   }}
                   className="w-full flex items-center justify-center gap-2 py-4 px-4 font-bold rounded-lg hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
-                  {loading ? (
+                  {isRegisterSubmitting ? (
                     "Creating Account..."
                   ) : (
                     <>
