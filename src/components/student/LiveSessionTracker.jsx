@@ -2,28 +2,27 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/AuthContext';
 import { useEnrollment } from '../../shared/EnrollmentContext';
+import { useQuery } from '@tanstack/react-query';
 import { Video, Calendar, Clock, Activity, ShieldCheck, PlayCircle, Archive, ExternalLink, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API } from '../../config';
 
 const LiveSessionTracker = ({ limit = 3 }) => {
-  const { user, smartFetch } = useAuth();
+  const { user, authFetch } = useAuth();
   const { enrolledCourses } = useEnrollment();
   const navigate = useNavigate();
-  
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  const fetchSessions = useCallback(async () => {
-    if (!enrolledCourses || enrolledCourses.length === 0) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Fetch full-details for all enrolled courses to get live sessions
+  const { data: sessions = [], isLoading: loading } = useQuery({
+    queryKey: ['student_live_sessions', enrolledCourses?.map(c => c.id || c.course_id).join(',')],
+    queryFn: async () => {
       const results = await Promise.all(
-        enrolledCourses.map(c => smartFetch(`${ADMIN_API}/course/${c.id || c.course_id}/full-details`, { cacheKey: `details_${c.id || c.course_id}` }))
+        enrolledCourses.map(async c => {
+            const res = await authFetch(`${ADMIN_API}/course/${c.id || c.course_id}/full-details`);
+            if (res.ok) {
+                return res.json();
+            }
+            return null;
+        })
       );
 
       const allSessions = [];
@@ -51,17 +50,11 @@ const LiveSessionTracker = ({ limit = 3 }) => {
         });
       });
 
-      setSessions(allSessions);
-    } catch (err) {
-      console.error('Student live session sync failure', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [enrolledCourses, smartFetch]);
-
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+      return allSessions;
+    },
+    enabled: !!enrolledCourses && enrolledCourses.length > 0,
+    staleTime: 5 * 60 * 1000
+  });
 
   const { liveSessions, upcomingSessions, passedSessions } = useMemo(() => {
     const now = new Date();

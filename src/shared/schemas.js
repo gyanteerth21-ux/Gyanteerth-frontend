@@ -31,11 +31,32 @@ export const resetPasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 
-// For Profile updates (Phase 7.2)
+// Profile Schemas
 export const profileSchema = z.object({
   user_name: z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal('')),
   user_number: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits").optional().or(z.literal('')),
   user_dob: z.string().optional().or(z.literal('')),
   user_gender: z.enum(['male', 'female', 'other']).optional().or(z.literal('')),
   user_pic: z.any().optional(),
+});
+
+// Admin CRUD Form Schemas
+export const degreeSchema = z.object({
+  name: z.string().min(2, "Degree name must be at least 2 characters"),
+});
+
+export const branchSchema = z.object({
+  name: z.string().min(2, "Branch name must be at least 2 characters"),
+});
+
+export const collegeSchema = z.object({
+  name: z.string().min(2, "College name must be at least 2 characters"),
+});
+
+export const tpoSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters").optional().or(z.literal('')),
+  number: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits").optional().or(z.literal('')),
+  collegeId: z.string().min(1, "College selection is required"),
 });

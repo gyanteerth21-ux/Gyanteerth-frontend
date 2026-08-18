@@ -8,20 +8,19 @@ import {
 import { useAuth } from '../../shared/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ADMIN_API, optimizeImageUrl } from '../../config';
 import { CreateCourseModal, EditCourseModal } from '../../components/admin/CourseModals';
 import AdminCourseCard from '../../components/admin/AdminCourseCard';
 
 const AdminCourses = () => {
   const navigate = useNavigate();
-  const { user, smartFetch, authFetch, clearCache } = useAuth();
+  const { user, authFetch } = useAuth();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const urlCategoryId = searchParams.get('categoryId');
   
-  const [courses, setCourses] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [trainers, setTrainers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('draft'); 
   const [activeCategory, setActiveCategory] = useState(urlCategoryId || 'all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,52 +36,48 @@ const AdminCourses = () => {
   };
 
 
-  const fetchAllData = useCallback(async (force = false) => {
-    if (!user) return;
-    try {
-      // 1. Concurrent Fetch Categories & Status Metadata (SWR)
-      const [catData, statusData] = await Promise.all([
-        smartFetch(`${ADMIN_API}/get-categories`, { cacheKey: 'admin_categories', forceRefresh: force }),
-        smartFetch(`${ADMIN_API}/courses/ids-by-status`, { cacheKey: 'admin_course_ids', forceRefresh: force })
+  const { data: coursesData = { courses: [], categories: [] }, isLoading: loading, refetch: fetchAllData } = useQuery({
+    queryKey: ['admin_courses_full_data'],
+    queryFn: async () => {
+      const [catRes, statusRes] = await Promise.all([
+        authFetch(`${ADMIN_API}/get-categories`),
+        authFetch(`${ADMIN_API}/courses/ids-by-status`)
       ]);
+      
+      const catData = catRes.ok ? await catRes.json() : { categories: [] };
+      const statusData = statusRes.ok ? await statusRes.json() : { courses: { active: [], draft: [] } };
 
-      if (catData) setCategories(catData.categories || []);
+      const categories = catData.categories || [];
+      const { active = [], draft = [] } = statusData.courses || {};
+      const allMeta = [
+        ...active.map(id => ({ id, status: 'active' })),
+        ...draft.map(id => ({ id, status: 'draft' }))
+      ];
 
-      if (statusData) {
-        const { active = [], draft = [] } = statusData.courses || {};
-        const allMeta = [
-          ...active.map(id => ({ id, status: 'active' })),
-          ...draft.map(id => ({ id, status: 'draft' }))
-        ];
+      const detailPromises = allMeta.map(async (meta) => {
+        const r = await authFetch(`${ADMIN_API}/course/${meta.id}/full-details`);
+        if (!r.ok) return null;
+        const data = await r.json();
+        const c = data.course || data;
+        return {
+          ...c,
+          course_id: meta.id,
+          status: meta.status,
+          course_title: c.course_title || c.title || 'Untitled Course',
+          course_description: c.course_description || c.description || 'No description available',
+          thumbnail: optimizeImageUrl(c.thumbnail || c.Thumbnail)
+        };
+      });
 
-        // 2. 🔥 CONCURRENT BATCH FETCHING (Parallelized SWR)
-        const detailPromises = allMeta.map(async (meta) => {
-          const data = await smartFetch(`${ADMIN_API}/course/${meta.id}/full-details`, { 
-            cacheKey: `details_${meta.id}`,
-            forceRefresh: force 
-          });
-          if (!data) return null;
-          const c = data.course || data;
-          return {
-            ...c,
-            course_id: meta.id,
-            status: meta.status,
-            course_title: c.course_title || c.title || 'Untitled Course',
-            course_description: c.course_description || c.description || 'No description available',
-            thumbnail: optimizeImageUrl(c.thumbnail || c.Thumbnail)
-          };
-        });
+      const courses = (await Promise.all(detailPromises)).filter(Boolean);
+      return { courses, categories };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000
+  });
 
-        const detailResults = (await Promise.all(detailPromises)).filter(Boolean);
-        setCourses(detailResults);
-      }
-    } catch (err) { 
-      console.error("Courses sync failed", err);
-      showToast('Sync failed', 'error'); 
-    } finally { 
-      setLoading(false); 
-    }
-  }, [user, smartFetch]);
+  const courses = coursesData.courses;
+  const categories = coursesData.categories;
 
   const fetchTrainers = useCallback(async () => {
     try {
@@ -100,7 +95,7 @@ const AdminCourses = () => {
     } catch (err) { console.error('Faculty fetch failed'); }
   }, [authFetch]);
 
-  useEffect(() => { fetchAllData(); fetchTrainers(); }, [fetchAllData, fetchTrainers]);
+  useEffect(() => { fetchTrainers(); }, [fetchTrainers]);
 
   const handlePublish = async (courseId) => {
     if (!window.confirm('Mobilize live?')) return;
@@ -109,9 +104,7 @@ const AdminCourses = () => {
       const res = await authFetch(`${ADMIN_API}/activate/${courseId}`, { method: 'PUT' });
       if (res.ok) { 
         showToast('Strategic Deployment Successful'); 
-        clearCache('admin_course_ids'); // Bust IDs cache
-        clearCache(`details_${courseId}`); // Bust specific detail cache
-        fetchAllData(true); 
+        queryClient.invalidateQueries({ queryKey: ['admin_courses_full_data'] });
         setActiveTab('active'); 
       }
       else { const d = await res.json(); showToast(d.detail || d.message || 'Denied', 'error'); }
@@ -125,9 +118,7 @@ const AdminCourses = () => {
       const res = await authFetch(`${ADMIN_API}/delete-course/${courseId}`, { method: 'DELETE' });
       if (res.ok) { 
         showToast('Asset Purged'); 
-        clearCache('admin_course_ids');
-        clearCache(`details_${courseId}`);
-        fetchAllData(true); 
+        queryClient.invalidateQueries({ queryKey: ['admin_courses_full_data'] });
       }
       else showToast('Restricted', 'error');
     } catch (err) { showToast('Sync failed', 'error'); }

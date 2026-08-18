@@ -4,13 +4,13 @@ import {
   RefreshCcw, Eye, EyeOff, ShieldAlert, Archive
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../shared/AuthContext';
 import { ADMIN_API } from '../../config';
 
 const AdminFeedbacks = () => {
-  const { authFetch, smartFetch } = useAuth();
-  const [feedbacks, setFeedbacks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { authFetch } = useAuth();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('All');
   const [actionLoading, setActionLoading] = useState(null);
@@ -32,23 +32,16 @@ const AdminFeedbacks = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
-  const fetchFeedbacks = useCallback(async () => {
-    setLoading(true);
-    try {
-      const json = await smartFetch(`${ADMIN_API}/all-feedback`, { cacheKey: 'admin_all_feedbacks' });
-      if (json) {
-        setFeedbacks(json.data || []);
-      }
-    } catch (err) {
-      showToast('Failed to fetch feedbacks', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [smartFetch]);
-
-  useEffect(() => {
-    fetchFeedbacks();
-  }, [fetchFeedbacks]);
+  const { data: feedbacks = [], isLoading: loading, refetch: fetchFeedbacks } = useQuery({
+    queryKey: ['admin_all_feedbacks'],
+    queryFn: async () => {
+      const res = await authFetch(`${ADMIN_API}/all-feedback`);
+      if (!res.ok) throw new Error("Failed to fetch feedbacks");
+      const json = await res.json();
+      return json.data || [];
+    },
+    staleTime: 5 * 60 * 1000
+  });
 
   const handleUpdateStatus = async (feedbackId, newStatus) => {
     setActionLoading(feedbackId);
@@ -60,9 +53,7 @@ const AdminFeedbacks = () => {
       });
       if (res.ok) {
         showToast('Feedback status updated');
-        setFeedbacks(prev => prev.map(f => 
-          f.feedback_id === feedbackId ? { ...f, display_status: newStatus } : f
-        ));
+        queryClient.invalidateQueries({ queryKey: ['admin_all_feedbacks'] });
       } else {
         const d = await res.json();
         showToast(d.detail || 'Update rejected', 'error');

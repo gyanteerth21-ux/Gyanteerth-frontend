@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }) => {
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [cacheSyncToken, setCacheSyncToken] = useState(0); // 🚀 REVALIDATION ENGINE
 
   // Initialize Auth State
   useEffect(() => {
@@ -52,8 +51,6 @@ export const AuthProvider = ({ children }) => {
     if (tokens?.refresh_token) {
       localStorage.setItem(REFRESH_KEY, tokens.refresh_token);
     }
-    // Bust all cache on login to ensure fresh data for the new session
-    setCacheSyncToken(v => v + 1);
   }, []);
 
   // Secure Logout
@@ -69,7 +66,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem(key);
       }
     });
-    setCacheSyncToken(0);
   }, []);
 
   const authFetch = useCallback(async (url, options = {}) => {
@@ -98,72 +94,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, [logout]);
 
-  // 🚀 PERFORMANCE + SECURITY: Universal Smart Fetcher (Powered by TanStack Query)
-  const smartFetch = useCallback(async (url, options = {}) => {
-    const { 
-      cacheKey = btoa(url).slice(0, 16), 
-      forceRefresh = false, 
-      swr = true 
-    } = options;
-
-    const queryKey = [cacheKey];
-
-    const fetchFn = async () => {
-      const res = await authFetch(url, options);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      
-      const currentData = queryClient.getQueryData(queryKey);
-      const dataChanged = JSON.stringify(data) !== JSON.stringify(currentData);
-      
-      // Keep legacy signaling active for contexts that still rely on cacheSyncToken
-      if (dataChanged) {
-        setCacheSyncToken(v => v + 1); 
-      }
-      return data;
-    };
-
-    if (forceRefresh) {
-      return queryClient.fetchQuery({ queryKey, queryFn: fetchFn, staleTime: 0 });
-    }
-
-    const cachedData = queryClient.getQueryData(queryKey);
-
-    if (cachedData && swr) {
-      // SWR: return cache instantly, trigger background fetch
-      queryClient.prefetchQuery({ queryKey, queryFn: fetchFn });
-      return cachedData;
-    }
-
-    if (cachedData) {
-      return cachedData;
-    }
-
-    // No cache: fetch and wait
-    return queryClient.fetchQuery({ queryKey, queryFn: fetchFn });
-  }, [authFetch, queryClient]);
 
   // 🧹 CACHE MANAGEMENT
   const clearCache = useCallback((key) => {
-    queryClient.removeQueries({ queryKey: [key] });
-    setCacheSyncToken(v => v + 1);
+    queryClient.invalidateQueries({ queryKey: [key] });
   }, [queryClient]);
 
-  // 🔄 Force a global re-sync (useful on page transitions)
-  const revalidateAll = useCallback(() => {
-    setCacheSyncToken(v => v + 1);
-  }, []);
 
   return (
     <AuthContext.Provider value={{ 
       user, 
       login, 
       logout, 
-      authFetch, 
-      smartFetch,
+      authFetch,
       clearCache,
-      revalidateAll,
-      cacheSyncToken, // 🚀 Exposed for components to use in deps
       loading 
     }}>
       {!loading && children}

@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../shared/AuthContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, ChevronDown, Globe, Upload, X, CheckCircle2, AlertCircle, Database, FileText, GraduationCap, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API, TRAINER_API } from '../../config';
@@ -11,11 +12,9 @@ import useStudentFilters from '../../hooks/useStudentFilters';
 import { fetchCollegesAndBranchesMap } from '../../utils/mappingUtils';
 
 const AdminStudents = () => {
-  const { user, smartFetch, authFetch, clearCache } = useAuth();
-  const [students, setStudents] = useState([]);
-  const [uniqueStudents, setUniqueStudents] = useState([]);
-  const [availableCourses, setAvailableCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, authFetch } = useAuth();
+  const queryClient = useQueryClient();
+
   const [showImportModal, setShowImportModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -28,10 +27,6 @@ const AdminStudents = () => {
 
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
-  
-  const [globalColleges, setGlobalColleges] = useState([]);
-  const [globalBranches, setGlobalBranches] = useState([]);
-  const [globalDegrees, setGlobalDegrees] = useState([]);
 
   const {
     searchQuery, setSearchQuery,
@@ -45,19 +40,14 @@ const AdminStudents = () => {
     filteredStudents, filteredUniqueStudents
   } = useStudentFilters(students, uniqueStudents);
 
-  const fetchStudents = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-
-    try {
-      // Fetch colleges to map IDs to Names
+  const { data: { students = [], uniqueStudents = [], availableCourses = [], globalColleges = [], globalBranches = [], globalDegrees = [] } = {}, isLoading: loading } = useQuery({
+    queryKey: ['admin_students_data'],
+    queryFn: async () => {
       const { colMap, brMap, degMap } = await fetchCollegesAndBranchesMap(authFetch, ADMIN_API);
       
-      setGlobalColleges(Object.values(colMap));
-      setGlobalBranches(Object.values(brMap));
-      setGlobalDegrees(Object.values(degMap));
-
-      const response = await smartFetch(`${ADMIN_API}/students`, { cacheKey: 'admin_students_data', forceRefresh: true });
+      const responseRes = await authFetch(`${ADMIN_API}/students`);
+      if (!responseRes.ok) throw new Error("Failed to fetch students roster");
+      const response = await responseRes.json();
 
       if (response && response.status) {
         const uniqueArr = response.data;
@@ -65,7 +55,6 @@ const AdminStudents = () => {
         let courseMap = new Map();
 
         uniqueArr.forEach(st => {
-          // Map IDs to Names
           st.college = colMap[st.college] || st.college;
           st.branch = brMap[st.branch] || st.branch;
           st.degree = degMap[st.degree] || st.degree;
@@ -95,19 +84,26 @@ const AdminStudents = () => {
 
         const clist = Array.from(courseMap.values());
 
-        setStudents(allStudents.sort((a, b) => b.progress - a.progress));
-        setUniqueStudents(uniqueArr);
-        setAvailableCourses(clist);
-        if (uniqueArr.length > 0) setSelectedUser(uniqueArr[0]);
+        return {
+          students: allStudents.sort((a, b) => b.progress - a.progress),
+          uniqueStudents: uniqueArr,
+          availableCourses: clist,
+          globalColleges: Object.values(colMap),
+          globalBranches: Object.values(brMap),
+          globalDegrees: Object.values(degMap)
+        };
       }
-    } catch (err) {
-      console.error("Failed to fetch students roster:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, smartFetch]);
+      return {};
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000
+  });
 
-  useEffect(() => { fetchStudents(); }, [fetchStudents]);
+  useEffect(() => {
+    if (!loading && uniqueStudents.length > 0 && !selectedUser) {
+      setSelectedUser(uniqueStudents[0]);
+    }
+  }, [loading, uniqueStudents, selectedUser]);
 
   const handleBulkImport = async (file) => {
     setActionLoading(true);
@@ -125,7 +121,7 @@ const AdminStudents = () => {
       if (response.ok) {
         showToast('Students imported successfully');
         setShowImportModal(false);
-        fetchStudents();
+        queryClient.invalidateQueries({ queryKey: ['admin_students_data'] });
       } else {
         const errorData = await response.json();
         console.error("Bulk Import Error Details:", errorData);

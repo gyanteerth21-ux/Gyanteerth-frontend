@@ -1,35 +1,34 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/AuthContext';
-import { Video, Calendar, Clock, PlusCircle, Activity, ShieldCheck, PlayCircle, Archive, Monitor, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { Video, PlusCircle } from 'lucide-react';
 import { ADMIN_API, TRAINER_API } from '../../config';
 import LiveSessionCard from '../../components/shared/LiveSessionCard';
 
 const LiveSessions = () => {
-  const { user, smartFetch } = useAuth();
+  const { user, authFetch } = useAuth();
   const navigate = useNavigate();
+  const identifier = user?.user_id || user?.id || user?.email;
   
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('upcoming');
 
-  const fetchSessions = useCallback(async () => {
-    const identifier = user?.user_id || user?.id || user?.email;
-    if (!identifier) return;
-
-    try {
-      // 1. Get trainer's course IDs (SWR enabled)
-      const data = await smartFetch(`${TRAINER_API}/trainer_course_ids`, {
-         cacheKey: `trainer_course_ids_${identifier}`
-      });
+  const { data: sessions = [], isLoading: loading } = useQuery({
+    queryKey: ['trainer_live_sessions', identifier],
+    queryFn: async () => {
+      const dataRes = await authFetch(`${TRAINER_API}/trainer_course_ids`);
+      if (!dataRes.ok) throw new Error("Failed to fetch course ids");
+      const data = await dataRes.json();
       const ids = data?.course_ids || [];
 
-      if (ids.length === 0) { setLoading(false); return; }
+      if (ids.length === 0) return [];
 
-      // 2. Fetch full-details for each course (SWR enabled with shared keys)
       const results = await Promise.all(
-        ids.map(id => smartFetch(`${ADMIN_API}/course/${id}/full-details`, { cacheKey: `details_${id}` }))
+        ids.map(async id => {
+           const res = await authFetch(`${ADMIN_API}/course/${id}/full-details`);
+           if (res.ok) return res.json();
+           return null;
+        })
       );
 
       const allSessions = [];
@@ -55,15 +54,11 @@ const LiveSessions = () => {
         });
       });
 
-      setSessions(allSessions);
-    } catch (err) {
-      console.error('Live session sync failure', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, smartFetch]);
-
-  useEffect(() => { fetchSessions(); }, [fetchSessions]);
+      return allSessions;
+    },
+    enabled: !!identifier,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
 
   // Same filtering logic as student panel — time-based, not status-based
   const { liveSessions, upcomingSessions, passedSessions } = useMemo(() => {

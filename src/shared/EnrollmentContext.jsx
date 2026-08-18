@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { USER_API, ADMIN_API } from '../config';
 
@@ -8,7 +9,8 @@ const EnrollmentContext = createContext(null);
 const norm = (id) => (id === undefined || id === null || String(id) === 'NaN' || String(id) === 'undefined') ? null : String(id);
 
 export const EnrollmentProvider = ({ children }) => {
-  const { user, authFetch, smartFetch, clearCache, cacheSyncToken } = useAuth();
+  const queryClient = useQueryClient();
+  const { user, authFetch } = useAuth();
 
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [completedLessons, setCompletedLessons] = useState({});
@@ -93,68 +95,94 @@ export const EnrollmentProvider = ({ children }) => {
     const syncEnrollments = async () => {
       if (!user?.user_id) return;
 
-      const baseData = await smartFetch(`${USER_API}/enrolled_courses`, { 
-        cacheKey: `enrollments_${user.user_id}` 
-      });
-
-      if (!Array.isArray(baseData)) return;
-
-      const normalizedBase = baseData.map(c => {
-        const cid = norm(c.id || c.course_id || c.Course_id || c.Course_ID || c.courseId || c.CourseId || c.ID);
-        const title = c.course_title || c.Course_Title || c.title || c.Title || c.courseTitle || 'Untitled Course';
-        const type = (c.course_type || c.course_Type || c.Course_Type || c.type || c.Type || 'recorded').toLowerCase();
-        return {
-          ...c, id: cid, course_id: cid, title, course_title: title, type,
-          progress: c.progress_percentage !== undefined ? c.progress_percentage : (c.progress || c.Progress || 0)
-        };
-      });
-
-      if (isMounted) setEnrolledCourses(normalizedBase);
-
-      const enrichedData = await Promise.all(normalizedBase.map(async (c) => {
-        if (!c.id) return c;
-        
-        const [details, progressData] = await Promise.all([
-          smartFetch(`${ADMIN_API}/course/${c.id}/full-details`, { cacheKey: `details_${c.id}` }),
-          smartFetch(`${USER_API}/course/${c.id}/progress`, { cacheKey: `progress_${c.id}` })
-        ]);
-
-        const d = details?.course || details?.data || details || {};
-        const p = progressData || {};
-
-        // 🚨 ASSESSMENT GATE: Check for failed assessments
-        let prog = p.progress_percentage !== undefined ? Number(p.progress_percentage) : (Number(p.progress) || c.progress || 0);
-        const assessments = p.assessments_progress || p.assessments;
-        if (Array.isArray(assessments) && prog >= 100) {
-          const hasFailed = assessments.some(a => a.passed !== true && a.status !== 'Passed');
-          if (hasFailed) prog = 99;
-        }
-
-        return {
-          ...c,
-          title: d.course_title || d.Course_Title || d.title || d.Title || c.title,
-          thumbnail: d.thumbnail || d.Thumbnail || d.course_thumbnail || c.thumbnail,
-          type: (d.course_type || d.type || c.type).toLowerCase(),
-          level: d.level || d.course_level || c.level,
-          category_name: d.category_name || d.Category || c.category_name,
-          progress: prog,
-          total_modules: p.total_modules || c.total_modules,
-          completed_modules: p.completed_modules || c.completed_modules
-        };
-      }));
-
-      if (isMounted) {
-        setEnrolledCourses(enrichedData);
-        // Populate syncedLessons for each course via fetchCourseProgress
-        enrichedData.forEach(c => {
-          if (c.id) fetchCourseProgress(c.id);
+      try {
+        const baseData = await queryClient.fetchQuery({
+          queryKey: ['enrollments', user.user_id],
+          queryFn: async () => {
+            const res = await authFetch(`${USER_API}/enrolled_courses`);
+            if (!res.ok) throw new Error('Failed to fetch enrollments');
+            return res.json();
+          },
+          staleTime: 5 * 60 * 1000 // 5 minutes
         });
+
+        if (!Array.isArray(baseData)) return;
+
+        const normalizedBase = baseData.map(c => {
+          const cid = norm(c.id || c.course_id || c.Course_id || c.Course_ID || c.courseId || c.CourseId || c.ID);
+          const title = c.course_title || c.Course_Title || c.title || c.Title || c.courseTitle || 'Untitled Course';
+          const type = (c.course_type || c.course_Type || c.Course_Type || c.type || c.Type || 'recorded').toLowerCase();
+          return {
+            ...c, id: cid, course_id: cid, title, course_title: title, type,
+            progress: c.progress_percentage !== undefined ? c.progress_percentage : (c.progress || c.Progress || 0)
+          };
+        });
+
+        if (isMounted) setEnrolledCourses(normalizedBase);
+
+        const enrichedData = await Promise.all(normalizedBase.map(async (c) => {
+          if (!c.id) return c;
+          
+          const [details, progressData] = await Promise.all([
+            queryClient.fetchQuery({
+              queryKey: ['course_details', c.id],
+              queryFn: async () => {
+                const res = await authFetch(`${ADMIN_API}/course/${c.id}/full-details`);
+                if (!res.ok) throw new Error('Failed to fetch details');
+                return res.json();
+              },
+              staleTime: 5 * 60 * 1000
+            }),
+            queryClient.fetchQuery({
+              queryKey: ['course_progress', c.id],
+              queryFn: async () => {
+                const res = await authFetch(`${USER_API}/course/${c.id}/progress`);
+                if (!res.ok) throw new Error('Failed to fetch progress');
+                return res.json();
+              },
+              staleTime: 0 // Progress should always be fresh
+            }).catch(() => ({}))
+          ]);
+
+          const d = details?.course || details?.data || details || {};
+          const p = progressData || {};
+
+          // 🚨 ASSESSMENT GATE: Check for failed assessments
+          let prog = p.progress_percentage !== undefined ? Number(p.progress_percentage) : (Number(p.progress) || c.progress || 0);
+          const assessments = p.assessments_progress || p.assessments;
+          if (Array.isArray(assessments) && prog >= 100) {
+            const hasFailed = assessments.some(a => a.passed !== true && a.status !== 'Passed');
+            if (hasFailed) prog = 99;
+          }
+
+          return {
+            ...c,
+            title: d.course_title || d.Course_Title || d.title || d.Title || c.title,
+            thumbnail: d.thumbnail || d.Thumbnail || d.course_thumbnail || c.thumbnail,
+            type: (d.course_type || d.type || c.type).toLowerCase(),
+            level: d.level || d.course_level || c.level,
+            category_name: d.category_name || d.Category || c.category_name,
+            progress: prog,
+            total_modules: p.total_modules || c.total_modules,
+            completed_modules: p.completed_modules || c.completed_modules
+          };
+        }));
+
+        if (isMounted) {
+          setEnrolledCourses(enrichedData);
+          // Populate syncedLessons for each course via fetchCourseProgress
+          enrichedData.forEach(c => {
+            if (c.id) fetchCourseProgress(c.id);
+          });
+        }
+      } catch (error) {
+        console.error("Failed to sync enrollments:", error);
       }
     };
 
     syncEnrollments();
     return () => { isMounted = false; };
-  }, [user?.user_id, smartFetch, cacheSyncToken]);
+  }, [user?.user_id, queryClient, authFetch]);
 
 
   /* ── Local State Calculations ── */
@@ -241,7 +269,7 @@ export const EnrollmentProvider = ({ children }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: user.user_id, course_id: cid })
         });
-        clearCache(`enrollments_${user.user_id}`);
+        queryClient.invalidateQueries({ queryKey: ['enrollments', user.user_id] });
       } catch (err) { console.error("Enrollment failed:", err); }
     }
   };
@@ -252,9 +280,17 @@ export const EnrollmentProvider = ({ children }) => {
     
     let data;
     try {
-      data = await smartFetch(`${USER_API}/course/${cid}/progress`, {
-        cacheKey: `progress_${cid}`,
-        forceRefresh: force
+      if (force) {
+        await queryClient.invalidateQueries({ queryKey: ['course_progress', cid] });
+      }
+      data = await queryClient.fetchQuery({
+        queryKey: ['course_progress', cid],
+        queryFn: async () => {
+          const res = await authFetch(`${USER_API}/course/${cid}/progress`);
+          if (!res.ok) throw new Error('Failed to fetch progress');
+          return res.json();
+        },
+        staleTime: force ? 0 : 5 * 60 * 1000
       });
     } catch (err) {
       console.error(`Failed to fetch progress for ${cid}:`, err);
@@ -330,7 +366,7 @@ export const EnrollmentProvider = ({ children }) => {
     setCompletedLessons(prev => ({ ...prev, [cid]: passedLids }));
 
     return data;
-  }, [smartFetch]);
+  }, [authFetch]);
 
   const triggerProgressUpdate = async (endpoint, payload, courseId, fromQueue = false) => {
     try {
@@ -355,7 +391,7 @@ export const EnrollmentProvider = ({ children }) => {
       }
 
       // Always re-fetch progress from backend to get the truth
-      clearCache(`progress_${courseId}`);
+      queryClient.invalidateQueries({ queryKey: ['course_progress', courseId] });
       await fetchCourseProgress(courseId, true); 
       
       return data;

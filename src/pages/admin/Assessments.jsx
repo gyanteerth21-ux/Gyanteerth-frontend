@@ -6,6 +6,7 @@ import {
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../shared/AuthContext';
 import { ADMIN_API, TRAINER_API } from '../../config';
 import EditAssessmentModal from '../../components/admin/EditAssessmentModal';
@@ -15,11 +16,9 @@ import { useViewMode } from '../../hooks/useViewMode';
 
 
 const AdminAssessments = () => {
-  const { user, authFetch, smartFetch } = useAuth();
+  const { user, authFetch } = useAuth();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [assessments, setAssessments] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
   const { viewMode, setViewMode } = useViewMode('admin_assessments_view_mode', 'grid');
   const [toast, setToast] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState('all');
@@ -38,84 +37,79 @@ const AdminAssessments = () => {
   const isTrainer = user?.role === 'trainer';
   const BASE_URL = isTrainer ? TRAINER_API : ADMIN_API;
 
-  const fetchEverything = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      // For trainers, we might need a different endpoint to get their specific courses
+  const { data: fetchResult = { courses: [], assessments: [] }, isLoading: loading, refetch: fetchEverything } = useQuery({
+    queryKey: [isTrainer ? 'trainer_assessments' : 'admin_assessments'],
+    queryFn: async () => {
       const statusEndpoint = isTrainer ? `${TRAINER_API}/trainer_course_ids` : `${ADMIN_API}/courses/ids-by-status`;
-      const statusData = await smartFetch(statusEndpoint, { 
-        cacheKey: isTrainer ? 'trainer_course_ids' : 'admin_course_ids',
-        forceRefresh: true 
-      });
+      const res = await authFetch(statusEndpoint);
+      if (!res.ok) throw new Error("Failed to fetch course IDs");
+      const statusData = await res.json();
       
-      if (statusData) {
-        let allIds = [];
-        if (isTrainer) {
-          allIds = statusData.course_ids || statusData.ids || [];
-        } else {
-          const { active = [], draft = [], inactive = [] } = statusData.courses || {};
-          allIds = [...active, ...draft, ...inactive];
-        }
-        
-        const allAsms = [];
-        const courseRegistry = [];
-
-        // Parallelize fetching course details for assessments using smartFetch
-        const coursePromises = allIds.map(async (id) => {
-           try {
-              const detailsEndpoint = isTrainer ? `${TRAINER_API}/course/${id}/details` : `${ADMIN_API}/course/${id}/full-details`;
-              const fullData = await smartFetch(detailsEndpoint, { cacheKey: `details_${id}` });
-              if (fullData) {
-                 const c = fullData.course || fullData;
-                 return { id, data: c };
-              }
-           } catch (e) {}
-           return null;
-        });
-
-        const courseResults = await Promise.all(coursePromises);
-
-        for (const res of courseResults) {
-           if (!res) continue;
-           const { id, data: c } = res;
-           courseRegistry.push({ 
-              course_id: id, 
-              course_title: c.course_title || c.title || 'Untitled Course',
-              status: c.status || c.Status || 'active'
-            });
-           
-           (c.modules || []).forEach(m => {
-              const content = m.content || {};
-              const relevantAsms = content.assessments || m.assessments || [];
-              relevantAsms.forEach(a => {
-                 allAsms.push({ 
-                   ...a, 
-                   assessment_id: a.assessment_id || a.Assessment_ID,
-                   module_id: m.module_id || m.Module_ID,
-                   module_title: m.title || m.Title, 
-                   course_title: c.course_title || c.title || 'Untitled Course', 
-                   course_id: id,
-                   course_status: c.status || c.Status || 'active'
-                 });
-              });
-           });
-        }
-        const clist = courseRegistry.map(c => {
-           const count = allAsms.filter(a => a.course_id === c.course_id).length;
-           return { ...c, count };
-        }).filter(c => c.count > 0);
-        setCourses(clist);
-        setAssessments(allAsms);
+      let allIds = [];
+      if (isTrainer) {
+        allIds = statusData.course_ids || statusData.ids || [];
+      } else {
+        const { active = [], draft = [], inactive = [] } = statusData.courses || {};
+        allIds = [...active, ...draft, ...inactive];
       }
-    } catch (err) {
-      showToast('Data sync failed', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [user, smartFetch]);
+      
+      const allAsms = [];
+      const courseRegistry = [];
 
-  useEffect(() => { fetchEverything(); }, [fetchEverything]);
+      const coursePromises = allIds.map(async (id) => {
+         try {
+            const detailsEndpoint = isTrainer ? `${TRAINER_API}/course/${id}/details` : `${ADMIN_API}/course/${id}/full-details`;
+            const r = await authFetch(detailsEndpoint);
+            if (r.ok) {
+               const fullData = await r.json();
+               const c = fullData.course || fullData;
+               return { id, data: c };
+            }
+         } catch (e) {}
+         return null;
+      });
+
+      const courseResults = await Promise.all(coursePromises);
+
+      for (const res of courseResults) {
+         if (!res) continue;
+         const { id, data: c } = res;
+         courseRegistry.push({ 
+            course_id: id, 
+            course_title: c.course_title || c.title || 'Untitled Course',
+            status: c.status || c.Status || 'active'
+          });
+         
+         (c.modules || []).forEach(m => {
+            const content = m.content || {};
+            const relevantAsms = content.assessments || m.assessments || [];
+            relevantAsms.forEach(a => {
+               allAsms.push({ 
+                 ...a, 
+                 assessment_id: a.assessment_id || a.Assessment_ID,
+                 module_id: m.module_id || m.Module_ID,
+                 module_title: m.title || m.Title, 
+                 course_title: c.course_title || c.title || 'Untitled Course', 
+                 course_id: id,
+                 course_status: c.status || c.Status || 'active'
+               });
+            });
+         });
+      }
+      
+      const clist = courseRegistry.map(c => {
+         const count = allAsms.filter(a => a.course_id === c.course_id).length;
+         return { ...c, count };
+      }).filter(c => c.count > 0);
+      
+      return { courses: clist, assessments: allAsms };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000
+  });
+
+  const courses = fetchResult.courses;
+  const assessments = fetchResult.assessments;
 
   const handleDelete = async (id, courseId) => {
     if (!window.confirm('Are you sure you want to delete this assessment?')) return;
@@ -123,8 +117,7 @@ const AdminAssessments = () => {
       const res = await authFetch(`${BASE_URL}/delete-assessment/${id}`, { method: 'DELETE' });
       if (res.ok) { 
         showToast('Assessment Deleted'); 
-        if (courseId) clearCache(`details_${courseId}`);
-        fetchEverything(); 
+        queryClient.invalidateQueries({ queryKey: [isTrainer ? 'trainer_assessments' : 'admin_assessments'] });
       }
       else showToast('Delete failed', 'error');
     } catch (err) { showToast('Network fail', 'error'); }

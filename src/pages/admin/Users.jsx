@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ExportExcelButton from '../../components/ExportExcelButton';
 import { useAuth } from '../../shared/AuthContext';
 import { ADMIN_API, getHeaders } from '../../config';
@@ -20,10 +21,47 @@ import { useViewMode } from '../../hooks/useViewMode';
 
 
 const AdminUsers = () => {
-  const { authFetch, smartFetch, clearCache } = useAuth();
+  const { authFetch } = useAuth();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [trainers, setTrainers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  const { data: trainers = [], isLoading: loading } = useQuery({
+    queryKey: ['admin_trainers'],
+    queryFn: async () => {
+      const res = await authFetch(`${ADMIN_API}/all_trainer`);
+      if (!res.ok) throw new Error('Failed to fetch trainers');
+      const data = await res.json();
+      
+      const activeList = data.active_trainer_email || [];
+      const inactiveList = data.inactive_trainer_email || [];
+
+      const fetchDetails = async (list, status) => {
+        const promises = list.map(async (item) => {
+          const email = typeof item === 'string' ? item : Object.values(item)[0];
+          if (!email) return null;
+          try {
+             const detailRes = await authFetch(`${ADMIN_API}/get_trainer?trainer_email=${email}`);
+             if (detailRes.ok) {
+                 const detail = await detailRes.json();
+                 return { ...detail, trainer_status: status };
+             }
+          } catch (e) {}
+          return null;
+        });
+        const results = await Promise.all(promises);
+        return results.filter(Boolean);
+      };
+
+      const [activeDetails, inactiveDetails] = await Promise.all([
+        fetchDetails(activeList, 'active'),
+        fetchDetails(inactiveList, 'inactive')
+      ]);
+      
+      return [...activeDetails, ...inactiveDetails];
+    },
+    staleTime: 5 * 60 * 1000
+  });
+
   const { searchQuery, setSearchQuery, filteredData: filteredTrainers } = useSearchFilter(trainers, ['user_name', 'trainer_name', 'email', 'trainer_email']);
   const { viewMode, setViewMode } = useViewMode('admin_users_view_mode', 'grid');
   
@@ -45,47 +83,7 @@ const AdminUsers = () => {
   const validatePassword = (pass) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(pass);
 
 
-  const fetchTrainers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await smartFetch(`${ADMIN_API}/all_trainer`, { cacheKey: 'admin_all_trainers' });
-      if (data) {
-        const activeList = data.active_trainer_email || [];
-        const inactiveList = data.inactive_trainer_email || [];
-
-        const fetchDetails = async (list, status) => {
-          const promises = list.map(async (item) => {
-            const email = typeof item === 'string' ? item : Object.values(item)[0];
-            if (!email) return null;
-            try {
-               const detail = await smartFetch(`${ADMIN_API}/get_trainer?trainer_email=${email}`, {
-                  cacheKey: `trainer_detail_${email}`
-               });
-               if (detail) return { ...detail, trainer_status: status };
-            } catch (e) {}
-            return null;
-          });
-          const results = await Promise.all(promises);
-          return results.filter(Boolean);
-        };
-
-        const [activeDetails, inactiveDetails] = await Promise.all([
-          fetchDetails(activeList, 'active'),
-          fetchDetails(inactiveList, 'inactive')
-        ]);
-        
-        setTrainers([...activeDetails, ...inactiveDetails]);
-      }
-    } catch (err) {
-      showToast('Registry sync interrupted', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [smartFetch]);
-
-  useEffect(() => {
-    fetchTrainers();
-  }, [fetchTrainers]);
+  const validatePassword = (pass) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(pass);
 
   const handleCreate = async (formData) => {
     setActionLoading(true);
@@ -99,8 +97,7 @@ const AdminUsers = () => {
       });
       if (res.ok) { 
         showToast('Faculty operational'); 
-        clearCache('admin_all_trainers');
-        setTrainers(prev => [{ ...formData, trainer_status: 'active' }, ...prev]);
+        queryClient.invalidateQueries({ queryKey: ['admin_trainers'] });
         setShowCreateModal(false); 
       }
       else { const d = await res.json(); showToast(d.detail || 'Creation denied', 'error'); }
@@ -127,13 +124,8 @@ const AdminUsers = () => {
         body: JSON.stringify(payload)
       });
       if (res.ok) { 
-        setTrainers(prev => prev.map(t => (t.email === formData.trainer_email || t.trainer_email === formData.trainer_email) ? { ...t, ...formData } : t));
         showToast('Profile sync success'); 
-        clearCache('admin_all_trainers');
-        if (formData.trainer_email) {
-          clearCache(`trainer_detail_${formData.trainer_email}`);
-          refreshSingleTrainer(formData.trainer_email, selectedTrainer.trainer_status);
-        }
+        queryClient.invalidateQueries({ queryKey: ['admin_trainers'] });
         setShowEditModal(false); 
       }
       else showToast('Update rejected', 'error');
@@ -155,8 +147,7 @@ const AdminUsers = () => {
       if (response.ok) {
         showToast('Faculty initialized successfully');
         setShowImportModal(false);
-        clearCache('admin_all_trainers');
-        fetchTrainers();
+        queryClient.invalidateQueries({ queryKey: ['admin_trainers'] });
       } else {
         const errorData = await response.json();
         console.error("Bulk Import Error Details:", errorData);
@@ -170,14 +161,7 @@ const AdminUsers = () => {
     }
   };
 
-  const refreshSingleTrainer = async (email, status) => {
-    try {
-      const detail = await smartFetch(`${ADMIN_API}/get_trainer?trainer_email=${email}`, { forceRefresh: true });
-      if (detail) {
-        setTrainers(prev => prev.map(t => (t.email === email || t.trainer_email === email) ? { ...detail, trainer_status: status } : t));
-      }
-    } catch (e) {}
-  };
+
 
   const handleToggleStatus = async (email, currentStatus, name) => {
     const action = currentStatus === 'active' ? 'deactivate' : 'activate';
@@ -191,11 +175,8 @@ const AdminUsers = () => {
         body: JSON.stringify({ trainer_email: email, status: targetStatus })
       });
       if (res.ok) { 
-        setTrainers(prev => prev.map(t => (t.email === email || t.trainer_email === email) ? { ...t, trainer_status: targetStatus } : t));
         showToast(`Trainer ${targetStatus === 'active' ? 'Activated' : 'Deactivated'}`); 
-        clearCache('admin_all_trainers');
-        clearCache(`trainer_detail_${email}`);
-        refreshSingleTrainer(email, targetStatus);
+        queryClient.invalidateQueries({ queryKey: ['admin_trainers'] });
       }
       else showToast('Status change denied', 'error');
     } catch (err) { showToast('Sync protocol failure', 'error'); }

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../shared/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ADMIN_API } from '../../config';
 import { SubTab, ContentItem, AMInput, AMTextarea, AMSelect, EmptyPlaceholder } from '../../components/admin/CurriculumComponents';
@@ -17,12 +18,12 @@ import { CurriculumSidebar } from '../../components/admin/CurriculumSidebar';
 const AdminCurriculum = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { user, authFetch, smartFetch, cacheSyncToken } = useAuth();
+  const { user, authFetch } = useAuth();
+  const queryClient = useQueryClient();
 
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [activeModule, setActiveModule] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = React.useRef(null);
@@ -80,91 +81,94 @@ const AdminCurriculum = () => {
     }
   };
 
-  const fetchCurriculum = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const data = await smartFetch(`${ADMIN_API}/course/${courseId}/full-details`, { cacheKey: `details_${courseId}` });
-      if (data) {
-        const rawCourse = data.course || data;
-        const mappedCourse = {
-          ...rawCourse,
-          course_id: rawCourse.course_id || rawCourse.id,
-          course_title: rawCourse.course_title || rawCourse.title,
-          course_type: rawCourse.type || rawCourse.course_type || rawCourse.course_Type || 'recorded'
-        };
-        setCourse(mappedCourse);
-        
-        if (mappedCourse.course_type === 'live' && activeTab === 'lessons') {
-          setActiveTab('live');
-        } else if (mappedCourse.course_type === 'recorded' && activeTab === 'live') {
-          setActiveTab('lessons');
-        }
+  const fetchCurriculumData = async () => {
+    const res = await authFetch(`${ADMIN_API}/course/${courseId}/full-details`);
+    if (!res.ok) throw new Error('Failed to fetch curriculum');
+    return await res.json();
+  };
 
-        const courseLevelNotes = (rawCourse.notes || []);
-        const sortedModules = (rawCourse.modules || []).sort((a, b) => (a.position || a.Position || 0) - (b.position || b.Position || 0)).map(m => {
-          const content = m.content || {};
-          return {
-            ...m,
-            module_id: m.module_id || m.Module_ID,
-            video: (content.videos || m.video || []).map(v => ({
-              ...v,
-              video_id: v.video_id || v.Video_ID,
-              video_url: v.video_url || v.Video_URL || v.url,
-              course_description: v.description || v.course_description || v.Course_Description || v.title
-            })),
-            assessments: (content.assessments || m.assessments || []).map(a => {
-              const rawQuestions = a.questions || a.Questions || [];
-              const sortedQuestions = [...rawQuestions].sort((qx, qy) => (qx.position || qx.Position || 0) - (qy.position || qy.Position || 0));
+  const { data, isLoading: loading, refetch: fetchCurriculum } = useQuery({
+    queryKey: ['admin_course_full_details', courseId],
+    queryFn: fetchCurriculumData,
+    enabled: !!user && !!courseId,
+    staleTime: 5 * 60 * 1000
+  });
 
-              return {
-                ...a,
-                assessment_id: a.assessment_id || a.Assessment_ID,
-                questions: sortedQuestions.map(q => ({
-                  ...q,
-                  question_id: q.question_id || q.Question_ID,
-                  question_txt: q.question_text || q.question_txt || q.Question_Txt || q.text,
-                  options: (q.options || q.Options || []).map(o => ({
-                    ...o,
-                    option_id: o.option_id || o.Option_ID,
-                    option_txt: o.text || o.option_txt || o.Option_Txt || o.option,
-                    is_correct: o.is_correct !== undefined ? o.is_correct : o.Is_Correct
-                  }))
+  useEffect(() => {
+    if (data) {
+      const rawCourse = data.course || data;
+      const mappedCourse = {
+        ...rawCourse,
+        course_id: rawCourse.course_id || rawCourse.id,
+        course_title: rawCourse.course_title || rawCourse.title,
+        course_type: rawCourse.type || rawCourse.course_type || rawCourse.course_Type || 'recorded'
+      };
+      setCourse(mappedCourse);
+      
+      if (mappedCourse.course_type === 'live' && activeTab === 'lessons') {
+        setActiveTab('live');
+      } else if (mappedCourse.course_type === 'recorded' && activeTab === 'live') {
+        setActiveTab('lessons');
+      }
+
+      const courseLevelNotes = (rawCourse.notes || []);
+      const sortedModules = (rawCourse.modules || []).sort((a, b) => (a.position || a.Position || 0) - (b.position || b.Position || 0)).map(m => {
+        const content = m.content || {};
+        return {
+          ...m,
+          module_id: m.module_id || m.Module_ID,
+          video: (content.videos || m.video || []).map(v => ({
+            ...v,
+            video_id: v.video_id || v.Video_ID,
+            video_url: v.video_url || v.Video_URL || v.url,
+            course_description: v.description || v.course_description || v.Course_Description || v.title
+          })),
+          assessments: (content.assessments || m.assessments || []).map(a => {
+            const rawQuestions = a.questions || a.Questions || [];
+            const sortedQuestions = [...rawQuestions].sort((qx, qy) => (qx.position || qx.Position || 0) - (qy.position || qy.Position || 0));
+
+            return {
+              ...a,
+              assessment_id: a.assessment_id || a.Assessment_ID,
+              questions: sortedQuestions.map(q => ({
+                ...q,
+                question_id: q.question_id || q.Question_ID,
+                question_txt: q.question_text || q.question_txt || q.Question_Txt || q.text,
+                options: (q.options || q.Options || []).map(o => ({
+                  ...o,
+                  option_id: o.option_id || o.Option_ID,
+                  option_txt: o.text || o.option_txt || o.Option_Txt || o.option,
+                  is_correct: o.is_correct !== undefined ? o.is_correct : o.Is_Correct
                 }))
-              };
-            }),
-            live_sessions: (content.live_sessions || m.live_sessions || []).map(l => ({
-              ...l,
-              live_id: l.live_id || l.Live_ID,
-              meeting_url: l.meeting_url || l.Meeting_URL
-            })),
-            notes: (content.notes || m.notes || courseLevelNotes).map(n => ({
-              ...n,
-              note_id: n.note_id || n.Notes_ID || n.notes_id,
-              note_url: n.file_url || n.note_url || n.File_URL || n.Note_URL
-            }))
-          };
-        });
-        setModules(sortedModules);
-        if (sortedModules.length > 0 && !activeModule) { setActiveModule(sortedModules[0]); }
-        else if (activeModule) {
-          const updatedActive = sortedModules.find(m => (m.module_id || m.Module_ID) === (activeModule.module_id || activeModule.Module_ID));
-          if (updatedActive) {
-            setActiveModule(updatedActive);
-            if (activeAssessment) {
-              const updatedAsm = updatedActive.assessments.find(a => (a.assessment_id || a.Assessment_ID) === (activeAssessment.assessment_id || activeAssessment.Assessment_ID));
-              if (updatedAsm) setActiveAssessment(updatedAsm);
-            }
+              }))
+            };
+          }),
+          live_sessions: (content.live_sessions || m.live_sessions || []).map(l => ({
+            ...l,
+            live_id: l.live_id || l.Live_ID,
+            meeting_url: l.meeting_url || l.Meeting_URL
+          })),
+          notes: (content.notes || m.notes || courseLevelNotes).map(n => ({
+            ...n,
+            note_id: n.note_id || n.Notes_ID || n.notes_id,
+            note_url: n.file_url || n.note_url || n.File_URL || n.Note_URL
+          }))
+        };
+      });
+      setModules(sortedModules);
+      if (sortedModules.length > 0 && !activeModule) { setActiveModule(sortedModules[0]); }
+      else if (activeModule) {
+        const updatedActive = sortedModules.find(m => (m.module_id || m.Module_ID) === (activeModule.module_id || activeModule.Module_ID));
+        if (updatedActive) {
+          setActiveModule(updatedActive);
+          if (activeAssessment) {
+            const updatedAsm = updatedActive.assessments.find(a => (a.assessment_id || a.Assessment_ID) === (activeAssessment.assessment_id || activeAssessment.Assessment_ID));
+            if (updatedAsm) setActiveAssessment(updatedAsm);
           }
         }
       }
-    } catch (err) { console.error('fetchCurriculum failed:', err); showToast('Data synchronization failed', 'error'); }
-    finally { setLoading(false); }
-  }, [courseId, smartFetch, cacheSyncToken]);
-
-  useEffect(() => {
-    fetchCurriculum();
-  }, [fetchCurriculum]);
+    }
+  }, [data]);
 
   const handleModuleSubmit = async (e) => {
     e.preventDefault();

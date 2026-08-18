@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/AuthContext';
+import { useQuery } from '@tanstack/react-query';
 import { Search, BookOpen, BarChart2, PlayCircle, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -8,11 +9,10 @@ import { ADMIN_API, TRAINER_API, optimizeImageUrl } from '../../config';
 import TrainerCourseCard from '../../components/trainer/TrainerCourseCard';
 
 const TrainerCourses = () => {
-  const { user, smartFetch } = useAuth();
+  const { user, authFetch } = useAuth();
   const navigate = useNavigate();
+  const identifier = user?.user_id || user?.id || user?.email;
   
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
   /* ── Skeleton Loader ── */
@@ -25,23 +25,22 @@ const TrainerCourses = () => {
     </div>
   );
 
-  const fetchTrainerCourses = useCallback(async () => {
-    const identifier = user?.user_id || user?.id || user?.email;
-    if (!identifier) return;
-    
-    try {
-      // 1. Fetch Course IDs securely (SWR enabled)
-      const data = await smartFetch(`${TRAINER_API}/trainer_course_ids`, {
-         cacheKey: `trainer_course_ids_${identifier}`
-      });
+  const { data: courses = [], isLoading: loading } = useQuery({
+    queryKey: ['trainer_courses', identifier],
+    queryFn: async () => {
+      const dataRes = await authFetch(`${TRAINER_API}/trainer_course_ids`);
+      if (!dataRes.ok) throw new Error("Failed to fetch course ids");
+      const data = await dataRes.json();
       const ids = data?.course_ids || [];
 
-      // 3. CONCURRENT BATCH FETCHING (Eliminates the N+1 loop)
       const coursePromises = ids.map(async (id) => {
-        const [detailJson, pData] = await Promise.all([
-          smartFetch(`${ADMIN_API}/course/${id}/full-details`, { cacheKey: `details_${id}` }),
-          smartFetch(`${TRAINER_API}/course/${id}/students-progress`, { cacheKey: `st_prog_${id}` })
+        const [detRes, pRes] = await Promise.all([
+          authFetch(`${ADMIN_API}/course/${id}/full-details`),
+          authFetch(`${TRAINER_API}/course/${id}/students-progress`)
         ]);
+        
+        const detailJson = detRes.ok ? await detRes.json() : null;
+        const pData = pRes.ok ? await pRes.json() : null;
 
         let courseData = { 
           course_id: id, 
@@ -77,17 +76,11 @@ const TrainerCourses = () => {
         return courseData;
       });
 
-      const fetchedCourses = await Promise.all(coursePromises);
-      
-      setCourses(fetchedCourses);
-    } catch (err) {
-      console.error("Dashboard sync failure", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, smartFetch]);
-
-  useEffect(() => { fetchTrainerCourses(); }, [fetchTrainerCourses]);
+      return Promise.all(coursePromises);
+    },
+    enabled: !!identifier,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
 
   // Memoize filtering to prevent CPU spikes when typing
   const filteredCourses = useMemo(() => {

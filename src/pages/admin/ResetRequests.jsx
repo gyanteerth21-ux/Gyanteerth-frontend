@@ -4,13 +4,13 @@ import {
   RefreshCcw, AlertCircle, User, Award, MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../shared/AuthContext';
 import { ADMIN_API } from '../../config';
 
 const ResetRequests = () => {
-  const { authFetch, smartFetch } = useAuth();
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { authFetch } = useAuth();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('pending');
   const [actionLoading, setActionLoading] = useState(null);
@@ -21,25 +21,16 @@ const ResetRequests = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
-  const fetchRequests = useCallback(async () => {
-    setLoading(true);
-    try {
-      const json = await smartFetch(`${ADMIN_API}/assessment/reset-requests`, { 
-        cacheKey: 'admin_reset_requests' 
-      });
-      if (json) {
-        setRequests(json.requests || json.data || []);
-      }
-    } catch (err) {
-      showToast('Failed to fetch reset requests', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [smartFetch]);
-
-  useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+  const { data: requests = [], isLoading: loading, refetch: fetchRequests } = useQuery({
+    queryKey: ['admin_reset_requests'],
+    queryFn: async () => {
+      const res = await authFetch(`${ADMIN_API}/assessment/reset-requests`);
+      if (!res.ok) throw new Error('Failed to fetch reset requests');
+      const json = await res.json();
+      return json.requests || json.data || [];
+    },
+    staleTime: 5 * 60 * 1000
+  });
 
   const handleAction = async (requestId, action) => {
     setActionLoading(requestId);
@@ -52,9 +43,7 @@ const ResetRequests = () => {
       
       if (res.ok) {
         showToast(`Request ${action === 'Approve' ? 'Approved' : 'Rejected'} successfully`);
-        setRequests(prev => prev.map(r => 
-          r.request_id === requestId ? { ...r, status: action === 'Approve' ? 'Approved' : 'Rejected', resolved_at: new Date().toISOString() } : r
-        ));
+        queryClient.invalidateQueries({ queryKey: ['admin_reset_requests'] });
       } else {
         const d = await res.json();
         showToast(d.detail || 'Action failed', 'error');

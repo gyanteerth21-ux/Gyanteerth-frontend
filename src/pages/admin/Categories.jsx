@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../../shared/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ADMIN_API, optimizeImageUrl } from '../../config';
 import CategoryModal from '../../components/admin/CategoryModal';
 import { CreateCourseModal } from '../../components/admin/CourseModals';
@@ -20,12 +21,9 @@ import { useViewMode } from '../../hooks/useViewMode';
 
 
 const AdminCategories = () => {
-  const { user, authFetch, smartFetch, clearCache } = useAuth();
+  const { user, authFetch } = useAuth();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  
-  const [categories, setCategories] = useState([]);
-  const [liveCount, setLiveCount] = useState(0);
-  const [loading, setLoading] = useState(true);
   const { searchQuery, setSearchQuery, filteredData: filteredCategories } = useSearchFilter(categories, 'Category_Name');
   const { viewMode, setViewMode } = useViewMode('admin_categories_view_mode', 'grid');
   const [toast, setToast] = useState(null);
@@ -44,24 +42,28 @@ const AdminCategories = () => {
   };
 
 
-  const fetchCategories = useCallback(async (force = false) => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const [data, sData] = await Promise.all([
-        smartFetch(`${ADMIN_API}/get-categories`, { cacheKey: 'admin_categories', forceRefresh: force }),
-        smartFetch(`${ADMIN_API}/courses/ids-by-status`, { cacheKey: 'admin_course_ids', forceRefresh: force })
+  const { data: catData = { categories: [], liveCount: 0 }, isLoading: loading, refetch: fetchCategories } = useQuery({
+    queryKey: ['admin_categories_full_data'],
+    queryFn: async () => {
+      const [catRes, statusRes] = await Promise.all([
+        authFetch(`${ADMIN_API}/get-categories`),
+        authFetch(`${ADMIN_API}/courses/ids-by-status`)
       ]);
+      
+      const cData = catRes.ok ? await catRes.json() : { categories: [] };
+      const sData = statusRes.ok ? await statusRes.json() : null;
 
-      if (data) setCategories(data.categories || []);
-      if (sData) setLiveCount(sData.courses?.active?.length || 0);
+      const categories = cData.categories || [];
+      const liveCount = sData?.courses?.active?.length || 0;
 
-    } catch (err) {
-      showToast('Backend synchronization failed', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [user, smartFetch]);
+      return { categories, liveCount };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000
+  });
+
+  const categories = catData.categories;
+  const liveCount = catData.liveCount;
 
   const fetchTrainers = useCallback(async () => {
     try {
@@ -80,9 +82,8 @@ const AdminCategories = () => {
   }, [authFetch]);
 
   useEffect(() => {
-    fetchCategories();
     fetchTrainers();
-  }, [fetchCategories, fetchTrainers]);
+  }, [fetchTrainers]);
 
   const handleDelete = async (catId) => {
     if (!window.confirm('Caution: Delete this category and all its associations? This action is permanent.')) return;
@@ -90,8 +91,7 @@ const AdminCategories = () => {
       const res = await authFetch(`${ADMIN_API}/delete-category/${catId}`, { method: 'DELETE' });
       if (res.ok) { 
           showToast('Category Deleted'); 
-          clearCache('admin_categories');
-          fetchCategories(true); 
+          queryClient.invalidateQueries({ queryKey: ['admin_categories_full_data'] });
       } else {
           try {
               const errData = await res.json();

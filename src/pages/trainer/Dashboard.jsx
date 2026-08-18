@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/AuthContext';
-import { Book, Users, Video, Clock, Activity, ArrowRight, Calendar, Shield, BookOpen, Award, CalendarDays, ExternalLink, Zap, Layers, ChevronRight } from 'lucide-react';
+import { Book, Users, Video, Activity, ArrowRight, Shield, BookOpen, CalendarDays, ExternalLink, Layers, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { ADMIN_API, TRAINER_API, optimizeImageUrl } from '../../config';
 
-const CACHE_KEY = 'trainer_dashboard_cache';
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
 
 /* ── Premium Stat Card ── */
 const StatCard = ({ title, value, icon, color, delay }) => (
@@ -50,29 +50,28 @@ const DashboardSkeleton = () => (
 );
 
 const TrainerDashboard = () => {
-  const { user, smartFetch } = useAuth();
+  const { user, authFetch } = useAuth();
   const navigate = useNavigate();
+  const identifier = user?.user_id || user?.id || user?.email;
   
-  const [data, setData] = useState({ courses: [], students: [], liveSessions: [] });
-  const [loading, setLoading] = useState(true);
-
-  const fetchTrainerData = useCallback(async () => {
-    const identifier = user?.user_id || user?.id || user?.email;
-    if (!identifier) return;
-
-    try {
-      // 1. Fetch Course IDs securely (SWR enabled)
-      const cachedIds = await smartFetch(`${TRAINER_API}/trainer_course_ids`, {
-        cacheKey: `trainer_course_ids_${identifier}`
-      });
+  const { data = { courses: [], students: [], liveSessions: [] }, isLoading: loading } = useQuery({
+    queryKey: ['trainer_dashboard', identifier],
+    queryFn: async () => {
+      // 1. Fetch Course IDs securely
+      const idsRes = await authFetch(`${TRAINER_API}/trainer_course_ids`);
+      if (!idsRes.ok) throw new Error("Failed to fetch course ids");
+      const cachedIds = await idsRes.json();
       const ids = cachedIds?.course_ids || [];
 
       // 3. CONCURRENT BATCH FETCHING
       const coursePromises = ids.map(async (id) => {
-        const [detailJson, pData] = await Promise.all([
-          smartFetch(`${ADMIN_API}/course/${id}/full-details`, { cacheKey: `details_${id}` }),
-          smartFetch(`${TRAINER_API}/course/${id}/students-progress`, { cacheKey: `st_prog_${id}` })
+        const [detRes, pRes] = await Promise.all([
+          authFetch(`${ADMIN_API}/course/${id}/full-details`),
+          authFetch(`${TRAINER_API}/course/${id}/students-progress`)
         ]);
+        
+        const detailJson = detRes.ok ? await detRes.json() : null;
+        const pData = pRes.ok ? await pRes.json() : null;
 
         let courseData = { course_id: id, course_title: `Course ${id}`, progress: 0, studentCount: 0, type: 'recorded', is_active: false, studentsList: [], liveSessions: [] };
 
@@ -156,21 +155,11 @@ const TrainerDashboard = () => {
           return new Date(a.start_time) - new Date(b.start_time);
         });
 
-      const payload = {
-        courses: coursesResult,
-        students: finalStudents,
-        liveSessions: allLive
-      };
-
-      setData(payload);
-    } catch (err) {
-      console.error("Dashboard sync failure", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, smartFetch]);
-
-  useEffect(() => { fetchTrainerData(); }, [fetchTrainerData]);
+      return { courses: coursesResult, students: finalStudents, liveSessions: allLive };
+    },
+    enabled: !!identifier,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
 
   const { courses, students, liveSessions } = data;
   const avgOverallProgress = courses.length > 0 ? Math.round(courses.reduce((acc, c) => acc + c.progress, 0) / courses.length) : 0;

@@ -3,6 +3,9 @@ import { Search, Plus, Edit, Trash2, ShieldCheck, Building, UserPlus, X, Loader2
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../shared/AuthContext';
 import { ADMIN_API, getHeaders } from '../../config';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { collegeSchema, tpoSchema } from '../../shared/schemas';
 
 const Colleges = () => {
   const { authFetch } = useAuth();
@@ -13,12 +16,19 @@ const Colleges = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
   const [isCollegeModalOpen, setIsCollegeModalOpen] = useState(false);
+  const [selectedCollegeId, setSelectedCollegeId] = useState(null);
+  const { register: registerCollege, handleSubmit: handleCollegeSubmit, reset: resetCollege, setValue: setCollegeValue, formState: { errors: collegeErrors, isSubmitting: isCollegeSubmitting } } = useForm({
+    resolver: zodResolver(collegeSchema),
+    defaultValues: { name: '' }
+  });
+  
   const [isTpoModalOpen, setIsTpoModalOpen] = useState(false);
+  const [tpoCollegeName, setTpoCollegeName] = useState('');
+  const { register: registerTpo, handleSubmit: handleTpoSubmit, reset: resetTpo, setValue: setTpoValue, formState: { errors: tpoErrors, isSubmitting: isTpoSubmitting } } = useForm({
+    resolver: zodResolver(tpoSchema),
+    defaultValues: { name: '', email: '', password: '', number: '', collegeId: '' }
+  });
   
-  const [collegeForm, setCollegeForm] = useState({ id: null, name: '' });
-  const [tpoForm, setTpoForm] = useState({ name: '', email: '', password: '', number: '', collegeId: '', collegeName: '' });
-  
-  const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(null);
   const [actionError, setActionError] = useState(null);
 
@@ -49,37 +59,34 @@ const Colleges = () => {
     fetchData();
   }, []);
 
-  const handleCreateOrUpdateCollege = async (e) => {
-    e.preventDefault();
-    setActionLoading(true);
+  const onSubmitCollege = async (data) => {
     setActionError(null);
     setActionSuccess(null);
     
     try {
-      const isUpdate = !!collegeForm.id;
-      const url = isUpdate ? `${ADMIN_API}/colleges/${collegeForm.id}` : `${ADMIN_API}/colleges`;
+      const isUpdate = !!selectedCollegeId;
+      const url = isUpdate ? `${ADMIN_API}/colleges/${selectedCollegeId}` : `${ADMIN_API}/colleges`;
       const method = isUpdate ? 'PUT' : 'POST';
       
       const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ College_Name: collegeForm.name })
+        body: JSON.stringify({ College_Name: data.name })
       });
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Operation failed');
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.detail || 'Operation failed');
       
       setActionSuccess(`College ${isUpdate ? 'updated' : 'created'} successfully!`);
       fetchData();
       setTimeout(() => {
         setIsCollegeModalOpen(false);
-        setCollegeForm({ id: null, name: '' });
+        resetCollege();
+        setSelectedCollegeId(null);
         setActionSuccess(null);
       }, 1500);
     } catch (err) {
       setActionError(err.message);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -97,9 +104,7 @@ const Colleges = () => {
     }
   };
 
-  const handleCreateTpo = async (e) => {
-    e.preventDefault();
-    setActionLoading(true);
+  const onSubmitTpo = async (data) => {
     setActionError(null);
     setActionSuccess(null);
     
@@ -108,27 +113,26 @@ const Colleges = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tpo_name: tpoForm.name,
-          tpo_email: tpoForm.email,
-          tpo_pass: tpoForm.password,
-          tpo_number: tpoForm.number,
-          tpo_college: tpoForm.collegeId
+          tpo_name: data.name,
+          tpo_email: data.email,
+          tpo_pass: data.password,
+          tpo_number: data.number,
+          tpo_college: data.collegeId
         })
       });
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Failed to create TPO');
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.detail || 'Failed to create TPO');
       
       setActionSuccess('TPO created successfully!');
       setTimeout(() => {
         setIsTpoModalOpen(false);
-        setTpoForm({ name: '', email: '', password: '', number: '', collegeId: '', collegeName: '' });
+        resetTpo();
+        setTpoCollegeName('');
         setActionSuccess(null);
       }, 1500);
     } catch (err) {
       setActionError(err.message);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -149,7 +153,7 @@ const Colleges = () => {
         
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button 
-            onClick={() => { setCollegeForm({ id: null, name: '' }); setIsCollegeModalOpen(true); }}
+            onClick={() => { resetCollege(); setSelectedCollegeId(null); setIsCollegeModalOpen(true); }}
             className="btn btn-primary"
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
@@ -218,7 +222,9 @@ const Colleges = () => {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                         <button 
                           onClick={() => {
-                            setTpoForm(prev => ({ ...prev, collegeId: college.College_ID, collegeName: college.College_Name }));
+                            resetTpo();
+                            setTpoValue('collegeId', college.College_ID);
+                            setTpoCollegeName(college.College_Name);
                             setIsTpoModalOpen(true);
                           }}
                           className="btn btn-primary"
@@ -227,7 +233,7 @@ const Colleges = () => {
                           <UserPlus size={14} /> Add TPO
                         </button>
                         <button 
-                          onClick={() => { setCollegeForm({ id: college.College_ID, name: college.College_Name }); setIsCollegeModalOpen(true); }}
+                          onClick={() => { resetCollege(); setCollegeValue('name', college.College_Name); setSelectedCollegeId(college.College_ID); setIsCollegeModalOpen(true); }}
                           className="btn"
                           style={{ padding: '0.5rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', background: 'transparent' }}
                         >
@@ -259,23 +265,24 @@ const Colleges = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Building className="text-primary" size={20} />
-                  {collegeForm.id ? 'Edit College' : 'Add New College'}
+                  {selectedCollegeId ? 'Edit College' : 'Add New College'}
                 </h2>
-                <button onClick={() => setIsCollegeModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={20} /></button>
+                <button type="button" onClick={() => setIsCollegeModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={20} /></button>
               </div>
-              <form onSubmit={handleCreateOrUpdateCollege} style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleCollegeSubmit(onSubmitCollege)} style={{ padding: '1.5rem' }}>
                 {actionError && <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><AlertCircle size={16} />{actionError}</div>}
                 {actionSuccess && <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle2 size={16} />{actionSuccess}</div>}
                 
                 <div style={{ marginBottom: '1.5rem' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>College Name</label>
-                  <input required type="text" value={collegeForm.name} onChange={e => setCollegeForm({ ...collegeForm, name: e.target.value })} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} placeholder="e.g. MIT College of Engineering" />
+                  <input {...registerCollege('name')} type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${collegeErrors.name ? 'var(--color-danger)' : 'var(--color-border)'}`, backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} placeholder="e.g. MIT College of Engineering" />
+                  {collegeErrors.name && <p style={{ color: 'var(--color-danger)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{collegeErrors.name.message}</p>}
                 </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                   <button type="button" onClick={() => setIsCollegeModalOpen(false)} className="btn btn-secondary">Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={actionLoading}>
-                    {actionLoading ? <Loader2 size={18} className="spin" /> : (collegeForm.id ? 'Update College' : 'Add College')}
+                  <button type="submit" className="btn btn-primary" disabled={isCollegeSubmitting}>
+                    {isCollegeSubmitting ? <Loader2 size={18} className="spin" /> : (selectedCollegeId ? 'Update College' : 'Add College')}
                   </button>
                 </div>
               </form>
@@ -293,37 +300,41 @@ const Colleges = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <ShieldCheck className="text-primary" size={20} />
-                  Add TPO for {tpoForm.collegeName}
+                  Add TPO for {tpoCollegeName}
                 </h2>
-                <button onClick={() => setIsTpoModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={20} /></button>
+                <button type="button" onClick={() => setIsTpoModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={20} /></button>
               </div>
-              <form onSubmit={handleCreateTpo} style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleTpoSubmit(onSubmitTpo)} style={{ padding: '1.5rem' }}>
                 {actionError && <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><AlertCircle size={16} />{actionError}</div>}
                 {actionSuccess && <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle2 size={16} />{actionSuccess}</div>}
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>TPO Name</label>
-                    <input required type="text" value={tpoForm.name} onChange={e => setTpoForm({ ...tpoForm, name: e.target.value })} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} />
+                    <input {...registerTpo('name')} type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${tpoErrors.name ? 'var(--color-danger)' : 'var(--color-border)'}`, backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} />
+                    {tpoErrors.name && <p style={{ color: 'var(--color-danger)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{tpoErrors.name.message}</p>}
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>Email Address</label>
-                    <input required type="email" value={tpoForm.email} onChange={e => setTpoForm({ ...tpoForm, email: e.target.value })} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} />
+                    <input {...registerTpo('email')} type="email" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${tpoErrors.email ? 'var(--color-danger)' : 'var(--color-border)'}`, backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} />
+                    {tpoErrors.email && <p style={{ color: 'var(--color-danger)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{tpoErrors.email.message}</p>}
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>Password</label>
-                    <input required type="text" value={tpoForm.password} onChange={e => setTpoForm({ ...tpoForm, password: e.target.value })} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} />
+                    <input {...registerTpo('password')} type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${tpoErrors.password ? 'var(--color-danger)' : 'var(--color-border)'}`, backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} />
+                    {tpoErrors.password && <p style={{ color: 'var(--color-danger)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{tpoErrors.password.message}</p>}
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>Phone Number</label>
-                    <input required type="text" value={tpoForm.number} onChange={e => setTpoForm({ ...tpoForm, number: e.target.value })} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} />
+                    <input {...registerTpo('number')} type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${tpoErrors.number ? 'var(--color-danger)' : 'var(--color-border)'}`, backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} />
+                    {tpoErrors.number && <p style={{ color: 'var(--color-danger)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{tpoErrors.number.message}</p>}
                   </div>
                 </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                   <button type="button" onClick={() => setIsTpoModalOpen(false)} className="btn btn-secondary">Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={actionLoading}>
-                    {actionLoading ? <Loader2 size={18} className="spin" /> : 'Create TPO'}
+                  <button type="submit" className="btn btn-primary" disabled={isTpoSubmitting}>
+                    {isTpoSubmitting ? <Loader2 size={18} className="spin" /> : 'Create TPO'}
                   </button>
                 </div>
               </form>
