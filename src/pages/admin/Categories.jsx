@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ADMIN_API, optimizeImageUrl } from '../../config';
 import CategoryModal from '../../components/admin/CategoryModal';
-import { CreateCourseModal } from '../../components/admin/CourseModals';
+import { CreateCourseModal } from '../../components/admin/CreateCourseModal';
 import { PremiumCategoryCard, PremiumCategoryListRow } from '../../components/admin/CategoryCards';
 import { useSearchFilter } from '../../hooks/useSearchFilter';
 import { useViewMode } from '../../hooks/useViewMode';

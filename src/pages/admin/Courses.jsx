@@ -10,7 +10,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ADMIN_API, optimizeImageUrl } from '../../config';
-import { CreateCourseModal, EditCourseModal } from '../../components/admin/CourseModals';
+import { CreateCourseModal } from '../../components/admin/CreateCourseModal';
+import { EditCourseModal } from '../../components/admin/EditCourseModal';
 import AdminCourseCard from '../../components/admin/AdminCourseCard';
 
 const AdminCourses = () => {
