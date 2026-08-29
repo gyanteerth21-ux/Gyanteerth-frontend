@@ -1,7 +1,7 @@
 import { 
   Search, Edit, Target, Clock, Award, Trash2, ArrowRight, ArrowLeft,
   Loader2, AlertCircle, CheckCircle2, Filter, X, Save, Calendar,
-  ChevronRight, Bookmark, BarChart3, Settings2, Layout, BookOpen, Grid, List, Globe, Download, FileUp
+  ChevronRight, Bookmark, BarChart3, Settings2, Layout, BookOpen, Grid, List, Globe, Download, FileUp, ExternalLink
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -186,6 +186,34 @@ const AdminAssessments = () => {
          </div>
          
          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                const token = localStorage.getItem('_gt_auth_tkn');
+                const targetUrl = token 
+                  ? `https://assessment.gyanteerthlearning.online/admin/sso?token=${encodeURIComponent(token)}`
+                  : `https://assessment.gyanteerthlearning.online/admin/sso`;
+                window.open(targetUrl, '_blank', 'noopener,noreferrer');
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.85rem 1.35rem',
+                borderRadius: '1.25rem',
+                border: 'none',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                fontWeight: 800,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+                transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <ExternalLink size={16} /> Launch Assessment Platform
+            </button>
+
             <div style={{ position: 'relative' }}>
               <Search size={18} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
               <input 
