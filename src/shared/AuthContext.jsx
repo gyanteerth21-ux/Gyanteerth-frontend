@@ -100,6 +100,9 @@ export const AuthProvider = ({ children }) => {
     queryClient.invalidateQueries({ queryKey: [key] });
   }, [queryClient]);
 
+  const revalidateAll = useCallback(() => {
+    queryClient.invalidateQueries();
+  }, [queryClient]);
 
   return (
     <AuthContext.Provider value={{ 
@@ -108,6 +111,7 @@ export const AuthProvider = ({ children }) => {
       logout, 
       authFetch,
       clearCache,
+      revalidateAll,
       loading 
     }}>
       {!loading && children}

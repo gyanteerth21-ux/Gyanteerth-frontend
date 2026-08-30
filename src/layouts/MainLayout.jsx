@@ -51,9 +51,11 @@ const MainLayout = () => {
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // 🚀 SWR: Revalidate all background caches when navigating to a new section
+  // 🚀 SWR/React-Query: Revalidate background caches when navigating to a new section
   useEffect(() => {
-    revalidateAll();
+    if (typeof revalidateAll === 'function') {
+      revalidateAll();
+    }
   }, [location.pathname, revalidateAll]);
 
   useEffect(() => {

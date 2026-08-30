@@ -64,11 +64,12 @@ const Login = () => {
 
       let profile = null;
       let isComplete = true;
+      const userEmail = data.email || data.user_email || "";
 
       login(
         {
           user_id: data.user_id,
-          email: data.email || email.trim(),
+          email: userEmail,
           role: userRole,
         },
         {
@@ -91,7 +92,7 @@ const Login = () => {
             login(
               {
                 user_id: data.user_id || profile?.user_id,
-                email: data.email || email.trim(),
+                email: userEmail,
                 role: userRole,
                 name: profile?.user_name || data.name || "User",
                 pic: profile?.user_pic || null,
@@ -106,7 +107,7 @@ const Login = () => {
 
       navigate(`/${userRole}`);
     },
-    [email, login, authFetch, navigate],
+    [login, authFetch, navigate],
   );
 
   const handleLoginSubmit = async (formData) => {

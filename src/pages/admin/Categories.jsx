@@ -24,8 +24,6 @@ const AdminCategories = () => {
   const { user, authFetch } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { searchQuery, setSearchQuery, filteredData: filteredCategories } = useSearchFilter(categories, 'Category_Name');
-  const { viewMode, setViewMode } = useViewMode('admin_categories_view_mode', 'grid');
   const [toast, setToast] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,7 +38,6 @@ const AdminCategories = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   };
-
 
   const { data: catData = { categories: [], liveCount: 0 }, isLoading: loading, refetch: fetchCategories } = useQuery({
     queryKey: ['admin_categories_full_data'],
@@ -62,8 +59,10 @@ const AdminCategories = () => {
     staleTime: 5 * 60 * 1000
   });
 
-  const categories = catData.categories;
-  const liveCount = catData.liveCount;
+  const categories = catData.categories || [];
+  const liveCount = catData.liveCount || 0;
+
+  const { searchQuery, setSearchQuery, filteredData: filteredCategories } = useSearchFilter(categories, 'Category_Name');
 
   const fetchTrainers = useCallback(async () => {
     try {
