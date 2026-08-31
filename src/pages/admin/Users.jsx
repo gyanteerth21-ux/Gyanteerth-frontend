@@ -20,6 +20,16 @@ import { useSearchFilter } from '../../hooks/useSearchFilter';
 import { useViewMode } from '../../hooks/useViewMode';
 
 
+const CompactStat = ({ label, value, icon }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', minWidth: 'max-content' }}>
+    <div style={{ width: '2rem', height: '2rem', borderRadius: '0.6rem', backgroundColor: 'var(--color-surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>{icon}</div>
+    <div>
+      <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 950, color: 'var(--color-text)', lineHeight: 1 }}>{value}</h4>
+      <p style={{ margin: '0.1rem 0 0 0', fontSize: '0.55rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+    </div>
+  </div>
+);
+
 const AdminUsers = () => {
   const { authFetch } = useAuth();
   const queryClient = useQueryClient();
@@ -359,15 +369,5 @@ const AdminUsers = () => {
     </div>
   );
 };
-
-const CompactStat = ({ label, value, icon }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', minWidth: 'max-content' }}>
-    <div style={{ width: '2rem', height: '2rem', borderRadius: '0.6rem', backgroundColor: 'var(--color-surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>{icon}</div>
-    <div>
-      <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 950, color: 'var(--color-text)', lineHeight: 1 }}>{value}</h4>
-      <p style={{ margin: '0.1rem 0 0 0', fontSize: '0.55rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
-    </div>
-  </div>
-);
 
 export default AdminUsers;

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 
-const useStudentFilters = (students, uniqueStudents = []) => {
+const useStudentFilters = (students = [], uniqueStudents = []) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('All');
   const [progressFilter, setProgressFilter] = useState('All');
@@ -9,32 +9,35 @@ const useStudentFilters = (students, uniqueStudents = []) => {
   const [degreeFilter, setDegreeFilter] = useState('All');
   const [yearFilter, setYearFilter] = useState('All');
 
+  const safeStudents = Array.isArray(students) ? students : [];
+  const safeUnique = Array.isArray(uniqueStudents) ? uniqueStudents : [];
+
   // We primarily use uniqueStudents for filters like Colleges, Branches, Years
   // to avoid duplication if students array contains flattened enrollments.
-  const filterSource = uniqueStudents.length > 0 ? uniqueStudents : students;
+  const filterSource = safeUnique.length > 0 ? safeUnique : safeStudents;
 
   const uniqueColleges = useMemo(() => {
-    const colleges = filterSource.map(s => s.college).filter(Boolean);
+    const colleges = filterSource.map(s => s?.college).filter(Boolean);
     return ['All Colleges', ...Array.from(new Set(colleges))];
   }, [filterSource]);
 
   const uniqueBranches = useMemo(() => {
-    const branches = filterSource.map(s => s.branch).filter(Boolean);
+    const branches = filterSource.map(s => s?.branch).filter(Boolean);
     return ['All Branches', ...Array.from(new Set(branches))];
   }, [filterSource]);
 
   const uniqueDegrees = useMemo(() => {
-    const degrees = filterSource.map(s => s.degree).filter(Boolean);
+    const degrees = filterSource.map(s => s?.degree).filter(Boolean);
     return ['All Degrees', ...Array.from(new Set(degrees))];
   }, [filterSource]);
 
   const uniqueYears = useMemo(() => {
-    const years = filterSource.map(s => s.year).filter(Boolean);
+    const years = filterSource.map(s => s?.year).filter(Boolean);
     return ['All Years', ...Array.from(new Set(years))];
   }, [filterSource]);
 
   const filteredStudents = useMemo(() => {
-    return students.filter(st => {
+    return safeStudents.filter(st => {
       const q = searchQuery.toLowerCase();
       const matchesSearch = (st.name || '').toLowerCase().includes(q) ||
         (st.email || '').toLowerCase().includes(q) ||
@@ -52,10 +55,10 @@ const useStudentFilters = (students, uniqueStudents = []) => {
 
       return matchesSearch && matchesCourse && matchesCollege && matchesBranch && matchesDegree && matchesYear && matchesProgress;
     });
-  }, [students, searchQuery, courseFilter, collegeFilter, branchFilter, degreeFilter, yearFilter, progressFilter]);
+  }, [safeStudents, searchQuery, courseFilter, collegeFilter, branchFilter, degreeFilter, yearFilter, progressFilter]);
 
   const filteredUniqueStudents = useMemo(() => {
-    return uniqueStudents.filter(st => {
+    return safeUnique.filter(st => {
       const q = searchQuery.toLowerCase();
       const matchesSearch = (st.name || '').toLowerCase().includes(q) ||
         (st.email || '').toLowerCase().includes(q);

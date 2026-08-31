@@ -14,6 +14,15 @@ import { PremiumAssessmentCard, PremiumAssessmentListRow } from '../../component
 import { useSearchFilter } from '../../hooks/useSearchFilter';
 import { useViewMode } from '../../hooks/useViewMode';
 
+const CompactStat = ({ label, value, icon }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.75rem 1.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.15rem', minWidth: 'max-content' }}>
+     <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
+     <div>
+        <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 950, color: 'var(--color-text)', lineHeight: 1 }}>{value}</h4>
+        <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.6rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+     </div>
+  </div>
+);
 
 const AdminAssessments = () => {
   const { user, authFetch } = useAuth();
@@ -364,16 +373,6 @@ const AdminAssessments = () => {
     </div>
   );
 };
-
-const CompactStat = ({ label, value, icon }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.75rem 1.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.15rem', minWidth: 'max-content' }}>
-     <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
-     <div>
-        <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 950, color: 'var(--color-text)', lineHeight: 1 }}>{value}</h4>
-        <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.6rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
-     </div>
-  </div>
-);
 
 const AssessmentResultsView = ({ asm, onBack }) => {
   const { user, authFetch } = useAuth();
