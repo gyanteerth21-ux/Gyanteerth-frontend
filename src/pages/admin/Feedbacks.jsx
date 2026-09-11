@@ -16,9 +16,20 @@ const AdminFeedbacks = () => {
   const [actionLoading, setActionLoading] = useState(null);
   const [toast, setToast] = useState(null);
 
+  const { data: feedbacks = [], isLoading: loading, refetch: fetchFeedbacks } = useQuery({
+    queryKey: ['admin_all_feedbacks'],
+    queryFn: async () => {
+      const res = await authFetch(`${ADMIN_API}/all-feedback`);
+      if (!res.ok) throw new Error("Failed to fetch feedbacks");
+      const json = await res.json();
+      return json.data || [];
+    },
+    staleTime: 5 * 60 * 1000
+  });
+
   const availableCourses = React.useMemo(() => {
     const courseMap = {};
-    feedbacks.forEach(f => {
+    (feedbacks || []).forEach(f => {
       if (f.course_id && f.course_title) {
         if (!courseMap[f.course_id]) courseMap[f.course_id] = { id: f.course_id, title: f.course_title, count: 0 };
         courseMap[f.course_id].count++;
@@ -31,17 +42,6 @@ const AdminFeedbacks = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   };
-
-  const { data: feedbacks = [], isLoading: loading, refetch: fetchFeedbacks } = useQuery({
-    queryKey: ['admin_all_feedbacks'],
-    queryFn: async () => {
-      const res = await authFetch(`${ADMIN_API}/all-feedback`);
-      if (!res.ok) throw new Error("Failed to fetch feedbacks");
-      const json = await res.json();
-      return json.data || [];
-    },
-    staleTime: 5 * 60 * 1000
-  });
 
   const handleUpdateStatus = async (feedbackId, newStatus) => {
     setActionLoading(feedbackId);

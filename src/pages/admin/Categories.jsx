@@ -24,6 +24,7 @@ const AdminCategories = () => {
   const { user, authFetch } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { viewMode, setViewMode } = useViewMode('admin_categories_view_mode', 'grid');
   const [toast, setToast] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);

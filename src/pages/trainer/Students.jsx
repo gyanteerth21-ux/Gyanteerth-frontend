@@ -29,17 +29,6 @@ const TrainerStudents = () => {
   };
 
 
-  const {
-    searchQuery, setSearchQuery,
-    courseFilter, setCourseFilter,
-    progressFilter, setProgressFilter,
-    collegeFilter, setCollegeFilter,
-    branchFilter, setBranchFilter,
-    yearFilter, setYearFilter,
-    uniqueColleges, uniqueBranches, uniqueYears,
-    filteredStudents
-  } = useStudentFilters(students, []);
-
   const identifier = user?.user_id || user?.id || user?.email;
 
   const { data: { students = [], availableCourses = [] } = {}, isLoading: loading } = useQuery({
@@ -68,13 +57,11 @@ const TrainerStudents = () => {
             course_id: id,
             course_title: courseTitle,
             email: st.email || st.user_id,
-            name: st.user_name || 'Anonymous Student',
-            progress: st.progress_percentage || 0,
-            completed_modules: st.completed_modules,
-            total_modules: st.total_modules,
-            college: colMap[st.user_college] || st.user_college || '',
-            branch: brMap[st.user_branch] || st.user_branch || '',
-            year: st.user_year || ''
+            name: st.name || 'Anonymous Student',
+            progress: st.progress || 0,
+            college: colMap[st.college] || st.college || '',
+            branch: brMap[st.branch] || st.branch || '',
+            year: st.year || ''
           }));
         }
         return { courseId: id, courseTitle, students: courseStudents };
@@ -91,6 +78,17 @@ const TrainerStudents = () => {
     enabled: !!identifier,
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
+
+  const {
+    searchQuery, setSearchQuery,
+    courseFilter, setCourseFilter,
+    progressFilter, setProgressFilter,
+    collegeFilter, setCollegeFilter,
+    branchFilter, setBranchFilter,
+    yearFilter, setYearFilter,
+    uniqueColleges, uniqueBranches, uniqueYears,
+    filteredStudents
+  } = useStudentFilters(students, []);
 
   const handleBulkImport = async (file) => {
     setActionLoading(true);

@@ -28,18 +28,6 @@ const AdminStudents = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const {
-    searchQuery, setSearchQuery,
-    courseFilter, setCourseFilter,
-    progressFilter, setProgressFilter,
-    collegeFilter, setCollegeFilter,
-    branchFilter, setBranchFilter,
-    degreeFilter, setDegreeFilter,
-    yearFilter, setYearFilter,
-    uniqueColleges, uniqueBranches, uniqueDegrees, uniqueYears,
-    filteredStudents, filteredUniqueStudents
-  } = useStudentFilters(students, uniqueStudents);
-
   const { data: { students = [], uniqueStudents = [], availableCourses = [], globalColleges = [], globalBranches = [], globalDegrees = [] } = {}, isLoading: loading } = useQuery({
     queryKey: ['admin_students_data'],
     queryFn: async () => {
@@ -98,6 +86,18 @@ const AdminStudents = () => {
     enabled: !!user,
     staleTime: 5 * 60 * 1000
   });
+
+  const {
+    searchQuery, setSearchQuery,
+    courseFilter, setCourseFilter,
+    progressFilter, setProgressFilter,
+    collegeFilter, setCollegeFilter,
+    branchFilter, setBranchFilter,
+    degreeFilter, setDegreeFilter,
+    yearFilter, setYearFilter,
+    uniqueColleges, uniqueBranches, uniqueDegrees, uniqueYears,
+    filteredStudents, filteredUniqueStudents
+  } = useStudentFilters(students, uniqueStudents);
 
   useEffect(() => {
     if (!loading && uniqueStudents.length > 0 && !selectedUser) {
