@@ -22,9 +22,6 @@ const AdminAssessments = () => {
   const { viewMode, setViewMode } = useViewMode('admin_assessments_view_mode', 'grid');
   const [toast, setToast] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState('all');
-
-  const filteredByCourse = useMemo(() => assessments.filter(a => selectedCourse === 'all' || a.course_id === selectedCourse), [assessments, selectedCourse]);
-  const { searchQuery, setSearchQuery, filteredData: filteredAssessments } = useSearchFilter(filteredByCourse, ['title', 'Title', 'course_title']);
   const [editingAsm, setEditingAsm] = useState(null);
   const [viewingResults, setViewingResults] = useState(null);
 
@@ -32,7 +29,6 @@ const AdminAssessments = () => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   };
-
 
   const isTrainer = user?.role === 'trainer';
   const BASE_URL = isTrainer ? TRAINER_API : ADMIN_API;
@@ -108,8 +104,11 @@ const AdminAssessments = () => {
     staleTime: 5 * 60 * 1000
   });
 
-  const courses = fetchResult.courses;
-  const assessments = fetchResult.assessments;
+  const courses = fetchResult.courses || [];
+  const assessments = fetchResult.assessments || [];
+
+  const filteredByCourse = useMemo(() => assessments.filter(a => selectedCourse === 'all' || a.course_id === selectedCourse), [assessments, selectedCourse]);
+  const { searchQuery, setSearchQuery, filteredData: filteredAssessments } = useSearchFilter(filteredByCourse, ['title', 'Title', 'course_title']);
 
   const handleDelete = async (id, courseId) => {
     if (!window.confirm('Are you sure you want to delete this assessment?')) return;
