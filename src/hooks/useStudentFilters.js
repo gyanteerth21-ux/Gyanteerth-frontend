@@ -74,7 +74,7 @@ const useStudentFilters = (students = [], uniqueStudents = []) => {
 
       return matchesSearch && matchesCollege && matchesBranch && matchesDegree && matchesYear && matchesProgress;
     });
-  }, [uniqueStudents, searchQuery, collegeFilter, branchFilter, degreeFilter, yearFilter, progressFilter]);
+  }, [safeUnique, searchQuery, collegeFilter, branchFilter, degreeFilter, yearFilter, progressFilter]);
 
   return {
     searchQuery, setSearchQuery,

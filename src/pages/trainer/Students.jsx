@@ -164,7 +164,7 @@ const TrainerStudents = () => {
               style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer' }}
             >
               <option value="All">All Courses</option>
-              {availableCourses.map(c => (
+              {(availableCourses || []).map(c => (
                 <option key={c.id} value={c.id}>{c.title}</option>
               ))}
             </select>
@@ -177,7 +177,7 @@ const TrainerStudents = () => {
               onChange={(e) => setCollegeFilter(e.target.value)}
               style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', maxWidth: '200px', textOverflow: 'ellipsis' }}
             >
-              {uniqueColleges.map(c => (
+              {(uniqueColleges || []).map(c => (
                 <option key={c} value={c === 'All Colleges' ? 'All' : c}>{c}</option>
               ))}
             </select>
@@ -190,7 +190,7 @@ const TrainerStudents = () => {
               onChange={(e) => setBranchFilter(e.target.value)}
               style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', maxWidth: '200px', textOverflow: 'ellipsis' }}
             >
-              {uniqueBranches.map(b => (
+              {(uniqueBranches || []).map(b => (
                 <option key={b} value={b === 'All Branches' ? 'All' : b}>{b}</option>
               ))}
             </select>
@@ -203,7 +203,7 @@ const TrainerStudents = () => {
               onChange={(e) => setYearFilter(e.target.value)}
               style={{ appearance: 'none', padding: '0.85rem 2.5rem 0.85rem 1.25rem', backgroundColor: 'var(--color-surface)', border: '1px solid #e2e8f0', borderRadius: '1.25rem', fontSize: '0.9rem', fontWeight: 700, color: '#475569', outline: 'none', cursor: 'pointer', minWidth: '130px' }}
             >
-              {uniqueYears.map(y => (
+              {(uniqueYears || []).map(y => (
                 <option key={y} value={y === 'All Years' ? 'All' : y}>{y}</option>
               ))}
             </select>

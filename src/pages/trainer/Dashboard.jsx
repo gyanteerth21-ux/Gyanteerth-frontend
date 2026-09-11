@@ -161,8 +161,10 @@ const TrainerDashboard = () => {
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
 
-  const { courses, students, liveSessions } = data;
-  const avgOverallProgress = courses.length > 0 ? Math.round(courses.reduce((acc, c) => acc + c.progress, 0) / courses.length) : 0;
+  const courses = Array.isArray(data?.courses) ? data.courses : [];
+  const students = Array.isArray(data?.students) ? data.students : [];
+  const liveSessions = Array.isArray(data?.liveSessions) ? data.liveSessions : [];
+  const avgOverallProgress = courses.length > 0 ? Math.round(courses.reduce((acc, c) => acc + (c.progress || 0), 0) / courses.length) : 0;
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '4rem' }}>

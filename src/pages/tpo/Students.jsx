@@ -123,7 +123,7 @@ const TpoStudents = () => {
             />
           </div>
           <ExportExcelButton 
-            data={filteredUniqueStudents.map(st => ({
+            data={(filteredUniqueStudents || []).map(st => ({
               ...st,
               enrollments: st.enrollments ? st.enrollments.map(e => `${e.course_title} (${e.progress}%)`).join(', ') : ''
             }))} 
@@ -156,7 +156,7 @@ const TpoStudents = () => {
               style={{ appearance: 'none', padding: '0.75rem 2.25rem 0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '130px', maxWidth: '180px', textOverflow: 'ellipsis' }}
             >
               <option value="All">All Branches</option>
-              {globalBranches.map(b => (
+              {(globalBranches || []).map(b => (
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
@@ -170,7 +170,7 @@ const TpoStudents = () => {
               style={{ appearance: 'none', padding: '0.75rem 2.25rem 0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text)', outline: 'none', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', minWidth: '140px', maxWidth: '180px', textOverflow: 'ellipsis' }}
             >
               <option value="All">All Degrees</option>
-              {globalDegrees.map(d => (
+              {(globalDegrees || []).map(d => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
@@ -214,10 +214,10 @@ const TpoStudents = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUniqueStudents.length === 0 ? (
+              {(filteredUniqueStudents || []).length === 0 ? (
                 <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No students found matching your criteria.</td></tr>
               ) : (
-                filteredUniqueStudents.map(student => (
+                (filteredUniqueStudents || []).map(student => (
                   <tr key={student.user_id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                     <td style={{ padding: '1rem' }}>
                       <div style={{ fontWeight: 600 }}>{student.name}</div>

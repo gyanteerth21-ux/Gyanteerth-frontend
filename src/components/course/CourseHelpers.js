@@ -3,8 +3,12 @@ export const norm = (id) => (id === undefined || id === null || String(id) === '
 export function buildLessons(modules, courseNotes) {
   const lessons = [];
 
+  const safeNotes = Array.isArray(courseNotes) ? courseNotes : [];
+  const safeModules = Array.isArray(modules) ? modules : [];
+
   // 0. Course-Level Notes
-  (courseNotes || []).forEach((n, ni) => {
+  safeNotes.forEach((n, ni) => {
+    if (!n) return;
     lessons.push({
       id: n.notes_id || n.note_id || n.Notes_ID || n.id,
       moduleId: 'global-resources',
@@ -15,14 +19,16 @@ export function buildLessons(modules, courseNotes) {
     });
   });
 
-  (modules || []).forEach(mod => {
-    const vc = mod.content?.videos || mod.video || [];
-    const lc = mod.content?.live_sessions || mod.live_sessions || [];
-    const nc = mod.content?.notes || mod.notes || [];
-    const ac = mod.content?.assessments || mod.assessments || [];
+  safeModules.forEach(mod => {
+    if (!mod) return;
+    const vc = Array.isArray(mod.content?.videos) ? mod.content.videos : (Array.isArray(mod.video) ? mod.video : []);
+    const lc = Array.isArray(mod.content?.live_sessions) ? mod.content.live_sessions : (Array.isArray(mod.live_sessions) ? mod.live_sessions : []);
+    const nc = Array.isArray(mod.content?.notes) ? mod.content.notes : (Array.isArray(mod.notes) ? mod.notes : []);
+    const ac = Array.isArray(mod.content?.assessments) ? mod.content.assessments : (Array.isArray(mod.assessments) ? mod.assessments : []);
 
     // 1. Videos
     vc.forEach((v, vi) => {
+      if (!v) return;
       lessons.push({
         id: v.video_id || v.Video_ID,
         moduleId: mod.module_id || mod.Module_ID,
@@ -35,6 +41,7 @@ export function buildLessons(modules, courseNotes) {
 
     // 2. Live Sessions
     lc.forEach((ls, li) => {
+      if (!ls) return;
       lessons.push({
         id: ls.live_id || ls.Live_ID,
         moduleId: mod.module_id || mod.Module_ID,
@@ -45,12 +52,13 @@ export function buildLessons(modules, courseNotes) {
         start_time: ls.start_time || ls.Start_time,
         end_time: ls.end_time || ls.End_time,
         status: ls.status || ls.Status,
-        recordings: ls.recordings || []
+        recordings: Array.isArray(ls.recordings) ? ls.recordings : []
       });
     });
 
     // 3. Notes
     nc.forEach((n, ni) => {
+      if (!n) return;
       lessons.push({
         id: n.notes_id || n.note_id || n.Notes_ID || n.id,
         moduleId: mod.module_id || mod.Module_ID,
@@ -63,6 +71,7 @@ export function buildLessons(modules, courseNotes) {
 
     // 4. Assessments
     ac.forEach(a => {
+      if (!a) return;
       lessons.push({
         id: a.assessment_id || a.Assessment_ID,
         moduleId: mod.module_id || mod.Module_ID,
@@ -73,7 +82,7 @@ export function buildLessons(modules, courseNotes) {
         passingMark: a.passing_mark || a.Passing_Mark,
         duration: a.duration || a.Duration,
         attemptLimit: (a.attempt_limit !== undefined && a.attempt_limit !== null) ? a.attempt_limit : a.Attempt_Limit,
-        questions: a.questions || []
+        questions: Array.isArray(a.questions) ? a.questions : []
       });
     });
   });

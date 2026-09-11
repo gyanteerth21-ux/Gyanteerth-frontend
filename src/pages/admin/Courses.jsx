@@ -77,16 +77,16 @@ const AdminCourses = () => {
     staleTime: 5 * 60 * 1000
   });
 
-  const courses = coursesData.courses;
-  const categories = coursesData.categories;
+  const courses = Array.isArray(coursesData?.courses) ? coursesData.courses : [];
+  const categories = Array.isArray(coursesData?.categories) ? coursesData.categories : [];
 
   const fetchTrainers = useCallback(async () => {
     try {
       const res = await authFetch(`${ADMIN_API}/all_trainer`);
       if (res.ok) {
         const data = await res.json();
-        const active = data.active_trainer_email || [];
-        const inactive = data.inactive_trainer_email || [];
+        const active = Array.isArray(data.active_trainer_email) ? data.active_trainer_email : [];
+        const inactive = Array.isArray(data.inactive_trainer_email) ? data.inactive_trainer_email : [];
         const process = (list) => list.map(t => {
            const id = Object.keys(t)[0];
            return { id, email: t[id] };
@@ -128,7 +128,7 @@ const AdminCourses = () => {
   const filteredCourses = courses.filter(c => {
     const matchesStatus = c.status === activeTab;
     const matchesCategory = activeCategory === 'all' || c.category_id === activeCategory;
-    const matchesSearch = c.course_title?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (c.course_title || c.title || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesCategory && matchesSearch;
   });
 

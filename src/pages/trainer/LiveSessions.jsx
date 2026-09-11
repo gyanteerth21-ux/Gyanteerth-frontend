@@ -65,7 +65,7 @@ const LiveSessions = () => {
     const now = new Date();
     const groups = { liveSessions: [], upcomingSessions: [], passedSessions: [] };
     
-    (sessions || []).forEach(s => {
+    (Array.isArray(sessions) ? sessions : []).forEach(s => {
       const startTime = new Date(s.start_time);
       const endTime = new Date(s.end_time);
       
@@ -97,6 +97,7 @@ const LiveSessions = () => {
 
 
   const currentList = activeTab === 'live' ? liveSessions : (activeTab === 'upcoming' ? upcomingSessions : passedSessions);
+  const safeCurrentList = Array.isArray(currentList) ? currentList : [];
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '4rem' }}>
@@ -161,7 +162,7 @@ const LiveSessions = () => {
             <div key={i} style={{ height: '100px', background: 'var(--color-surface)', borderRadius: '1.5rem', animation: 'pulse-bg 1.5s infinite ease-in-out' }} />
           ))}
         </div>
-      ) : currentList.length === 0 ? (
+      ) : safeCurrentList.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '6rem 2rem', background: 'var(--color-surface)', borderRadius: '2.5rem', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--color-surface-muted)', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-light)' }}>
             <Video size={36} />
@@ -179,7 +180,7 @@ const LiveSessions = () => {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {currentList.map((s, i) => (
+          {safeCurrentList.map((s, i) => (
             <LiveSessionCard key={s.live_id} session={s} type={activeTab} idx={i} role="trainer" />
           ))}
         </div>

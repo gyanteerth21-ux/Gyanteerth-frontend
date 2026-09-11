@@ -20,7 +20,7 @@ const Certificates = () => {
 
   // 🎓 Identify completed courses (100% progress — strictly backend-verified)
   const earnedCertificates = useMemo(() => {
-    const raw = enrolledCourses || [];
+    const raw = Array.isArray(enrolledCourses) ? enrolledCourses : [];
     return raw
       .filter(c => (c.progress || 0) === 100)
       .map(c => ({
@@ -33,8 +33,8 @@ const Certificates = () => {
       }));
   }, [enrolledCourses]);
 
-  const filteredCerts = earnedCertificates.filter(c => 
-    c.courseTitle.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCerts = (earnedCertificates || []).filter(c => 
+    (c.courseTitle || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

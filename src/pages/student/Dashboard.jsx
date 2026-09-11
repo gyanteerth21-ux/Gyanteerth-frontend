@@ -16,7 +16,7 @@ const Dashboard = () => {
 
   // Memoize calculations to prevent performance hits on re-renders
   const { enrolledWithProgress, totalCompleted, inProgress } = useMemo(() => {
-    const rawCourses = enrolledCourses || [];
+    const rawCourses = Array.isArray(enrolledCourses) ? enrolledCourses : [];
 
     const mapped = rawCourses.map(c => ({
       ...c,

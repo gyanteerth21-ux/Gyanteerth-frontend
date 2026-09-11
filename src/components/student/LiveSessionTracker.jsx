@@ -11,12 +11,13 @@ const LiveSessionTracker = ({ limit = 3 }) => {
   const { user, authFetch } = useAuth();
   const { enrolledCourses } = useEnrollment();
   const navigate = useNavigate();
+  const safeEnrolled = Array.isArray(enrolledCourses) ? enrolledCourses : [];
 
   const { data: sessions = [], isLoading: loading } = useQuery({
-    queryKey: ['student_live_sessions', enrolledCourses?.map(c => c.id || c.course_id).join(',')],
+    queryKey: ['student_live_sessions', safeEnrolled.map(c => c.id || c.course_id).join(',')],
     queryFn: async () => {
       const results = await Promise.all(
-        enrolledCourses.map(async c => {
+        safeEnrolled.map(async c => {
             const res = await authFetch(`${ADMIN_API}/course/${c.id || c.course_id}/full-details`);
             if (res.ok) {
                 return res.json();
@@ -27,10 +28,10 @@ const LiveSessionTracker = ({ limit = 3 }) => {
 
       const allSessions = [];
       results.forEach((courseData, i) => {
-        if (!courseData) return;
+        if (!courseData || !safeEnrolled[i]) return;
         const c = courseData.course || courseData;
-        const courseTitle = c.course_title || c.title || enrolledCourses[i].title;
-        const courseId = enrolledCourses[i].id || enrolledCourses[i].course_id;
+        const courseTitle = c.course_title || c.title || safeEnrolled[i].title;
+        const courseId = safeEnrolled[i].id || safeEnrolled[i].course_id;
 
         (c.modules || []).forEach(m => {
           (m.content?.live_sessions || m.live_sessions || []).forEach(ls => {
@@ -52,7 +53,7 @@ const LiveSessionTracker = ({ limit = 3 }) => {
 
       return allSessions;
     },
-    enabled: !!enrolledCourses && enrolledCourses.length > 0,
+    enabled: safeEnrolled.length > 0,
     staleTime: 5 * 60 * 1000
   });
 
