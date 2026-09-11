@@ -3,6 +3,9 @@ import { Award, Network, Plus, Edit, Trash2, Search, Loader2, AlertCircle, Check
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../shared/AuthContext';
 import { ADMIN_API } from '../../config';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { degreeSchema, branchSchema } from '../../shared/schemas';
 
 const Academics = () => {
   const { authFetch } = useAuth();
@@ -17,12 +20,19 @@ const Academics = () => {
   
   // Modals
   const [isDegreeModalOpen, setIsDegreeModalOpen] = useState(false);
-  const [degreeForm, setDegreeForm] = useState({ id: null, name: '' });
+  const [selectedDegreeId, setSelectedDegreeId] = useState(null);
+  const { register: registerDegree, handleSubmit: handleDegreeSubmit, reset: resetDegree, setValue: setDegreeValue, formState: { errors: degreeErrors, isSubmitting: isDegreeSubmitting } } = useForm({
+    resolver: zodResolver(degreeSchema),
+    defaultValues: { name: '' }
+  });
   
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
-  const [branchForm, setBranchForm] = useState({ id: null, name: '' });
+  const [selectedBranchId, setSelectedBranchId] = useState(null);
+  const { register: registerBranch, handleSubmit: handleBranchSubmit, reset: resetBranch, setValue: setBranchValue, formState: { errors: branchErrors, isSubmitting: isBranchSubmitting } } = useForm({
+    resolver: zodResolver(branchSchema),
+    defaultValues: { name: '' }
+  });
   
-  const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(null);
   const [actionError, setActionError] = useState(null);
 
@@ -54,37 +64,34 @@ const Academics = () => {
   }, []);
 
   // --- Degree Handlers ---
-  const handleCreateOrUpdateDegree = async (e) => {
-    e.preventDefault();
-    setActionLoading(true);
+  const onSubmitDegree = async (data) => {
     setActionError(null);
     setActionSuccess(null);
     
     try {
-      const isUpdate = !!degreeForm.id;
-      const url = isUpdate ? `${ADMIN_API}/degrees/${degreeForm.id}` : `${ADMIN_API}/degrees`;
+      const isUpdate = !!selectedDegreeId;
+      const url = isUpdate ? `${ADMIN_API}/degrees/${selectedDegreeId}` : `${ADMIN_API}/degrees`;
       const method = isUpdate ? 'PUT' : 'POST';
       
       const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Degree_Name: degreeForm.name })
+        body: JSON.stringify({ Degree_Name: data.name })
       });
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Failed to save degree');
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.detail || 'Failed to save degree');
       
       setActionSuccess(`Degree ${isUpdate ? 'updated' : 'created'} successfully!`);
       fetchData();
       setTimeout(() => {
         setIsDegreeModalOpen(false);
-        setDegreeForm({ id: null, name: '' });
+        resetDegree();
+        setSelectedDegreeId(null);
         setActionSuccess(null);
       }, 1500);
     } catch (err) {
       setActionError(err.message);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -100,37 +107,34 @@ const Academics = () => {
   };
 
   // --- Branch Handlers ---
-  const handleCreateOrUpdateBranch = async (e) => {
-    e.preventDefault();
-    setActionLoading(true);
+  const onSubmitBranch = async (data) => {
     setActionError(null);
     setActionSuccess(null);
     
     try {
-      const isUpdate = !!branchForm.id;
-      const url = isUpdate ? `${ADMIN_API}/branches/${branchForm.id}` : `${ADMIN_API}/branches`;
+      const isUpdate = !!selectedBranchId;
+      const url = isUpdate ? `${ADMIN_API}/branches/${selectedBranchId}` : `${ADMIN_API}/branches`;
       const method = isUpdate ? 'PUT' : 'POST';
       
       const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Branch_Name: branchForm.name })
+        body: JSON.stringify({ Branch_Name: data.name })
       });
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Failed to save branch');
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.detail || 'Failed to save branch');
       
       setActionSuccess(`Branch ${isUpdate ? 'updated' : 'created'} successfully!`);
       fetchData();
       setTimeout(() => {
         setIsBranchModalOpen(false);
-        setBranchForm({ id: null, name: '' });
+        resetBranch();
+        setSelectedBranchId(null);
         setActionSuccess(null);
       }, 1500);
     } catch (err) {
       setActionError(err.message);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -163,7 +167,7 @@ const Academics = () => {
         <div style={{ display: 'flex', gap: '1rem' }}>
           {activeTab === 'degrees' ? (
             <button 
-              onClick={() => { setDegreeForm({ id: null, name: '' }); setIsDegreeModalOpen(true); }}
+              onClick={() => { resetDegree(); setSelectedDegreeId(null); setIsDegreeModalOpen(true); }}
               className="btn btn-primary"
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
@@ -171,7 +175,7 @@ const Academics = () => {
             </button>
           ) : (
             <button 
-              onClick={() => { setBranchForm({ id: null, name: '' }); setIsBranchModalOpen(true); }}
+              onClick={() => { resetBranch(); setSelectedBranchId(null); setIsBranchModalOpen(true); }}
               className="btn btn-primary"
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
@@ -263,7 +267,7 @@ const Academics = () => {
                   <td style={{ padding: '1rem', textAlign: 'right' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                       <button 
-                        onClick={() => { setDegreeForm({ id: degree.degree_id, name: degree.degree_name }); setIsDegreeModalOpen(true); }}
+                        onClick={() => { resetDegree(); setDegreeValue('name', degree.degree_name); setSelectedDegreeId(degree.degree_id); setIsDegreeModalOpen(true); }}
                         className="btn"
                         style={{ padding: '0.5rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', background: 'transparent' }}
                       >
@@ -291,7 +295,7 @@ const Academics = () => {
                   <td style={{ padding: '1rem', textAlign: 'right' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                       <button 
-                        onClick={() => { setBranchForm({ id: branch.branch_id, name: branch.branch_name }); setIsBranchModalOpen(true); }}
+                        onClick={() => { resetBranch(); setBranchValue('name', branch.branch_name); setSelectedBranchId(branch.branch_id); setIsBranchModalOpen(true); }}
                         className="btn"
                         style={{ padding: '0.5rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', background: 'transparent' }}
                       >
@@ -322,23 +326,24 @@ const Academics = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Award className="text-primary" size={20} />
-                  {degreeForm.id ? 'Edit Degree' : 'Add New Degree'}
+                  {selectedDegreeId ? 'Edit Degree' : 'Add New Degree'}
                 </h2>
                 <button type="button" onClick={() => setIsDegreeModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={20} /></button>
               </div>
-              <form onSubmit={handleCreateOrUpdateDegree} style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleDegreeSubmit(onSubmitDegree)} style={{ padding: '1.5rem' }}>
                 {actionError && <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><AlertCircle size={16} />{actionError}</div>}
                 {actionSuccess && <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle2 size={16} />{actionSuccess}</div>}
                 
                 <div style={{ marginBottom: '1.5rem' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>Degree Name</label>
-                  <input required type="text" value={degreeForm.name} onChange={e => setDegreeForm({ ...degreeForm, name: e.target.value })} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} placeholder="e.g. B.Tech" />
+                  <input {...registerDegree('name')} type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${degreeErrors.name ? 'var(--color-danger)' : 'var(--color-border)'}`, backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} placeholder="e.g. B.Tech" />
+                  {degreeErrors.name && <p style={{ color: 'var(--color-danger)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{degreeErrors.name.message}</p>}
                 </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                   <button type="button" onClick={() => setIsDegreeModalOpen(false)} className="btn btn-secondary">Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={actionLoading}>
-                    {actionLoading ? <Loader2 size={18} className="spin" /> : (degreeForm.id ? 'Update Degree' : 'Add Degree')}
+                  <button type="submit" className="btn btn-primary" disabled={isDegreeSubmitting}>
+                    {isDegreeSubmitting ? <Loader2 size={18} className="spin" /> : (selectedDegreeId ? 'Update Degree' : 'Add Degree')}
                   </button>
                 </div>
               </form>
@@ -356,23 +361,24 @@ const Academics = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Network className="text-primary" size={20} />
-                  {branchForm.id ? 'Edit Branch' : 'Add New Branch'}
+                  {selectedBranchId ? 'Edit Branch' : 'Add New Branch'}
                 </h2>
                 <button type="button" onClick={() => setIsBranchModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={20} /></button>
               </div>
-              <form onSubmit={handleCreateOrUpdateBranch} style={{ padding: '1.5rem' }}>
+              <form onSubmit={handleBranchSubmit(onSubmitBranch)} style={{ padding: '1.5rem' }}>
                 {actionError && <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><AlertCircle size={16} />{actionError}</div>}
                 {actionSuccess && <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle2 size={16} />{actionSuccess}</div>}
                 
                 <div style={{ marginBottom: '1.5rem' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: 600 }}>Branch Name</label>
-                  <input required type="text" value={branchForm.name} onChange={e => setBranchForm({ ...branchForm, name: e.target.value })} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} placeholder="e.g. Computer Science" />
+                  <input {...registerBranch('name')} type="text" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${branchErrors.name ? 'var(--color-danger)' : 'var(--color-border)'}`, backgroundColor: 'var(--color-background)', color: 'var(--color-text)' }} placeholder="e.g. Computer Science" />
+                  {branchErrors.name && <p style={{ color: 'var(--color-danger)', fontSize: '0.8rem', marginTop: '0.25rem' }}>{branchErrors.name.message}</p>}
                 </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                   <button type="button" onClick={() => setIsBranchModalOpen(false)} className="btn btn-secondary">Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={actionLoading}>
-                    {actionLoading ? <Loader2 size={18} className="spin" /> : (branchForm.id ? 'Update Branch' : 'Add Branch')}
+                  <button type="submit" className="btn btn-primary" disabled={isBranchSubmitting}>
+                    {isBranchSubmitting ? <Loader2 size={18} className="spin" /> : (selectedBranchId ? 'Update Branch' : 'Add Branch')}
                   </button>
                 </div>
               </form>

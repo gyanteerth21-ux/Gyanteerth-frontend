@@ -4,12 +4,53 @@ import { useAuth } from '../shared/AuthContext';
 import { useTheme } from '../shared/ThemeContext';
 import Logo from '../components/Logo';
 import ThemeToggle from '../components/ThemeToggle';
-import { LayoutDashboard, Book, Users, Video, FileText, MessageSquare, LogOut, Menu, X, Compass, UserCog, ChevronUp, Folder, Search, Bell, Clock, Building, Network, Award } from 'lucide-react';
+import { LayoutDashboard, Book, Users, Video, FileText, MessageSquare, LogOut, Menu, X, Compass, UserCog, ChevronUp, Folder, Search, Bell, Clock, Building, Network, Award, ExternalLink, GraduationCap } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { optimizeImageUrl } from '../config';
 
-const SidebarLink = ({ to, icon, label, currentPath }) => {
+const SidebarLink = ({ to, icon, label, currentPath, isExternal, onClick }) => {
+  if (isExternal || onClick) {
+    return (
+      <a
+        href={to || '#'}
+        onClick={onClick}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="sidebar-link"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.65rem',
+          padding: '0.65rem 1rem',
+          borderRadius: 'var(--radius-md)',
+          marginBottom: '0.15rem',
+          textDecoration: 'none',
+          color: 'var(--color-sidebar-text)',
+          fontWeight: 700,
+          fontSize: '0.85rem',
+          backgroundColor: 'transparent',
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          cursor: 'pointer'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--color-surface-muted)';
+          e.currentTarget.style.paddingLeft = '1.25rem';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
+          e.currentTarget.style.paddingLeft = '1rem';
+        }}
+      >
+        <div style={{ flexShrink: 0, transition: 'transform 0.3s ease', display: 'flex' }}>
+          {icon && React.cloneElement(icon, { size: 18 })}
+        </div>
+        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.01em', flex: 1 }}>{label}</span>
+        <ExternalLink size={13} style={{ opacity: 0.6, flexShrink: 0 }} />
+      </a>
+    );
+  }
+
   const isRoot = ['/admin', '/trainer', '/student', '/tpo'].includes(to);
   const isActive = isRoot 
     ? currentPath === to || currentPath === `${to}/`
@@ -64,6 +105,15 @@ const DashboardLayout = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const scrollRef = useRef(null);
+
+  const handleAssessmentPortalClick = (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('_gt_auth_tkn');
+    const targetUrl = token 
+      ? `https://assessment.gyanteerthlearning.online/admin/sso?token=${encodeURIComponent(token)}`
+      : `https://assessment.gyanteerthlearning.online/admin/sso`;
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
 
   // Auto-scroll to top on route change
   useEffect(() => {
@@ -122,7 +172,8 @@ const DashboardLayout = () => {
           { index: 2.5, to: '/admin/academics', icon: <Award size={20} />, label: 'Degrees & Branches' },
           { index: 3, to: '/admin/users', icon: <Users size={20} />, label: 'Trainers' },
           { index: 4, to: '/admin/students', icon: <Users size={20} />, label: 'Students' },
-          { index: 5, to: '/admin/assessments', icon: <FileText size={20} />, label: 'Assessments' },
+          { index: 4.8, to: '#', icon: <GraduationCap size={20} />, label: 'Assessment Portal', isExternal: true, onClick: handleAssessmentPortalClick },
+          { index: 5, to: '/admin/assessments', icon: <FileText size={20} />, label: 'Course Quizzes' },
           { index: 6, to: '/admin/feedbacks', icon: <MessageSquare size={20} />, label: 'Feedbacks' },
           { index: 7, to: '/admin/reset-requests', icon: <Clock size={20} />, label: 'Reset Requests' },
         ];
@@ -147,6 +198,7 @@ const DashboardLayout = () => {
         return [
           { to: '/tpo', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
           { to: '/tpo/students', icon: <Users size={20} />, label: 'My Students' },
+          { to: '#', icon: <GraduationCap size={20} />, label: 'Assessment Portal', isExternal: true, onClick: handleAssessmentPortalClick },
         ];
     }
   };
@@ -170,11 +222,13 @@ const DashboardLayout = () => {
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
             {navItems.map((item) => (
               <SidebarLink
-                key={item.to}
+                key={item.label}
                 to={item.to}
                 icon={item.icon}
                 label={item.label}
                 currentPath={location.pathname}
+                isExternal={item.isExternal}
+                onClick={item.onClick}
               />
             ))}
           </nav>

@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../shared/AuthContext';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, 
   ChevronDown, Upload, X, AlertCircle, Database, CheckCircle2,
@@ -16,11 +17,8 @@ import { fetchCollegesAndBranchesMap } from '../../utils/mappingUtils';
 
 
 const TrainerStudents = () => {
-  const { user, smartFetch, authFetch, cacheSyncToken } = useAuth();
+  const { user, authFetch } = useAuth();
   
-  const [students, setStudents] = useState([]);
-  const [availableCourses, setAvailableCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showImportModal, setShowImportModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -42,20 +40,26 @@ const TrainerStudents = () => {
     filteredStudents
   } = useStudentFilters(students, []);
 
-  const fetchStudents = useCallback(async () => {
-    const identifier = user?.user_id || user?.id || user?.email;
-    if (!identifier) return;
-    setLoading(true);
-    try {
-      const { colMap, brMap } = await fetchCollegesAndBranchesMap(smartFetch, USER_API);
+  const identifier = user?.user_id || user?.id || user?.email;
 
-      const data = await smartFetch(`${TRAINER_API}/trainer_course_ids`, { cacheKey: `trainer_course_ids_${identifier}`, forceRefresh: true });
-      const ids = data?.course_ids || [];
+  const { data: { students = [], availableCourses = [] } = {}, isLoading: loading } = useQuery({
+    queryKey: ['trainer_students', identifier],
+    queryFn: async () => {
+      const { colMap, brMap } = await fetchCollegesAndBranchesMap(authFetch, USER_API);
+
+      const idsRes = await authFetch(`${TRAINER_API}/trainer_course_ids`);
+      if (!idsRes.ok) throw new Error("Failed to fetch course ids");
+      const cachedIds = await idsRes.json();
+      const ids = cachedIds?.course_ids || [];
+
       const fetchPromises = ids.map(async (id) => {
-        const [cData, pData] = await Promise.all([
-          smartFetch(`${ADMIN_API}/course/${id}/full-details`, { cacheKey: `details_${id}` }),
-          smartFetch(`${TRAINER_API}/course/${id}/students-progress`, { cacheKey: `st_prog_${id}`, forceRefresh: true })
+        const [cRes, pRes] = await Promise.all([
+          authFetch(`${ADMIN_API}/course/${id}/full-details`),
+          authFetch(`${TRAINER_API}/course/${id}/students-progress`)
         ]);
+        const cData = cRes.ok ? await cRes.json() : null;
+        const pData = pRes.ok ? await pRes.json() : null;
+        
         let courseTitle = (cData?.course?.course_title || cData?.course?.title || `Course ID: ${id}`);
         let courseStudents = [];
         if (pData && pData.data) {
@@ -69,7 +73,7 @@ const TrainerStudents = () => {
             completed_modules: st.completed_modules,
             total_modules: st.total_modules,
             college: colMap[st.user_college] || st.user_college || '',
-            branch: branchMap[st.user_branch] || st.user_branch || '',
+            branch: brMap[st.user_branch] || st.user_branch || '',
             year: st.user_year || ''
           }));
         }
@@ -78,16 +82,15 @@ const TrainerStudents = () => {
       const results = await Promise.all(fetchPromises);
       const allEnrollments = results.flatMap(r => r.students);
       const coursesList = results.filter(r => r.students.length > 0).map(r => ({ id: r.courseId, title: r.courseTitle }));
-      setStudents(allEnrollments.sort((a, b) => b.progress - a.progress));
-      setAvailableCourses(coursesList);
-    } catch (err) {
-      console.error("Sync failure", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, smartFetch, cacheSyncToken]);
-
-  useEffect(() => { fetchStudents(); }, [fetchStudents]);
+      
+      return {
+        students: allEnrollments.sort((a, b) => b.progress - a.progress),
+        availableCourses: coursesList
+      };
+    },
+    enabled: !!identifier,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
 
   const handleBulkImport = async (file) => {
     setActionLoading(true);
@@ -102,7 +105,7 @@ const TrainerStudents = () => {
       if (response.ok) {
         showToast('Students imported successfully');
         setShowImportModal(false);
-        fetchStudents();
+        // We'll let the user invalidate or handle success
       } else {
         const errorData = await response.json();
         showToast(errorData.detail || 'Unable to import data', 'error');

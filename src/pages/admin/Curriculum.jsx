@@ -9,6 +9,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../shared/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { moduleSchema, lessonSchema, liveSessionSchema, notesSchema, assessmentSchema, questionSchema } from '../../shared/schemas';
 
 import { ADMIN_API } from '../../config';
 import { SubTab, ContentItem, AMInput, AMTextarea, AMSelect, EmptyPlaceholder } from '../../components/admin/CurriculumComponents';
@@ -17,12 +21,12 @@ import { CurriculumSidebar } from '../../components/admin/CurriculumSidebar';
 const AdminCurriculum = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { user, authFetch, smartFetch, cacheSyncToken } = useAuth();
+  const { user, authFetch } = useAuth();
+  const queryClient = useQueryClient();
 
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
   const [activeModule, setActiveModule] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = React.useRef(null);
@@ -31,13 +35,41 @@ const AdminCurriculum = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const [showModuleForm, setShowModuleForm] = useState(false);
-  const [moduleForm, setModuleForm] = useState({ Title: '', Description: '', Position: 1, editingId: null });
+  const [editingModuleId, setEditingModuleId] = useState(null);
 
-  const [editModal, setEditModal] = useState({ show: false, type: '', data: null });
+  const [editModal, setEditModal] = useState({ show: false, type: '', id: null });
   const [showQuestionForm, setShowQuestionForm] = useState(false);
 
   const [activeAssessment, setActiveAssessment] = useState(null);
-  const [questionForm, setQuestionForm] = useState({ Question_Txt: '', Mark: 10, Question_Type: 'MCQ', Explanation: '', Position: 1, editingId: null });
+  const [editingQuestionId, setEditingQuestionId] = useState(null);
+
+  const { register: regModule, handleSubmit: submitModule, reset: resetModule, setValue: setModuleVal, formState: { errors: errModule } } = useForm({
+    resolver: zodResolver(moduleSchema), defaultValues: { Title: '', Course_Description: '', Position: 1 }
+  });
+
+  const { register: regVideo, handleSubmit: submitVideo, reset: resetVideo, setValue: setVideoVal, formState: { errors: errVideo } } = useForm({
+    resolver: zodResolver(lessonSchema), defaultValues: { course_description: '', video_url: '' }
+  });
+
+  const { register: regLive, handleSubmit: submitLive, reset: resetLive, setValue: setLiveVal, formState: { errors: errLive } } = useForm({
+    resolver: zodResolver(liveSessionSchema), defaultValues: { Title: '', Meeting_URL: '', Provider: 'Zoom', Start_time: '', End_time: '', Status: 'scheduled' }
+  });
+
+  const { register: regNotes, handleSubmit: submitNotes, reset: resetNotes, setValue: setNotesVal, formState: { errors: errNotes } } = useForm({
+    resolver: zodResolver(notesSchema), defaultValues: { Title: '', File_URL: '', File_Type: 'link' }
+  });
+
+  const { register: regAssessment, handleSubmit: submitAssessment, reset: resetAssessment, setValue: setAssessmentVal, formState: { errors: errAssessment } } = useForm({
+    resolver: zodResolver(assessmentSchema), defaultValues: { Title: '', Description: '', Total_Mark: 100, Passing_Mark: 40, Duration: 30, Attempt_Limit: 3, Status: 'active' }
+  });
+
+  const { register: regQuestion, handleSubmit: submitQuestion, reset: resetQuestion, control: controlQuestion, setValue: setQuestionVal, formState: { errors: errQuestion }, watch: watchQuestion } = useForm({
+    resolver: zodResolver(questionSchema), defaultValues: { Question_Txt: '', Question_Type: 'MCQ', Mark: 10, Explanation: '' }
+  });
+  
+  const questionType = watchQuestion('Question_Type');
+
+  // We still need local state for options as RHF FieldArrays can be complex for custom radio UI
   const [options, setOptions] = useState([
     { Option_Txt: '', Is_Correct: false, Position: 1 },
     { Option_Txt: '', Is_Correct: false, Position: 2 }
@@ -80,110 +112,107 @@ const AdminCurriculum = () => {
     }
   };
 
-  const fetchCurriculum = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const data = await smartFetch(`${ADMIN_API}/course/${courseId}/full-details`, { cacheKey: `details_${courseId}` });
-      if (data) {
-        const rawCourse = data.course || data;
-        const mappedCourse = {
-          ...rawCourse,
-          course_id: rawCourse.course_id || rawCourse.id,
-          course_title: rawCourse.course_title || rawCourse.title,
-          course_type: rawCourse.type || rawCourse.course_type || rawCourse.course_Type || 'recorded'
-        };
-        setCourse(mappedCourse);
-        
-        if (mappedCourse.course_type === 'live' && activeTab === 'lessons') {
-          setActiveTab('live');
-        } else if (mappedCourse.course_type === 'recorded' && activeTab === 'live') {
-          setActiveTab('lessons');
-        }
+  const fetchCurriculumData = async () => {
+    const res = await authFetch(`${ADMIN_API}/course/${courseId}/full-details`);
+    if (!res.ok) throw new Error('Failed to fetch curriculum');
+    return await res.json();
+  };
 
-        const courseLevelNotes = (rawCourse.notes || []);
-        const sortedModules = (rawCourse.modules || []).sort((a, b) => (a.position || a.Position || 0) - (b.position || b.Position || 0)).map(m => {
-          const content = m.content || {};
-          return {
-            ...m,
-            module_id: m.module_id || m.Module_ID,
-            video: (content.videos || m.video || []).map(v => ({
-              ...v,
-              video_id: v.video_id || v.Video_ID,
-              video_url: v.video_url || v.Video_URL || v.url,
-              course_description: v.description || v.course_description || v.Course_Description || v.title
-            })),
-            assessments: (content.assessments || m.assessments || []).map(a => {
-              const rawQuestions = a.questions || a.Questions || [];
-              const sortedQuestions = [...rawQuestions].sort((qx, qy) => (qx.position || qx.Position || 0) - (qy.position || qy.Position || 0));
+  const { data, isLoading: loading, refetch: fetchCurriculum } = useQuery({
+    queryKey: ['admin_course_full_details', courseId],
+    queryFn: fetchCurriculumData,
+    enabled: !!user && !!courseId,
+    staleTime: 5 * 60 * 1000
+  });
 
-              return {
-                ...a,
-                assessment_id: a.assessment_id || a.Assessment_ID,
-                questions: sortedQuestions.map(q => ({
-                  ...q,
-                  question_id: q.question_id || q.Question_ID,
-                  question_txt: q.question_text || q.question_txt || q.Question_Txt || q.text,
-                  options: (q.options || q.Options || []).map(o => ({
-                    ...o,
-                    option_id: o.option_id || o.Option_ID,
-                    option_txt: o.text || o.option_txt || o.Option_Txt || o.option,
-                    is_correct: o.is_correct !== undefined ? o.is_correct : o.Is_Correct
-                  }))
+  useEffect(() => {
+    if (data) {
+      const rawCourse = data.course || data;
+      const mappedCourse = {
+        ...rawCourse,
+        course_id: rawCourse.course_id || rawCourse.id,
+        course_title: rawCourse.course_title || rawCourse.title,
+        course_type: rawCourse.type || rawCourse.course_type || rawCourse.course_Type || 'recorded'
+      };
+      setCourse(mappedCourse);
+      
+      if (mappedCourse.course_type === 'live' && activeTab === 'lessons') {
+        setActiveTab('live');
+      } else if (mappedCourse.course_type === 'recorded' && activeTab === 'live') {
+        setActiveTab('lessons');
+      }
+
+      const courseLevelNotes = (rawCourse.notes || []);
+      const sortedModules = (rawCourse.modules || []).sort((a, b) => (a.position || a.Position || 0) - (b.position || b.Position || 0)).map(m => {
+        const content = m.content || {};
+        return {
+          ...m,
+          module_id: m.module_id || m.Module_ID,
+          video: (content.videos || m.video || []).map(v => ({
+            ...v,
+            video_id: v.video_id || v.Video_ID,
+            video_url: v.video_url || v.Video_URL || v.url,
+            course_description: v.description || v.course_description || v.Course_Description || v.title
+          })),
+          assessments: (content.assessments || m.assessments || []).map(a => {
+            const rawQuestions = a.questions || a.Questions || [];
+            const sortedQuestions = [...rawQuestions].sort((qx, qy) => (qx.position || qx.Position || 0) - (qy.position || qy.Position || 0));
+
+            return {
+              ...a,
+              assessment_id: a.assessment_id || a.Assessment_ID,
+              questions: sortedQuestions.map(q => ({
+                ...q,
+                question_id: q.question_id || q.Question_ID,
+                question_txt: q.question_text || q.question_txt || q.Question_Txt || q.text,
+                options: (q.options || q.Options || []).map(o => ({
+                  ...o,
+                  option_id: o.option_id || o.Option_ID,
+                  option_txt: o.text || o.option_txt || o.Option_Txt || o.option,
+                  is_correct: o.is_correct !== undefined ? o.is_correct : o.Is_Correct
                 }))
-              };
-            }),
-            live_sessions: (content.live_sessions || m.live_sessions || []).map(l => ({
-              ...l,
-              live_id: l.live_id || l.Live_ID,
-              meeting_url: l.meeting_url || l.Meeting_URL
-            })),
-            notes: (content.notes || m.notes || courseLevelNotes).map(n => ({
-              ...n,
-              note_id: n.note_id || n.Notes_ID || n.notes_id,
-              note_url: n.file_url || n.note_url || n.File_URL || n.Note_URL
-            }))
-          };
-        });
-        setModules(sortedModules);
-        if (sortedModules.length > 0 && !activeModule) { setActiveModule(sortedModules[0]); }
-        else if (activeModule) {
-          const updatedActive = sortedModules.find(m => (m.module_id || m.Module_ID) === (activeModule.module_id || activeModule.Module_ID));
-          if (updatedActive) {
-            setActiveModule(updatedActive);
-            if (activeAssessment) {
-              const updatedAsm = updatedActive.assessments.find(a => (a.assessment_id || a.Assessment_ID) === (activeAssessment.assessment_id || activeAssessment.Assessment_ID));
-              if (updatedAsm) setActiveAssessment(updatedAsm);
-            }
+              }))
+            };
+          }),
+          live_sessions: (content.live_sessions || m.live_sessions || []).map(l => ({
+            ...l,
+            live_id: l.live_id || l.Live_ID,
+            meeting_url: l.meeting_url || l.Meeting_URL
+          })),
+          notes: (content.notes || m.notes || courseLevelNotes).map(n => ({
+            ...n,
+            note_id: n.note_id || n.Notes_ID || n.notes_id,
+            note_url: n.file_url || n.note_url || n.File_URL || n.Note_URL
+          }))
+        };
+      });
+      setModules(sortedModules);
+      if (sortedModules.length > 0 && !activeModule) { setActiveModule(sortedModules[0]); }
+      else if (activeModule) {
+        const updatedActive = sortedModules.find(m => (m.module_id || m.Module_ID) === (activeModule.module_id || activeModule.Module_ID));
+        if (updatedActive) {
+          setActiveModule(updatedActive);
+          if (activeAssessment) {
+            const updatedAsm = updatedActive.assessments.find(a => (a.assessment_id || a.Assessment_ID) === (activeAssessment.assessment_id || activeAssessment.Assessment_ID));
+            if (updatedAsm) setActiveAssessment(updatedAsm);
           }
         }
       }
-    } catch (err) { console.error('fetchCurriculum failed:', err); showToast('Data synchronization failed', 'error'); }
-    finally { setLoading(false); }
-  }, [courseId, smartFetch, cacheSyncToken]);
+    }
+  }, [data]);
 
-  useEffect(() => {
-    fetchCurriculum();
-  }, [fetchCurriculum]);
-
-  const handleModuleSubmit = async (e) => {
-    e.preventDefault();
+  const onModuleSubmit = async (data) => {
     setActionLoading(true);
-    const url = moduleForm.editingId ? `${ADMIN_API}/update_module/${moduleForm.editingId}` : `${ADMIN_API}/create_module`;
+    const url = editingModuleId ? `${ADMIN_API}/update_module/${editingModuleId}` : `${ADMIN_API}/create_module`;
     try {
       const res = await authFetch(url, {
-        method: moduleForm.editingId ? 'PUT' : 'POST',
+        method: editingModuleId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Course_ID: courseId, Title: moduleForm.Title, Course_Description: moduleForm.Description, Position: parseInt(moduleForm.Position) || 1 })
+        body: JSON.stringify({ Course_ID: courseId, Title: data.Title, Course_Description: data.Course_Description, Position: parseInt(data.Position) || 1 })
       });
-      if (res.ok) { showToast(moduleForm.editingId ? 'Chapter updated' : 'Chapter created'); setShowModuleForm(false); setModuleForm({ Title: '', Description: '', Position: 0, editingId: null }); await fetchCurriculum(); }
-      else { 
-        const errData = await res.json().catch(() => ({})); 
-        showToast(errData.detail || errData.message || `Action failed (${res.status} error)`, 'error'); 
-      }
-    } catch (err) { 
-      showToast('Network or server error', 'error'); 
-    } finally { setActionLoading(false); }
+      if (res.ok) { showToast(editingModuleId ? 'Chapter updated' : 'Chapter created'); setShowModuleForm(false); resetModule(); setEditingModuleId(null); await fetchCurriculum(); }
+      else { const errData = await res.json().catch(() => ({})); showToast(errData.detail || errData.message || `Action failed`, 'error'); }
+    } catch (err) { showToast('Network or server error', 'error'); } finally { setActionLoading(false); }
   };
 
   const deleteModule = async (id) => {
@@ -194,39 +223,48 @@ const AdminCurriculum = () => {
     } catch (err) { showToast('Action failed', 'error'); }
   };
 
-  const genericSubmit = async (type, payload) => {
+  const onVideoSubmit = async (data) => {
     setActionLoading(true);
-    const endpoints = {
-      video: { create: 'create_video', update: 'update_video', label: 'Lesson' },
-      live: { create: 'create_live_session', update: 'update_live_session', label: 'Live Session' },
-      notes: { create: 'create_notes', update: 'update_notes', label: 'Resource' },
-      assessment: { create: 'create_assessment', update: 'update_assessment', label: 'Assessment' }
-    };
-    const conf = endpoints[type];
-    const isUpdate = !!payload.editingId;
-    const url = isUpdate ? `${ADMIN_API}/${conf.update}/${payload.editingId}` : `${ADMIN_API}/${conf.create}`;
-
+    const url = editModal.id ? `${ADMIN_API}/update_video/${editModal.id}` : `${ADMIN_API}/create_video`;
     try {
-      const body = { ...payload, Course_ID: courseId, Module_ID: activeModule.module_id };
-      if (type === 'notes') { body.File_URL = payload.Note_URL; if (!payload.File_Type) body.File_Type = 'link'; delete body.Note_URL; }
-      if (type === 'video') { body.Video_URL = payload.video_url; body.course_description = payload.course_description || payload.title; delete body.video_url; }
+      const body = { Course_ID: courseId, Module_ID: activeModule.module_id, Video_URL: data.video_url, course_description: data.course_description };
+      const res = await authFetch(url, { method: editModal.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (res.ok) { showToast('Lesson Saved'); setEditModal({ show: false, type: '', id: null }); await fetchCurriculum(); }
+      else { const errorData = await res.json().catch(() => ({})); showToast(errorData.detail || errorData.message || `Failed to create Lesson`, 'error'); }
+    } catch (err) { showToast(`Network error`, 'error'); } finally { setActionLoading(false); }
+  };
 
-      const res = await authFetch(url, {
-        method: isUpdate ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (res.ok) {
-        showToast(`${conf.label} Saved`);
-        setEditModal({ show: false, type: '', data: null });
-        await fetchCurriculum();
-      } else {
-        const errorData = await res.json().catch(() => ({}));
-        showToast(errorData.detail || errorData.message || `Failed to create ${conf.label} (${res.status} error)`, 'error');
-      }
-    } catch (err) {
-      showToast(`Network or server error occurred`, 'error');
-    } finally { setActionLoading(false); }
+  const onLiveSubmit = async (data) => {
+    setActionLoading(true);
+    const url = editModal.id ? `${ADMIN_API}/update_live_session/${editModal.id}` : `${ADMIN_API}/create_live_session`;
+    try {
+      const body = { Course_ID: courseId, Module_ID: activeModule.module_id, ...data };
+      const res = await authFetch(url, { method: editModal.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (res.ok) { showToast('Live Session Saved'); setEditModal({ show: false, type: '', id: null }); await fetchCurriculum(); }
+      else { const errorData = await res.json().catch(() => ({})); showToast(errorData.detail || errorData.message || `Failed to create Session`, 'error'); }
+    } catch (err) { showToast(`Network error`, 'error'); } finally { setActionLoading(false); }
+  };
+
+  const onNotesSubmit = async (data) => {
+    setActionLoading(true);
+    const url = editModal.id ? `${ADMIN_API}/update_notes/${editModal.id}` : `${ADMIN_API}/create_notes`;
+    try {
+      const body = { Course_ID: courseId, Module_ID: activeModule.module_id, Title: data.Title, File_URL: data.File_URL || data.Note_URL, File_Type: data.File_Type || 'link' };
+      const res = await authFetch(url, { method: editModal.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (res.ok) { showToast('Resource Saved'); setEditModal({ show: false, type: '', id: null }); await fetchCurriculum(); }
+      else { const errorData = await res.json().catch(() => ({})); showToast(errorData.detail || errorData.message || `Failed to create Resource`, 'error'); }
+    } catch (err) { showToast(`Network error`, 'error'); } finally { setActionLoading(false); }
+  };
+
+  const onAssessmentSubmit = async (data) => {
+    setActionLoading(true);
+    const url = editModal.id ? `${ADMIN_API}/update_assessment/${editModal.id}` : `${ADMIN_API}/create_assessment`;
+    try {
+      const body = { Course_ID: courseId, Module_ID: activeModule.module_id, ...data, Total_Mark: parseInt(data.Total_Mark), Passing_Mark: parseInt(data.Passing_Mark), Duration: parseInt(data.Duration), Attempt_Limit: parseInt(data.Attempt_Limit) };
+      const res = await authFetch(url, { method: editModal.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (res.ok) { showToast('Assessment Saved'); setEditModal({ show: false, type: '', id: null }); await fetchCurriculum(); }
+      else { const errorData = await res.json().catch(() => ({})); showToast(errorData.detail || errorData.message || `Failed to create Assessment`, 'error'); }
+    } catch (err) { showToast(`Network error`, 'error'); } finally { setActionLoading(false); }
   };
 
   const genericDelete = async (type, id) => {
@@ -271,7 +309,7 @@ const AdminCurriculum = () => {
             const usedPositions = new Set(modules.map(m => m.position || m.Position || 0));
             let nextPos = 2;
             while (usedPositions.has(nextPos)) nextPos++;
-            setModuleForm({ Title: '', Description: '', Position: nextPos, editingId: null });
+            resetModule({ Title: '', Course_Description: '', Position: nextPos }); setEditingModuleId(null);
             setShowModuleForm(true);
           }} className="btn btn-primary" style={{ padding: '0.65rem 1.25rem', borderRadius: '1rem', fontSize: '0.85rem' }}>
             <Plus size={16} /> <span className="hide-on-mobile">New Chapter</span>
@@ -319,7 +357,14 @@ const AdminCurriculum = () => {
                 </div>
                 <div style={{ display: 'flex', gap: '0.85rem' }}>
                   <button
-                    onClick={() => setEditModal({ show: true, type: activeTab === 'assessments' ? 'assessment' : activeTab === 'notes' ? 'notes' : activeTab === 'live' ? 'live' : 'video', data: activeTab === 'assessments' ? { Title: '', Description: '', Total_Mark: 100, Passing_Mark: 40, Duration: 30, Attempt_Limit: 3, Status: 'active' } : activeTab === 'notes' ? { Title: '', Note_URL: '' } : activeTab === 'live' ? { Title: '', Meeting_URL: '', Provider: 'Zoom', Start_time: '', End_time: '', Status: 'scheduled' } : { video_url: '', course_description: '' } })}
+                    onClick={() => {
+                        const type = activeTab === 'assessments' ? 'assessment' : activeTab === 'notes' ? 'notes' : activeTab === 'live' ? 'live' : 'video';
+                        if (type === 'video') resetVideo();
+                        if (type === 'live') resetLive();
+                        if (type === 'notes') resetNotes();
+                        if (type === 'assessment') resetAssessment();
+                        setEditModal({ show: true, type, id: null });
+                    }}
                     className="btn btn-primary" style={{ padding: '0.45rem 1.15rem', borderRadius: '0.85rem', fontSize: '0.75rem' }}
                   >
                     <Plus size={14} /> Add {activeTab === 'lessons' ? 'Lesson' : activeTab === 'assessments' ? 'Exam' : 'Asset'}
@@ -334,26 +379,26 @@ const AdminCurriculum = () => {
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 450px), 1fr))', gap: '1.5rem' }}>
                         {activeTab === 'lessons' && (activeModule.video || []).map((v, i) => (
                           <ContentItem key={v.video_id} index={i} icon={<Play size={14} fill="currentColor" />} title={v.course_description} sub={v.video_url} color="var(--color-primary)"
-                            onEdit={() => setEditModal({ show: true, type: 'video', data: { editingId: v.video_id, video_url: v.video_url, course_description: v.course_description } })}
+                            onEdit={() => { resetVideo({ video_url: v.video_url, course_description: v.course_description }); setEditModal({ show: true, type: 'video', id: v.video_id }); }}
                             onDelete={() => genericDelete('video', v.video_id)}
                           />
                         ))}
                         {activeTab === 'live' && (activeModule.live_sessions || []).map((l, i) => (
                           <ContentItem key={l.live_id} index={i} icon={<Activity size={14} />} title={l.title || `${l.provider} Interaction`} sub={l.meeting_url} color="#3b82f6"
-                            onEdit={() => setEditModal({ show: true, type: 'live', data: { editingId: l.live_id, Title: l.title, Meeting_URL: l.meeting_url, Provider: l.provider, Start_time: l.start_time, End_time: l.end_time, Status: l.status } })}
+                            onEdit={() => { resetLive({ Title: l.title || '', Meeting_URL: l.meeting_url || '', Provider: l.provider, Start_time: l.start_time, End_time: l.end_time, Status: l.status }); setEditModal({ show: true, type: 'live', id: l.live_id }); }}
                             onDelete={() => genericDelete('live', l.live_id)}
                           />
                         ))}
                         {activeTab === 'notes' && (activeModule.notes || []).map((n, i) => (
                           <ContentItem key={n.note_id} index={i} icon={<FileBox size={14} />} title={n.title} sub={n.note_url} color="#ef4444"
-                            onEdit={() => setEditModal({ show: true, type: 'notes', data: { editingId: n.note_id, Title: n.title, Note_URL: n.note_url } })}
+                            onEdit={() => { resetNotes({ Title: n.title, File_URL: n.note_url, File_Type: 'link' }); setEditModal({ show: true, type: 'notes', id: n.note_id }); }}
                             onDelete={() => genericDelete('notes', n.note_id)}
                           />
                         ))}
                         {activeTab === 'assessments' && (activeModule.assessments || []).map((a, i) => (
                           <div key={a.assessment_id} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <ContentItem index={i} icon={<Briefcase size={14} />} title={a.title} sub={`${a.total_mark} Pts • ${a.duration} Mins`} color="#f97316"
-                              onEdit={() => setEditModal({ show: true, type: 'assessment', data: { editingId: a.assessment_id, Title: a.title, Description: a.description, Total_Mark: a.total_mark, Passing_Mark: a.passing_mark, Duration: a.duration, Attempt_Limit: a.attempt_limit, Status: a.status } })}
+                              onEdit={() => { resetAssessment({ Title: a.title, Description: a.description, Total_Mark: a.total_mark, Passing_Mark: a.passing_mark, Duration: a.duration, Attempt_Limit: a.attempt_limit, Status: a.status }); setEditModal({ show: true, type: 'assessment', id: a.assessment_id }); }}
                               onDelete={() => genericDelete('assessment', a.assessment_id)}
                             />
                             <div style={{ display: 'flex', gap: '0.75rem', alignSelf: 'flex-start', marginLeft: '4.5rem' }}>
@@ -402,7 +447,7 @@ const AdminCurriculum = () => {
                              {importing ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
                              Bulk Import Questions
                            </button>
-                           <button onClick={() => setShowQuestionForm(true)} className="btn btn-primary" style={{ padding: '0.45rem 1.15rem', borderRadius: '0.85rem', fontSize: '0.75rem', background: '#854dff', border: 'none' }}>+ New Question</button>
+                           <button onClick={() => { resetQuestion(); setOptions([{ Option_Txt: '', Is_Correct: false, Position: 1 }, { Option_Txt: '', Is_Correct: false, Position: 2 }]); setEditingQuestionId(null); setShowQuestionForm(true); }} className="btn btn-primary" style={{ padding: '0.45rem 1.15rem', borderRadius: '0.85rem', fontSize: '0.75rem', background: '#854dff', border: 'none' }}>+ New Question</button>
                            <button onClick={() => setActiveTab('assessments')} className="btn btn-ghost" style={{ padding: '0.45rem 1.15rem', borderRadius: '0.85rem', fontSize: '0.75rem', border: '1px solid var(--color-border-strong)' }}>Close Builder</button>
                          </div>
                       </div>
@@ -451,78 +496,61 @@ const AdminCurriculum = () => {
               style={{ width: 'clamp(320px, 95vw, 650px)', backgroundColor: 'var(--color-surface)', borderRadius: '3.5rem', padding: '3.5rem', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--color-border)', position: 'relative' }}
               className="no-scrollbar"
             >
-              <button onClick={() => setEditModal({ show: false, type: '', data: null })} style={{ position: 'absolute', top: '2.5rem', right: '2.5rem', padding: '0.75rem', borderRadius: '1.25rem', background: 'var(--color-surface-muted)', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}><X size={24} /></button>
+              <button onClick={() => setEditModal({ show: false, type: '', id: null })} style={{ position: 'absolute', top: '2.5rem', right: '2.5rem', padding: '0.75rem', borderRadius: '1.25rem', background: 'var(--color-surface-muted)', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}><X size={24} /></button>
               <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '3.5rem' }}>
                 <div style={{ width: '4rem', height: '4rem', borderRadius: '1.25rem', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text)' }}>
                   {editModal.type === 'video' ? <Video size={24} /> : editModal.type === 'live' ? <Monitor size={24} /> : editModal.type === 'notes' ? <FileText size={24} /> : <Award size={24} />}
                 </div>
                 <div>
-                  <h2 style={{ margin: 0 }}>{editModal.data?.editingId ? 'Modify Content' : 'New Content'}</h2>
+                  <h2 style={{ margin: 0 }}>{editModal.id ? 'Modify Content' : 'New Content'}</h2>
                   <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 950, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Architecting Wisdom</p>
                 </div>
               </div>
 
-              <form onSubmit={(e) => { e.preventDefault(); genericSubmit(editModal.type, editModal.data); }} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-                {editModal.type === 'video' && (
-                  <>
-                    <AMInput label="Lesson Title" value={editModal.data.course_description} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, course_description: e.target.value } })} required placeholder="e.g. Masterclass Introduction" />
-                    <AMInput label="Content Stream URL" value={editModal.data.video_url} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, video_url: e.target.value } })} required placeholder="https://..." />
-                  </>
-                )}
-                {editModal.type === 'live' && (
-                  <>
-                    <AMInput label="Session Topic" value={editModal.data.Title} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, Title: e.target.value } })} required placeholder="e.g. Q&A Session" />
-                    <AMInput label="Live Class Link" value={editModal.data.Meeting_URL} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, Meeting_URL: e.target.value } })} placeholder="https://..." />
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                      <AMSelect label="Platform" value={editModal.data.Provider} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, Provider: e.target.value } })} options={['Zoom', 'Google Meet', 'Teams', 'Other']} />
-                      <AMSelect label="Session Status" value={editModal.data.Status} onChange={e => {
-                        const newStatus = e.target.value;
-                        let startStr = editModal.data.Start_time;
-                        let endStr = editModal.data.End_time;
-                        if (newStatus === 'live') {
-                          const now = new Date();
-                          const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-                          const istTime = new Date(utc + (5.5 * 3600000));
-                          const istEndTime = new Date(utc + (6.5 * 3600000));
-                          const formatStr = (d) => {
-                            const p = n => n.toString().padStart(2, '0');
-                            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-                          };
-                          startStr = formatStr(istTime);
-                          endStr = formatStr(istEndTime);
-                        }
-                        setEditModal({ ...editModal, data: { ...editModal.data, Status: newStatus, Start_time: startStr, End_time: endStr } });
-                      }} options={[{ label: 'Scheduled', val: 'scheduled' }, { label: 'Live Now', val: 'live' }]} />
-                    </div>
-                    {editModal.data.Status !== 'live' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                         <AMInput label="Starting Time" type="datetime-local" step="60" value={editModal.data.Start_time} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, Start_time: e.target.value } })} required />
-                         <AMInput label="Ending Time" type="datetime-local" step="60" value={editModal.data.End_time} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, End_time: e.target.value } })} required />
-                      </div>
-                    )}
-                  </>
-                )}
-                {editModal.type === 'notes' && (
-                  <>
-                    <AMInput label="Resource Label" value={editModal.data.Title} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, Title: e.target.value } })} required placeholder="e.g. Reference Guide" />
-                    <AMInput label="Asset Reference Link" value={editModal.data.Note_URL} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, Note_URL: e.target.value } })} required />
-                  </>
-                )}
-                {editModal.type === 'assessment' && (
-                  <>
-                    <AMInput label="Evaluation Title" value={editModal.data.Title} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, Title: e.target.value } })} required />
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                      <AMInput label="Reward Threshold" type="number" value={editModal.data.Total_Mark} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, Total_Mark: e.target.value } })} />
-                      <AMInput label="Minutes Allowed" type="number" value={editModal.data.Duration} onChange={e => setEditModal({ ...editModal, data: { ...editModal.data, Duration: e.target.value } })} />
-                    </div>
-                  </>
-                )}
-
-                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ marginTop: '1.5rem', padding: '1.25rem', borderRadius: '1.5rem', fontSize: '1rem' }}>
-                  {actionLoading ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
-                  {editModal.data?.editingId ? 'Update Evolution' : 'Initialize Content'}
-                </button>
-              </form>
+              {editModal.type === 'video' && (
+                <form onSubmit={submitVideo(onVideoSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                  <AMInput label="Lesson Title" {...regVideo('course_description')} error={errVideo.course_description} placeholder="e.g. Masterclass Introduction" />
+                  <AMInput label="Content Stream URL" {...regVideo('video_url')} error={errVideo.video_url} placeholder="https://..." />
+                  <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ marginTop: '1.5rem', padding: '1.25rem', borderRadius: '1.5rem', fontSize: '1rem' }}>{actionLoading ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />} {editModal.id ? 'Update' : 'Initialize'}</button>
+                </form>
+              )}
+              {editModal.type === 'live' && (
+                <form onSubmit={submitLive(onLiveSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                  <AMInput label="Session Topic" {...regLive('Title')} error={errLive.Title} placeholder="e.g. Q&A Session" />
+                  <AMInput label="Live Class Link" {...regLive('Meeting_URL')} error={errLive.Meeting_URL} placeholder="https://..." />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    <AMSelect label="Platform" {...regLive('Provider')} error={errLive.Provider} options={['Zoom', 'Google Meet', 'Teams', 'Other']} />
+                    <AMSelect label="Session Status" {...regLive('Status')} error={errLive.Status} options={[{ label: 'Scheduled', val: 'scheduled' }, { label: 'Live Now', val: 'live' }, { label: 'Completed', val: 'completed' }]} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    <AMInput label="Starting Time" type="datetime-local" step="60" {...regLive('Start_time')} error={errLive.Start_time} />
+                    <AMInput label="Ending Time" type="datetime-local" step="60" {...regLive('End_time')} error={errLive.End_time} />
+                  </div>
+                  <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ marginTop: '1.5rem', padding: '1.25rem', borderRadius: '1.5rem', fontSize: '1rem' }}>{actionLoading ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />} {editModal.id ? 'Update' : 'Initialize'}</button>
+                </form>
+              )}
+              {editModal.type === 'notes' && (
+                <form onSubmit={submitNotes(onNotesSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                  <AMInput label="Resource Label" {...regNotes('Title')} error={errNotes.Title} placeholder="e.g. Reference Guide" />
+                  <AMInput label="Asset Reference Link" {...regNotes('File_URL')} error={errNotes.File_URL} />
+                  <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ marginTop: '1.5rem', padding: '1.25rem', borderRadius: '1.5rem', fontSize: '1rem' }}>{actionLoading ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />} {editModal.id ? 'Update' : 'Initialize'}</button>
+                </form>
+              )}
+              {editModal.type === 'assessment' && (
+                <form onSubmit={submitAssessment(onAssessmentSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                  <AMInput label="Evaluation Title" {...regAssessment('Title')} error={errAssessment.Title} />
+                  <AMTextarea label="Instructions" {...regAssessment('Description')} error={errAssessment.Description} rows={3} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    <AMInput label="Reward Threshold" type="number" {...regAssessment('Total_Mark')} error={errAssessment.Total_Mark} />
+                    <AMInput label="Minutes Allowed" type="number" {...regAssessment('Duration')} error={errAssessment.Duration} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    <AMInput label="Passing Mark" type="number" {...regAssessment('Passing_Mark')} error={errAssessment.Passing_Mark} />
+                    <AMInput label="Attempt Limit" type="number" {...regAssessment('Attempt_Limit')} error={errAssessment.Attempt_Limit} />
+                  </div>
+                  <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ marginTop: '1.5rem', padding: '1.25rem', borderRadius: '1.5rem', fontSize: '1rem' }}>{actionLoading ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />} {editModal.id ? 'Update' : 'Initialize'}</button>
+                </form>
+              )}
             </motion.div>
           </div>
         )}
@@ -534,14 +562,11 @@ const AdminCurriculum = () => {
           <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--page-padding)' }}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} style={{ width: 'clamp(320px, 95vw, 550px)', backgroundColor: 'var(--color-surface)', borderRadius: '3.5rem', padding: '3.5rem', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--color-border)', position: 'relative' }}>
               <button onClick={() => setShowModuleForm(false)} style={{ position: 'absolute', top: '2.5rem', right: '2.5rem', background: 'var(--color-surface-muted)', border: 'none', color: 'var(--color-text-muted)', padding: '0.75rem', borderRadius: '1.25rem' }}><X size={24} /></button>
-              <h2 style={{ margin: '0 0 3rem 0' }}>{moduleForm.editingId ? 'Modify Chapter' : 'New Chapter'}</h2>
-              <form onSubmit={handleModuleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                <AMInput label="Chapter Designation" value={moduleForm.Title} onChange={e => setModuleForm({ ...moduleForm, Title: e.target.value })} required placeholder="e.g. Introduction to Design" />
+              <h2 style={{ margin: '0 0 3rem 0' }}>{editingModuleId ? 'Modify Chapter' : 'New Chapter'}</h2>
+              <form onSubmit={submitModule(onModuleSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <AMInput label="Chapter Designation" {...regModule('Title')} error={errModule.Title} placeholder="e.g. Introduction to Design" />
+                <AMTextarea label="Overview" {...regModule('Course_Description')} error={errModule.Course_Description} rows={3} placeholder="What is this chapter about?" />
                 {/* Position is auto-calculated — no manual input */}
-                <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 800, padding: '0.5rem 1.5rem', background: 'var(--color-bg)', borderRadius: '1rem', border: '1px solid var(--color-border)' }}>
-                  📌 Auto-assigned position: <strong>#{moduleForm.Position}</strong>
-                  {moduleForm.editingId && ' (locked — use arrows to reorder)'}
-                </div>
                 <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ padding: '1.25rem', borderRadius: '1.5rem', fontSize: '1rem', marginTop: '1.5rem' }}>Confirm Chapter</button>
               </form>
             </motion.div>
@@ -556,16 +581,52 @@ const AdminCurriculum = () => {
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ width: 'clamp(320px, 95vw, 750px)', backgroundColor: 'var(--color-surface)', borderRadius: '3.5rem', padding: '3.5rem', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--color-border)', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }} className="no-scrollbar">
               <button onClick={() => setShowQuestionForm(false)} style={{ position: 'absolute', top: '2.5rem', right: '2.5rem', background: 'var(--color-surface-muted)', border: 'none', color: 'var(--color-text-muted)', padding: '0.75rem', borderRadius: '1.25rem' }}><X size={24} /></button>
               <h2 style={{ margin: '0 0 3rem 0' }}>Forge Evaluation Node</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-                <AMTextarea label="Question Premise" value={questionForm.Question_Txt} onChange={e => setQuestionForm({ ...questionForm, Question_Txt: e.target.value })} placeholder="What is being evaluated?" />
+              <form onSubmit={submitQuestion(async (data) => {
+                  setActionLoading(true); try {
+                    const nextPos = Math.floor(Math.random() * 2000000000) + 1000;
+
+                    const res = await authFetch(`${ADMIN_API}/create_question`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        Assessment_ID: activeAssessment.assessment_id,
+                        Question_Txt: data.Question_Txt,
+                        Mark: parseInt(data.Mark) || 10,
+                        Question_Type: data.Question_Type || 'MCQ',
+                        Explanation: data.Explanation || '',
+                        Position: nextPos
+                      })
+                    });
+
+                    if (res.ok) {
+                      const qData = await res.json();
+                      const qId = qData.Question_ID || qData.question_id || qData.id || (qData.data && (qData.data.Question_ID || qData.data.id));
+                      if (!qId) throw new Error('Registry Sync Error');
+
+                      for (const o of options) {
+                        const optPos = Math.floor(Math.random() * 2000000000) + 1000;
+                        await authFetch(`${ADMIN_API}/create_option`, {
+                          method: 'POST', headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ Question_ID: qId, Option_Txt: o.Option_Txt, Is_Correct: o.Is_Correct, Position: optPos })
+                        });
+                      }
+                      showToast('Question Forged'); await fetchCurriculum(); setShowQuestionForm(false);
+                      resetQuestion(); setOptions([{ Option_Txt: '', Is_Correct: false, Position: 1 }, { Option_Txt: '', Is_Correct: false, Position: 2 }]);
+                    } else {
+                      const err = await res.json(); showToast(err.message || 'Sync Refused', 'error');
+                    }
+                  } catch (err) {
+                      showToast('Sync Error', 'error');
+                  } finally { setActionLoading(false); }
+              })} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                <AMTextarea label="Question Premise" {...regQuestion('Question_Txt')} error={errQuestion.Question_Txt} placeholder="What is being evaluated?" />
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
-                  <AMSelect label="Evaluation Model" value={questionForm.Question_Type} onChange={e => {
-                    const type = e.target.value;
-                    setQuestionForm({ ...questionForm, Question_Type: type });
-                    if (type === 'True/False') setOptions([{ Option_Txt: 'True', Is_Correct: true, Position: 1 }, { Option_Txt: 'False', Is_Correct: false, Position: 2 }]);
-                    else setOptions([{ Option_Txt: '', Is_Correct: false, Position: 1 }, { Option_Txt: '', Is_Correct: false, Position: 2 }]);
+                  <AMSelect label="Evaluation Model" {...regQuestion('Question_Type')} error={errQuestion.Question_Type} onChange={(e) => {
+                     setQuestionVal('Question_Type', e.target.value);
+                     if (e.target.value === 'True/False') setOptions([{ Option_Txt: 'True', Is_Correct: true, Position: 1 }, { Option_Txt: 'False', Is_Correct: false, Position: 2 }]);
+                     else setOptions([{ Option_Txt: '', Is_Correct: false, Position: 1 }, { Option_Txt: '', Is_Correct: false, Position: 2 }]);
                   }} options={['MCQ', 'True/False']} />
-                  <AMInput label="Point Value" type="number" value={questionForm.Mark} onChange={e => setQuestionForm({ ...questionForm, Mark: e.target.value })} />
+                  <AMInput label="Point Value" type="number" {...regQuestion('Mark')} error={errQuestion.Mark} />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -574,73 +635,15 @@ const AdminCurriculum = () => {
                     <div key={idx} style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
                       <input type="radio" checked={opt.Is_Correct} onChange={() => setOptions(options.map((o, i) => ({ ...o, Is_Correct: i === idx })))} style={{ accentColor: 'var(--color-primary)', width: '1.5rem', height: '1.5rem' }} />
                       <textarea placeholder={`Option ${idx + 1}`} value={opt.Option_Txt} onChange={e => setOptions(options.map((o, i) => i === idx ? { ...o, Option_Txt: e.target.value } : o))} style={{ flex: 1, padding: '1rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--color-border-strong)', background: 'var(--color-bg)', fontWeight: 800, color: 'var(--color-text)', outline: 'none', resize: 'vertical', minHeight: '60px', fontFamily: 'inherit' }} />
-                      {options.length > 2 && <button onClick={() => setOptions(options.filter((_, i) => i !== idx))} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash size={18} /></button>}
+                      {options.length > 2 && <button type="button" onClick={() => setOptions(options.filter((_, i) => i !== idx))} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}><Trash size={18} /></button>}
                     </div>
                   ))}
-                  <button onClick={() => setOptions([...options, { Option_Txt: '', Is_Correct: false, Position: options.length + 1 }])} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 950, fontSize: '0.8rem', cursor: 'pointer', padding: '0.5rem' }}>+ Add Option Node</button>
+                  <button type="button" onClick={() => setOptions([...options, { Option_Txt: '', Is_Correct: false, Position: options.length + 1 }])} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 950, fontSize: '0.8rem', cursor: 'pointer', padding: '0.5rem' }}>+ Add Option Node</button>
                 </div>
-                <button onClick={async () => {
-                  setActionLoading(true); try {
-                    // ✅ Fetch fresh data — positions are GLOBALLY shared across all assessments in DB
-                    const freshRes = await authFetch(`${ADMIN_API}/course/${courseId}/full-details`);
-                    // ✅ Random int within 32-bit integer safe range (max: 2,147,483,647)
-                    // Collision chance is ~1 in 2 billion — effectively zero
-                    const nextPos = Math.floor(Math.random() * 2000000000) + 1000;
-
-                    const res = await authFetch(`${ADMIN_API}/create_question`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        Assessment_ID: activeAssessment.assessment_id,
-                        Question_Txt: questionForm.Question_Txt,
-                        Mark: parseInt(questionForm.Mark) || 10,
-                        Question_Type: questionForm.Question_Type || 'MCQ',
-                        Explanation: questionForm.Explanation || '',
-                        Position: nextPos   // ✅ always unique, never conflicts
-                      })
-                    });
-
-                    if (res.ok) {
-                      const qData = await res.json();
-                      const qId = qData.Question_ID || qData.question_id || qData.id ||
-                        (qData.data && (qData.data.Question_ID || qData.data.id));
-                      if (!qId) throw new Error('Registry Sync Error');
-
-                      for (const o of options) {
-                        // ✅ Same fix as question position — globally shared option table
-                        const optPos = Math.floor(Math.random() * 2000000000) + 1000;
-                        await authFetch(`${ADMIN_API}/create_option`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            Question_ID: qId,
-                            Option_Txt: o.Option_Txt,
-                            Is_Correct: o.Is_Correct,
-                            Position: optPos
-                          })
-                        });
-                      }
-                      showToast('Question Forged'); await fetchCurriculum(); setShowQuestionForm(false);
-                      setQuestionForm({ Question_Txt: '', Mark: 10, Question_Type: 'MCQ', Explanation: '', editingId: null });
-                      setOptions([{ Option_Txt: '', Is_Correct: false, Position: 1 }, { Option_Txt: '', Is_Correct: false, Position: 2 }]);
-                    } else {
-                      const err = await res.json();
-                      showToast(err.message || 'Sync Refused', 'error');
-                    }
-                  } finally { setActionLoading(false); }
-                }} 
-                  disabled={actionLoading}
-                  className="btn btn-primary" 
-                  style={{ 
-                    padding: '1.25rem', borderRadius: '1.5rem', fontSize: '1rem', marginTop: '1.5rem',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
-                    opacity: actionLoading ? 0.7 : 1, cursor: actionLoading ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  {actionLoading ? <Loader2 size={20} className="animate-spin" /> : <ShieldCheck size={20} />}
-                  {actionLoading ? 'Forging Question...' : 'Commit Question'}
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ padding: '1.25rem', borderRadius: '1.5rem', fontSize: '1rem', marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+                  {actionLoading ? <Loader2 size={20} className="animate-spin" /> : <ShieldCheck size={20} />} Commit Question
                 </button>
-              </div>
+              </form>
             </motion.div>
           </div>
         )}

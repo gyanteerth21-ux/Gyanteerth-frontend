@@ -1,14 +1,25 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { forgotPasswordSchema } from '../../shared/schemas';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, BookOpen, ArrowRight, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { API_BASE } from '../../config';
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
+
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
+  });
 
   const navigate = useNavigate();
 
@@ -26,10 +37,8 @@ const ForgotPassword = () => {
     visible: { opacity: 1, y: 0 }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (formData) => {
     setError(null);
-    setLoading(true);
 
     try {
       const response = await fetch(`${API_BASE}/auth_checkpoint/forget_password`, {
@@ -38,12 +47,13 @@ const ForgotPassword = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ email: email.trim() })
+        body: JSON.stringify({ email: formData.email.trim() })
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
+        setSubmittedEmail(formData.email.trim());
         setSuccess(true);
       } else {
         // Handle invalid email / account not created edge case
@@ -52,8 +62,6 @@ const ForgotPassword = () => {
     } catch (err) {
       setError('Failed to connect to the server. Please try again later.');
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -125,7 +133,7 @@ const ForgotPassword = () => {
                   </motion.div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleFormSubmit(handleSubmit)} className="space-y-6">
                   <div className="relative group">
                     <label className="text-sm font-semibold text-slate-700 mb-1 block">Email Address</label>
                     <div className="relative flex items-center">
@@ -133,19 +141,20 @@ const ForgotPassword = () => {
                         <Mail className="w-5 h-5" />
                       </div>
                       <input
-                        type="email" required placeholder="you@example.com"
-                        value={email} onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+                        type="email" placeholder="you@example.com"
+                        {...register('email')}
+                        className={`w-full pl-12 pr-4 py-4 bg-white border ${errors.email ? 'border-red-500' : 'border-slate-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm`}
                       />
                     </div>
+                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
                   </div>
 
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={isSubmitting}
                     className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-lg transition-all duration-200 disabled:opacity-70"
                   >
-                    {loading ? 'Sending Link...' : (
+                    {isSubmitting ? 'Sending Link...' : (
                       <>Send Reset Link <ArrowRight className="w-5 h-5" /></>
                     )}
                   </button>
@@ -170,7 +179,7 @@ const ForgotPassword = () => {
                 <h3 className="text-2xl font-bold text-slate-900 mb-3">Check Your Email</h3>
                 <p className="text-slate-600 mb-8 leading-relaxed">
                   We've sent a password reset link to <br />
-                  <span className="font-bold text-slate-900">{email}</span>. <br />
+                  <span className="font-bold text-slate-900">{submittedEmail}</span>. <br />
                   Please check your inbox and follow the instructions.
                 </p>
                 <div className="space-y-4">

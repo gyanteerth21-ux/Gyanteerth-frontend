@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { resetPasswordSchema } from '../../shared/schemas';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, BookOpen, ArrowRight, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
@@ -9,12 +12,18 @@ const ResetPassword = () => {
   const token = searchParams.get('token');
   const email = searchParams.get('email'); // Optional: extract email if provided in link
 
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { password: '', confirmPassword: '' },
+  });
 
   const navigate = useNavigate();
 
@@ -27,26 +36,13 @@ const ResetPassword = () => {
     }
   };
 
-  const handleReset = async (e) => {
-    e.preventDefault();
-
+  const handleReset = async (formData) => {
     if (!token) {
       setError('Invalid or missing reset token. Please request a new link.');
       return;
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
     setError(null);
-    setLoading(true);
 
     try {
       const response = await fetch(`${API_BASE}/auth_checkpoint/update_password`, {
@@ -57,7 +53,7 @@ const ResetPassword = () => {
         },
         body: JSON.stringify({
           token: token,
-          new_password: password
+          new_password: formData.password
         })
       });
 
@@ -72,8 +68,6 @@ const ResetPassword = () => {
     } catch (err) {
       setError('Failed to connect to the server. Please try again later.');
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -147,7 +141,7 @@ const ResetPassword = () => {
                   </motion.div>
                 )}
 
-                <form onSubmit={handleReset} className="space-y-6">
+                <form onSubmit={handleFormSubmit(handleReset)} className="space-y-6">
                   <div className="space-y-5">
                     <div className="relative group">
                       <label className="text-sm font-semibold text-slate-700 mb-1 block">New Password</label>
@@ -157,9 +151,9 @@ const ResetPassword = () => {
                         </div>
                         <input
                           type={showPassword ? "text" : "password"}
-                          required placeholder="Enter new password"
-                          value={password} onChange={(e) => setPassword(e.target.value)}
-                          className="w-full pl-12 pr-12 py-4 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+                          placeholder="Enter new password"
+                          {...register('password')}
+                          className={`w-full pl-12 pr-12 py-4 bg-white border ${errors.password ? 'border-red-500' : 'border-slate-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm`}
                         />
                         <button
                           type="button"
@@ -169,6 +163,7 @@ const ResetPassword = () => {
                           {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
                       </div>
+                      {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
                     </div>
 
                     <div className="relative group">
@@ -179,20 +174,21 @@ const ResetPassword = () => {
                         </div>
                         <input
                           type={showPassword ? "text" : "password"}
-                          required placeholder="Confirm new password"
-                          value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full pl-12 pr-12 py-4 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+                          placeholder="Confirm new password"
+                          {...register('confirmPassword')}
+                          className={`w-full pl-12 pr-12 py-4 bg-white border ${errors.confirmPassword ? 'border-red-500' : 'border-slate-200'} rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm`}
                         />
                       </div>
+                      {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={isSubmitting}
                     className="w-full flex items-center justify-center gap-2 py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-[0_4px_14px_0_rgba(5,150,105,0.39)] hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:hover:translate-y-0"
                   >
-                    {loading ? 'Updating...' : (
+                    {isSubmitting ? 'Updating...' : (
                       <>Update Password <ArrowRight className="w-5 h-5" /></>
                     )}
                   </button>

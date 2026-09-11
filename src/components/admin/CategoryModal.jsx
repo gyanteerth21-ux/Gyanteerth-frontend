@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FolderPlus, Settings2, XCircle, Loader2, Save } from 'lucide-react';
 import { useAuth } from '../../shared/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 import { ADMIN_API } from '../../config';
 
 const Input = ({ label, ...props }) => (
@@ -12,7 +13,8 @@ const Input = ({ label, ...props }) => (
 );
 
 const CategoryModal = ({ mode, category, categories, onClose, refresh, showToast }) => {
-  const { authFetch, clearCache } = useAuth();
+  const { authFetch } = useAuth();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -73,7 +75,7 @@ const CategoryModal = ({ mode, category, categories, onClose, refresh, showToast
 
       if (res.ok) { 
           showToast(`Category Saved`); 
-          clearCache('admin_categories');
+          queryClient.invalidateQueries({ queryKey: ['admin_categories_full_data'] });
           refresh(); 
           onClose(); 
       }
