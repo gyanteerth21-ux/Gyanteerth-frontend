@@ -55,7 +55,8 @@ const ResetRequests = () => {
     }
   };
 
-  const filteredRequests = requests.filter(r => {
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const filteredRequests = safeRequests.filter(r => {
     if (statusFilter !== 'all' && (r.status || '').toLowerCase() !== statusFilter) return false;
     const q = searchQuery.toLowerCase();
     return (r.user_name || r.user_id || '').toLowerCase().includes(q) || 

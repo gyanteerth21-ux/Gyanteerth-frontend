@@ -142,44 +142,54 @@ const AdminCurriculum = () => {
         setActiveTab('lessons');
       }
 
-      const courseLevelNotes = (rawCourse.notes || []);
-      const sortedModules = (rawCourse.modules || []).sort((a, b) => (a.position || a.Position || 0) - (b.position || b.Position || 0)).map(m => {
+      const courseLevelNotes = Array.isArray(rawCourse.notes) ? rawCourse.notes : [];
+      const rawModules = Array.isArray(rawCourse.modules) ? rawCourse.modules : [];
+      const sortedModules = rawModules.sort((a, b) => (a.position || a.Position || 0) - (b.position || b.Position || 0)).map(m => {
         const content = m.content || {};
+        const safeVideos = Array.isArray(content.videos) ? content.videos : (Array.isArray(m.video) ? m.video : []);
+        const safeAssessments = Array.isArray(content.assessments) ? content.assessments : (Array.isArray(m.assessments) ? m.assessments : []);
+        const safeLiveSessions = Array.isArray(content.live_sessions) ? content.live_sessions : (Array.isArray(m.live_sessions) ? m.live_sessions : []);
+        const rawModuleNotes = Array.isArray(content.notes) ? content.notes : (Array.isArray(m.notes) ? m.notes : courseLevelNotes);
+        const safeNotes = Array.isArray(rawModuleNotes) ? rawModuleNotes : [];
+
         return {
           ...m,
           module_id: m.module_id || m.Module_ID,
-          video: (content.videos || m.video || []).map(v => ({
+          video: safeVideos.map(v => ({
             ...v,
             video_id: v.video_id || v.Video_ID,
             video_url: v.video_url || v.Video_URL || v.url,
             course_description: v.description || v.course_description || v.Course_Description || v.title
           })),
-          assessments: (content.assessments || m.assessments || []).map(a => {
-            const rawQuestions = a.questions || a.Questions || [];
+          assessments: safeAssessments.map(a => {
+            const rawQuestions = Array.isArray(a.questions) ? a.questions : (Array.isArray(a.Questions) ? a.Questions : []);
             const sortedQuestions = [...rawQuestions].sort((qx, qy) => (qx.position || qx.Position || 0) - (qy.position || qy.Position || 0));
 
             return {
               ...a,
               assessment_id: a.assessment_id || a.Assessment_ID,
-              questions: sortedQuestions.map(q => ({
-                ...q,
-                question_id: q.question_id || q.Question_ID,
-                question_txt: q.question_text || q.question_txt || q.Question_Txt || q.text,
-                options: (q.options || q.Options || []).map(o => ({
-                  ...o,
-                  option_id: o.option_id || o.Option_ID,
-                  option_txt: o.text || o.option_txt || o.Option_Txt || o.option,
-                  is_correct: o.is_correct !== undefined ? o.is_correct : o.Is_Correct
-                }))
-              }))
+              questions: sortedQuestions.map(q => {
+                const rawOptions = Array.isArray(q.options) ? q.options : (Array.isArray(q.Options) ? q.Options : []);
+                return {
+                  ...q,
+                  question_id: q.question_id || q.Question_ID,
+                  question_txt: q.question_text || q.question_txt || q.Question_Txt || q.text,
+                  options: rawOptions.map(o => ({
+                    ...o,
+                    option_id: o.option_id || o.Option_ID,
+                    option_txt: o.text || o.option_txt || o.Option_Txt || o.option,
+                    is_correct: o.is_correct !== undefined ? o.is_correct : o.Is_Correct
+                  }))
+                };
+              })
             };
           }),
-          live_sessions: (content.live_sessions || m.live_sessions || []).map(l => ({
+          live_sessions: safeLiveSessions.map(l => ({
             ...l,
             live_id: l.live_id || l.Live_ID,
             meeting_url: l.meeting_url || l.Meeting_URL
           })),
-          notes: (content.notes || m.notes || courseLevelNotes).map(n => ({
+          notes: safeNotes.map(n => ({
             ...n,
             note_id: n.note_id || n.Notes_ID || n.notes_id,
             note_url: n.file_url || n.note_url || n.File_URL || n.Note_URL

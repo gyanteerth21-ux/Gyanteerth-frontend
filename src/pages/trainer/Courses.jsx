@@ -83,13 +83,14 @@ const TrainerCourses = () => {
   });
 
   // Memoize filtering to prevent CPU spikes when typing
+  const safeCourses = Array.isArray(courses) ? courses : [];
   const filteredCourses = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    return courses.filter(course => 
-      (course.course_title || '').toLowerCase().includes(query) ||
-      (course.course_description || '').toLowerCase().includes(query)
+    return safeCourses.filter(course => 
+      (course?.course_title || '').toLowerCase().includes(query) ||
+      (course?.course_description || '').toLowerCase().includes(query)
     );
-  }, [courses, searchQuery]);
+  }, [safeCourses, searchQuery]);
 
   const getTypeColor = (type) => {
     if (!type) return { bg: '#f8f7ff', text: '#6366f1', label: 'Recorded' };
@@ -130,7 +131,7 @@ const TrainerCourses = () => {
         <CourseGridSkeleton />
       ) : (
         <AnimatePresence mode="wait">
-          {filteredCourses.length === 0 ? (
+          {(filteredCourses || []).length === 0 ? (
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               style={{ padding: '6rem 2rem', textAlign: 'center', background: 'var(--color-surface)', borderRadius: '2rem', border: '2px dashed #e2e8f0' }}
@@ -144,7 +145,7 @@ const TrainerCourses = () => {
               layout 
               style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}
             >
-              {filteredCourses.map((course, index) => (
+              {(filteredCourses || []).map((course, index) => (
                 <motion.div 
                   key={course.course_id} 
                   initial={{ opacity: 0, y: 20 }}

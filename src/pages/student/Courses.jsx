@@ -86,13 +86,15 @@ const StudentCourses = () => {
   }, [feedbackCourse, feedbackForm, authFetch]);
 
   // ── Derived course lists (Strictly Backend-Driven) ───────────────────────
+  const safeEnrolledCourses = Array.isArray(enrolledCourses) ? enrolledCourses : [];
+
   const { ongoingCourses, completedCourses, inProgressCount, completedCount } = useMemo(() => {
     const ongoing   = [];
     const completed = [];
     let inProgress  = 0;
     let done        = 0;
 
-    enrolledCourses.forEach(course => {
+    safeEnrolledCourses.forEach(course => {
       // Strictly trust the progress reported by the backend API
       const prog = course.progress || 0;
       
@@ -106,7 +108,7 @@ const StudentCourses = () => {
     });
 
     return { ongoingCourses: ongoing, completedCourses: completed, inProgressCount: inProgress, completedCount: done };
-  }, [enrolledCourses]);
+  }, [safeEnrolledCourses]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const tabs = [
@@ -143,8 +145,8 @@ const StudentCourses = () => {
             My Learning <span style={{ color: '#fbbf24', marginLeft: '0.5rem' }}>Journey</span>
           </h1>
           <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '1.1rem', fontWeight: 600, maxWidth: '600px', lineHeight: 1.5 }}>
-            {enrolledCourses.length > 0
-              ? `You have ${enrolledCourses.length} active programs in your expertise portfolio.`
+            {safeEnrolledCourses.length > 0
+              ? `You have ${safeEnrolledCourses.length} active programs in your expertise portfolio.`
               : 'Start your professional transformation by exploring our catalog.'}
           </p>
 

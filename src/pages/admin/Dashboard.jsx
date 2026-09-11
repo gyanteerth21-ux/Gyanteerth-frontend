@@ -99,7 +99,7 @@ const AdminDashboard = () => {
   });
 
   const { data: tData, isLoading: loadingTrainers } = useQuery({
-    queryKey: ['admin_trainers'],
+    queryKey: ['admin_dashboard_trainers'],
     queryFn: async () => {
       const res = await authFetch(`${ADMIN_API}/all_trainer`);
       if (!res.ok) throw new Error('Failed to fetch trainers');
@@ -134,14 +134,15 @@ const AdminDashboard = () => {
 
   let courseCount = allIds.length;
   let trainerCount = (tData?.active_trainer_email?.length || 0) + (tData?.inactive_trainer_email?.length || 0);
-  let studentCount = statData?.data?.reduce((sum, course) => sum + (course.enrolled_students || 0), 0) || 0;
+  let studentCount = (Array.isArray(statData?.data) ? statData.data : []).reduce((sum, course) => sum + (course?.enrolled_students || 0), 0);
 
   let assessmentCount = 0;
   courseDetailsQueries.forEach(query => {
     if (query.data) {
       const c = query.data.course || query.data;
-      (c.modules || []).forEach(m => {
-        const relevantAsms = m.content?.assessments || m.assessments || [];
+      const safeModules = Array.isArray(c?.modules) ? c.modules : [];
+      safeModules.forEach(m => {
+        const relevantAsms = Array.isArray(m?.content?.assessments) ? m.content.assessments : (Array.isArray(m?.assessments) ? m.assessments : []);
         assessmentCount += relevantAsms.length;
       });
     }

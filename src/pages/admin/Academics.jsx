@@ -149,8 +149,10 @@ const Academics = () => {
     }
   };
 
-  const filteredDegrees = degrees.filter(b => b.degree_name.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredBranches = branches.filter(b => b.branch_name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const safeDegrees = Array.isArray(degrees) ? degrees : [];
+  const safeBranches = Array.isArray(branches) ? branches : [];
+  const filteredDegrees = safeDegrees.filter(b => (b?.degree_name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredBranches = safeBranches.filter(b => (b?.branch_name || '').toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="users-page" style={{ paddingBottom: '2rem' }}>
@@ -203,7 +205,7 @@ const Academics = () => {
             transition: 'all 0.2s'
           }}
         >
-          <Award size={18} /> Degrees ({degrees.length})
+          <Award size={18} /> Degrees ({safeDegrees.length})
         </button>
         <button
           onClick={() => { setActiveTab('branches'); setSearchQuery(''); }}
@@ -221,7 +223,7 @@ const Academics = () => {
             transition: 'all 0.2s'
           }}
         >
-          <Network size={18} /> Branches ({branches.length})
+          <Network size={18} /> Branches ({safeBranches.length})
         </button>
       </div>
 

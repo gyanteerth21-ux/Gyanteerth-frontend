@@ -65,7 +65,8 @@ const AdminFeedbacks = () => {
     }
   };
 
-  const filteredFeedbacks = feedbacks.filter(f => {
+  const safeFeedbacks = Array.isArray(feedbacks) ? feedbacks : [];
+  const filteredFeedbacks = safeFeedbacks.filter(f => {
     if (courseFilter !== 'All' && f.course_id !== courseFilter) return false;
     const q = searchQuery.toLowerCase();
     return (f.user_name || '').toLowerCase().includes(q) || 

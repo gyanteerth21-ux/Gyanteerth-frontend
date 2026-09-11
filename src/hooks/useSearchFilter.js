@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 
-export const useSearchFilter = (data, searchKey = 'name') => {
+export const useSearchFilter = (data = [], searchKey = 'name') => {
   const [searchQuery, setSearchQuery] = useState('');
 
+  const safeData = Array.isArray(data) ? data : [];
+
   const filteredData = useMemo(() => {
-    if (!searchQuery.trim()) return data;
+    if (!searchQuery.trim()) return safeData;
     const lowerQuery = searchQuery.toLowerCase();
-    return data.filter(item => {
+    return safeData.filter(item => {
+      if (!item) return false;
       // If searchKey is an array of keys
       if (Array.isArray(searchKey)) {
         return searchKey.some(key => {
@@ -18,7 +21,7 @@ export const useSearchFilter = (data, searchKey = 'name') => {
       const val = item[searchKey];
       return val && String(val).toLowerCase().includes(lowerQuery);
     });
-  }, [data, searchQuery, searchKey]);
+  }, [safeData, searchQuery, searchKey]);
 
   return {
     searchQuery,

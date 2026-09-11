@@ -236,7 +236,8 @@ const Catalog = () => {
 
   // Memoize filtering for performance
   const filteredCourses = useMemo(() => {
-    return courses.filter(c => {
+    const safeCourses = Array.isArray(courses) ? courses : [];
+    return safeCourses.filter(c => {
       // 1. Filter out already enrolled courses
       if (isEnrolled(c.id)) return false;
 
@@ -320,7 +321,7 @@ const Catalog = () => {
 
       {/* Categories */}
       <div className="flex gap-2 md:gap-2.5 mb-6 md:mb-10 overflow-x-auto no-scrollbar pb-1">
-        {categories.map(cat => (
+        {(categories || []).map(cat => (
           <button 
             key={cat} 
             onClick={() => setActiveCategory(cat)} 
@@ -344,7 +345,7 @@ const Catalog = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">
           <AnimatePresence>
-            {filteredCourses.map((course, index) => (
+            {(filteredCourses || []).map((course, index) => (
               <motion.div
                 key={course.id}
                 initial={{ opacity: 0, y: 20 }}
