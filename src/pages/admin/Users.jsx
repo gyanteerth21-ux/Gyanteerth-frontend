@@ -72,7 +72,8 @@ const AdminUsers = () => {
     staleTime: 5 * 60 * 1000
   });
 
-  const { searchQuery, setSearchQuery, filteredData: filteredTrainers } = useSearchFilter(trainers, ['user_name', 'trainer_name', 'email', 'trainer_email']);
+  const safeTrainers = Array.isArray(trainers) ? trainers : [];
+  const { searchQuery, setSearchQuery, filteredData: filteredTrainers } = useSearchFilter(safeTrainers, ['user_name', 'trainer_name', 'email', 'trainer_email']);
   const { viewMode, setViewMode } = useViewMode('admin_users_view_mode', 'grid');
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -220,7 +221,7 @@ const AdminUsers = () => {
               <button onClick={() => setViewMode('list')} style={{ padding: '0.6rem 0.85rem', borderRadius: '0.9rem', border: 'none', background: viewMode === 'list' ? 'var(--color-surface)' : 'transparent', color: viewMode === 'list' ? 'var(--color-primary)' : 'var(--color-text-light)', cursor: 'pointer', boxShadow: viewMode === 'list' ? 'var(--shadow-md)' : 'none', transition: 'all 0.3s' }}><List size={20} /></button>
             </div>
 
-            <ExportExcelButton data={trainers} filename="Admin_Trainers_List" sheetName="Trainers" />
+            <ExportExcelButton data={safeTrainers} filename="Admin_Trainers_List" sheetName="Trainers" />
             <button
               onClick={() => setShowImportModal(true)}
               style={{ padding: '0.65rem 1.25rem', borderRadius: '1rem', border: 'none', backgroundColor: '#0f172a', color: 'white', fontSize: '0.85rem', fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.2)' }}
@@ -243,8 +244,8 @@ const AdminUsers = () => {
 
       <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2.5rem var(--page-padding)' }}>
         <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '3.5rem', overflowX: 'auto', paddingBottom: '0.75rem' }} className="no-scrollbar">
-          <CompactStat label="Total Trainers" value={trainers.length} icon={<Fingerprint size={16} />} />
-          <CompactStat label="Active Faculty" value={trainers.filter(t => t.trainer_status === 'active').length} icon={<Zap size={16} color="var(--color-primary)" />} />
+          <CompactStat label="Total Trainers" value={safeTrainers.length} icon={<Fingerprint size={16} />} />
+          <CompactStat label="Active Faculty" value={safeTrainers.filter(t => t.trainer_status === 'active').length} icon={<Zap size={16} color="var(--color-primary)" />} />
           <CompactStat label="Core Systems" value="Gyanteerth LMS" icon={<ShieldCheck size={16} color="#64748b" />} />
         </div>
 

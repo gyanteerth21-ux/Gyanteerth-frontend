@@ -99,7 +99,7 @@ const AdminDashboard = () => {
   });
 
   const { data: tData, isLoading: loadingTrainers } = useQuery({
-    queryKey: ['admin_trainers'],
+    queryKey: ['admin_dashboard_trainers'],
     queryFn: async () => {
       const res = await authFetch(`${ADMIN_API}/all_trainer`);
       if (!res.ok) throw new Error('Failed to fetch trainers');
