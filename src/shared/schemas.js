@@ -34,7 +34,7 @@ export const resetPasswordSchema = z.object({
 export const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email").optional().or(z.literal('')),
-  number: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  number: z.coerce.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
   dob: z.string().min(1, "Birth date is required"),
   gender: z.enum(['male', 'female', 'other'], { errorMap: () => ({ message: "Please select your gender" }) }),
   city: z.string().min(1, "City is required"),
