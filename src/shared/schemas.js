@@ -31,13 +31,20 @@ export const resetPasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 
-// Profile Schemas
 export const profileSchema = z.object({
-  user_name: z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal('')),
-  user_number: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits").optional().or(z.literal('')),
-  user_dob: z.string().optional().or(z.literal('')),
-  user_gender: z.enum(['male', 'female', 'other']).optional().or(z.literal('')),
-  user_pic: z.any().optional(),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email").optional().or(z.literal('')),
+  number: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  dob: z.string().min(1, "Birth date is required"),
+  gender: z.enum(['male', 'female', 'other'], { errorMap: () => ({ message: "Please select your gender" }) }),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  college: z.string().optional().or(z.literal('')),
+  branch: z.string().optional().or(z.literal('')),
+  degree: z.string().optional().or(z.literal('')),
+  year: z.string().optional().or(z.literal('')),
+  expertise: z.string().optional().or(z.literal('')),
+  pic: z.any().optional(),
 });
 
 // Admin CRUD Form Schemas
