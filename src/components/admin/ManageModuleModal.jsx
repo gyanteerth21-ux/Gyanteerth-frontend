@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../shared/AuthContext';
 import { BookOpen, ShieldCheck, Target, Calendar, BookOpen as BookIcon } from 'lucide-react';
 import { ADMIN_API } from '../../config';
+import { useConfirm } from '../shared/ConfirmProvider';
 
 const Section = ({ title, children, icon: Icon }) => (
    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.5rem', backgroundColor: 'var(--color-surface-muted)', borderRadius: '1.5rem', border: '1px solid var(--color-border)' }}>
@@ -80,6 +81,7 @@ const FormSelect = React.forwardRef(({ label, children, error, ...props }, ref) 
 
 
 export const ManageModuleModal = ({ course, onClose, showToast, refresh }) => {
+  const confirm = useConfirm();
    const { authFetch } = useAuth();
    const [loading, setLoading] = useState(false);
    const [modules, setModules] = useState(course.modules || []);
@@ -221,25 +223,25 @@ export const ManageModuleModal = ({ course, onClose, showToast, refresh }) => {
    };
 
    const deleteVideo = async (id) => {
-      if (!window.confirm('Delete lesson?')) return;
+      if (!(await confirm('Delete lesson?'))) return;
       const res = await authFetch(`${ADMIN_API}/delete-video/${id}`, { method: 'DELETE' });
       if (res.ok) { showToast('Lesson removed'); await fetchFullCourse(); refresh(); }
    };
 
    const deleteLive = async (id) => {
-      if (!window.confirm('Delete live session?')) return;
+      if (!(await confirm('Delete live session?'))) return;
       const res = await authFetch(`${ADMIN_API}/delete-live/${id}`, { method: 'DELETE' });
       if (res.ok) { showToast('Live session removed'); await fetchFullCourse(); refresh(); }
    };
 
    const deleteRec = async (id) => {
-      if (!window.confirm('Remove recording?')) return;
+      if (!(await confirm('Remove recording?'))) return;
       const res = await authFetch(`${ADMIN_API}/delete-recorded-video/${id}`, { method: 'DELETE' });
       if (res.ok) { showToast('Recording removed'); await fetchFullCourse(); }
    };
 
    const deleteAssessment = async (id) => {
-      if (!window.confirm('Erase this assessment and all its contents?')) return;
+      if (!(await confirm('Erase this assessment and all its contents?'))) return;
       const res = await authFetch(`${ADMIN_API}/delete-assessment/${id}`, { method: 'DELETE' });
       if (res.ok) { showToast('Assessment purged'); await fetchFullCourse(); }
       else { showToast('Purge failed', 'error'); }
@@ -413,7 +415,7 @@ export const ManageModuleModal = ({ course, onClose, showToast, refresh }) => {
                                  </div>
                                  <div style={{ display: 'flex', gap: '0.5rem' }} onClick={e => e.stopPropagation()}>
                                     <button onClick={() => { setEditingModule(m); setModuleValue('Title', m.title); setModuleValue('Course_Description', m.description); setModuleValue('Position', m.position); }} style={{ padding: '0.6rem', borderRadius: '0.75rem', border: 'none', background: 'white', color: 'var(--color-text)', cursor: 'pointer' }}><Edit size={16} /></button>
-                                    <button onClick={async () => { if (window.confirm('Delete Module?')) { const res = await authFetch(`${ADMIN_API}/delete-module/${m.module_id}`, { method: 'DELETE' }); if (res.ok) { await fetchFullCourse(); refresh(); } } }} style={{ padding: '0.6rem', borderRadius: '0.75rem', border: 'none', background: 'white', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                                    <button onClick={async () => { if (await confirm('Delete Module?')) { const res = await authFetch(`${ADMIN_API}/delete-module/${m.module_id}`, { method: 'DELETE' }); if (res.ok) { await fetchFullCourse(); refresh(); } } }} style={{ padding: '0.6rem', borderRadius: '0.75rem', border: 'none', background: 'white', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
                                  </div>
                               </div>
                            ))}
