@@ -18,6 +18,8 @@ import { PremiumUserCard, PremiumUserListRow } from '../../components/admin/User
 import BulkImportModal from '../../components/shared/BulkImportModal';
 import { useSearchFilter } from '../../hooks/useSearchFilter';
 import { useViewMode } from '../../hooks/useViewMode';
+import { parseApiError } from '../../utils/errorUtils';
+import { useConfirm } from '../../components/shared/ConfirmProvider';
 
 
 const CompactStat = ({ label, value, icon }) => (
@@ -34,6 +36,7 @@ const AdminUsers = () => {
   const { authFetch } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const confirm = useConfirm();
 
   const { data: trainers = [], isLoading: loading } = useQuery({
     queryKey: ['admin_trainers'],
@@ -159,8 +162,7 @@ const AdminUsers = () => {
       } else {
         const errorData = await response.json();
         console.error("Bulk Import Error Details:", errorData);
-        const detail = Array.isArray(errorData.detail) ? errorData.detail[0]?.msg : errorData.detail;
-        showToast(detail ? `Import failed: ${detail}` : 'Unable to import data', 'error');
+        showToast(parseApiError(errorData, 'Unable to import data'), 'error');
       }
     } catch (err) {
       showToast('Neural link failed', 'error');
@@ -173,7 +175,7 @@ const AdminUsers = () => {
 
   const handleToggleStatus = async (email, currentStatus, name) => {
     const action = currentStatus === 'active' ? 'deactivate' : 'activate';
-    if (!window.confirm(`Would you like to ${action} ${name || email}?`)) return;
+    if (!(await confirm(`Would you like to ${action} ${name || email}?`))) return;
     setActionLoading(true);
     try {
       const targetStatus = currentStatus === 'active' ? 'inactive' : 'active';

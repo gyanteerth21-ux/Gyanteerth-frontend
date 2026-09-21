@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../shared/AuthContext';
 import { BookOpen, ShieldCheck, Target, Calendar, BookOpen as BookIcon } from 'lucide-react';
 import { ADMIN_API } from '../../config';
+import { useConfirm } from '../shared/ConfirmProvider';
 
 const Section = ({ title, children, icon: Icon }) => (
    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.5rem', backgroundColor: 'var(--color-surface-muted)', borderRadius: '1.5rem', border: '1px solid var(--color-border)' }}>
@@ -80,6 +81,7 @@ const FormSelect = React.forwardRef(({ label, children, error, ...props }, ref) 
 
 
 export const ManageDemoModal = ({ course, onClose, showToast, refresh }) => {
+  const confirm = useConfirm();
    const { authFetch, clearCache } = useAuth();
    const [loading, setLoading] = useState(false);
    const [demos, setDemos] = useState(course.demo || []);
@@ -148,7 +150,7 @@ export const ManageDemoModal = ({ course, onClose, showToast, refresh }) => {
    };
 
    const handleDelete = async (demoId) => {
-      if (!window.confirm('Remove this demo video?')) return;
+      if (!(await confirm('Remove this demo video?'))) return;
       try {
          const res = await authFetch(`${ADMIN_API}/delete-demo/${demoId}`, {
             method: 'DELETE'

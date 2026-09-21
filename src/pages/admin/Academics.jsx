@@ -6,8 +6,10 @@ import { ADMIN_API } from '../../config';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { degreeSchema, branchSchema } from '../../shared/schemas';
+import { useConfirm } from '../../components/shared/ConfirmProvider';
 
 const Academics = () => {
+  const confirm = useConfirm();
   const { authFetch } = useAuth();
   const [activeTab, setActiveTab] = useState('degrees'); // 'degrees' or 'branches'
   
@@ -96,7 +98,7 @@ const Academics = () => {
   };
 
   const handleDeleteDegree = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this degree?')) return;
+    if (!(await confirm('Are you sure you want to delete this degree?'))) return;
     try {
       const res = await authFetch(`${ADMIN_API}/degrees/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete degree');
@@ -139,7 +141,7 @@ const Academics = () => {
   };
 
   const handleDeleteBranch = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this branch?')) return;
+    if (!(await confirm('Are you sure you want to delete this branch?'))) return;
     try {
       const res = await authFetch(`${ADMIN_API}/branches/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete branch');

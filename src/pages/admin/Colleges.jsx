@@ -6,9 +6,12 @@ import { ADMIN_API, getHeaders } from '../../config';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { collegeSchema, tpoSchema } from '../../shared/schemas';
+import { parseApiError } from '../../utils/errorUtils';
+import { useConfirm } from '../../components/shared/ConfirmProvider';
 
 const Colleges = () => {
   const { authFetch } = useAuth();
+  const confirm = useConfirm();
   const [colleges, setColleges] = useState([]);
   const [tpos, setTpos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +78,7 @@ const Colleges = () => {
       });
       
       const resData = await res.json();
-      if (!res.ok) throw new Error(resData.detail || 'Operation failed');
+      if (!res.ok) throw new Error(parseApiError(resData, 'Operation failed'));
       
       setActionSuccess(`College ${isUpdate ? 'updated' : 'created'} successfully!`);
       fetchData();
@@ -91,7 +94,7 @@ const Colleges = () => {
   };
 
   const handleDeleteCollege = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this college?')) return;
+    if (!(await confirm('Are you sure you want to delete this college?'))) return;
     
     try {
       const res = await authFetch(`${ADMIN_API}/colleges/${id}`, {
@@ -122,9 +125,10 @@ const Colleges = () => {
       });
       
       const resData = await res.json();
-      if (!res.ok) throw new Error(resData.detail || 'Failed to create TPO');
+      if (!res.ok) throw new Error(parseApiError(resData, 'Failed to create TPO'));
       
       setActionSuccess('TPO created successfully!');
+      fetchData();
       setTimeout(() => {
         setIsTpoModalOpen(false);
         resetTpo();
@@ -139,7 +143,7 @@ const Colleges = () => {
   const [revokingTpoId, setRevokingTpoId] = useState(null);
 
   const handleDeleteTpo = async (tpoId, tpoName) => {
-    if (!window.confirm(`Are you sure you want to revoke TPO access for ${tpoName || 'this user'}?`)) return;
+    if (!(await confirm(`Are you sure you want to revoke TPO access for ${tpoName || 'this user'}?`))) return;
 
     try {
       setRevokingTpoId(tpoId);
@@ -147,7 +151,7 @@ const Colleges = () => {
         method: 'DELETE'
       });
       const resData = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(resData.detail || 'Failed to revoke TPO access');
+      if (!res.ok) throw new Error(parseApiError(resData, 'Failed to revoke TPO access'));
 
       setTpos(prev => prev.filter(t => t.user_id !== tpoId));
       fetchData();
