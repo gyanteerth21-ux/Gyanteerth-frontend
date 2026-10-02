@@ -13,6 +13,7 @@ import EditAssessmentModal from '../../components/admin/EditAssessmentModal';
 import { PremiumAssessmentCard, PremiumAssessmentListRow } from '../../components/admin/AssessmentCards';
 import { useSearchFilter } from '../../hooks/useSearchFilter';
 import { useViewMode } from '../../hooks/useViewMode';
+import { useConfirm } from '../../components/shared/ConfirmProvider';
 
 const CompactStat = ({ label, value, icon }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', padding: '0.75rem 1.5rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1.15rem', minWidth: 'max-content' }}>
@@ -25,6 +26,7 @@ const CompactStat = ({ label, value, icon }) => (
 );
 
 const AdminAssessments = () => {
+  const confirm = useConfirm();
   const { user, authFetch } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -120,7 +122,7 @@ const AdminAssessments = () => {
   const { searchQuery, setSearchQuery, filteredData: filteredAssessments } = useSearchFilter(filteredByCourse, ['title', 'Title', 'course_title']);
 
   const handleDelete = async (id, courseId) => {
-    if (!window.confirm('Are you sure you want to delete this assessment?')) return;
+    if (!(await confirm('Are you sure you want to delete this assessment?'))) return;
     try {
       const res = await authFetch(`${BASE_URL}/delete-assessment/${id}`, { method: 'DELETE' });
       if (res.ok) { 

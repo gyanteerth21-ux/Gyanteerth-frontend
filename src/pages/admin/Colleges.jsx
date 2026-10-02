@@ -6,9 +6,12 @@ import { ADMIN_API, getHeaders } from '../../config';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { collegeSchema, tpoSchema } from '../../shared/schemas';
+import { parseApiError } from '../../utils/errorUtils';
+import { useConfirm } from '../../components/shared/ConfirmProvider';
 
 const Colleges = () => {
   const { authFetch } = useAuth();
+  const confirm = useConfirm();
   const [colleges, setColleges] = useState([]);
   const [tpos, setTpos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +78,7 @@ const Colleges = () => {
       });
       
       const resData = await res.json();
-      if (!res.ok) throw new Error(resData.detail || 'Operation failed');
+      if (!res.ok) throw new Error(parseApiError(resData, 'Operation failed'));
       
       setActionSuccess(`College ${isUpdate ? 'updated' : 'created'} successfully!`);
       fetchData();
@@ -91,7 +94,7 @@ const Colleges = () => {
   };
 
   const handleDeleteCollege = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this college?')) return;
+    if (!(await confirm('Are you sure you want to delete this college?'))) return;
     
     try {
       const res = await authFetch(`${ADMIN_API}/colleges/${id}`, {
@@ -122,9 +125,10 @@ const Colleges = () => {
       });
       
       const resData = await res.json();
-      if (!res.ok) throw new Error(resData.detail || 'Failed to create TPO');
+      if (!res.ok) throw new Error(parseApiError(resData, 'Failed to create TPO'));
       
       setActionSuccess('TPO created successfully!');
+      fetchData();
       setTimeout(() => {
         setIsTpoModalOpen(false);
         resetTpo();
@@ -133,6 +137,28 @@ const Colleges = () => {
       }, 1500);
     } catch (err) {
       setActionError(err.message);
+    }
+  };
+
+  const [revokingTpoId, setRevokingTpoId] = useState(null);
+
+  const handleDeleteTpo = async (tpoId, tpoName) => {
+    if (!(await confirm(`Are you sure you want to revoke TPO access for ${tpoName || 'this user'}?`))) return;
+
+    try {
+      setRevokingTpoId(tpoId);
+      const res = await authFetch(`${ADMIN_API}/tpo/${tpoId}`, {
+        method: 'DELETE'
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(parseApiError(resData, 'Failed to revoke TPO access'));
+
+      setTpos(prev => prev.filter(t => t.user_id !== tpoId));
+      fetchData();
+    } catch (err) {
+      alert(err.message || 'Failed to revoke TPO access');
+    } finally {
+      setRevokingTpoId(null);
     }
   };
 
@@ -208,13 +234,73 @@ const Colleges = () => {
                         <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                           <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)', fontWeight: 700 }}>TPO Accounts ({safeTpos.filter(t => t.college === college.College_ID || t.college === college.College_Name).length})</span>
                           {safeTpos.filter(t => t.college === college.College_ID || t.college === college.College_Name).map(tpo => (
-                            <div key={tpo.user_id} style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 500, backgroundColor: 'var(--color-bg)', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-                              <ShieldCheck size={14} className="text-primary" />
-                              <span>{tpo.name}</span>
-                              <span style={{ color: 'var(--color-border)', margin: '0 0.25rem' }}>|</span>
-                              <span style={{ color: 'var(--color-text-light)', fontWeight: 400 }}>{tpo.email}</span>
-                              <span style={{ color: 'var(--color-border)', margin: '0 0.25rem' }}>|</span>
-                              <span style={{ color: 'var(--color-text-light)', fontWeight: 400 }}>{tpo.number}</span>
+                            <div 
+                              key={tpo.user_id} 
+                              style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'space-between', 
+                                flexWrap: 'wrap', 
+                                gap: '0.5rem', 
+                                fontSize: '0.85rem', 
+                                fontWeight: 500, 
+                                backgroundColor: 'var(--color-bg)', 
+                                padding: '0.5rem 0.75rem', 
+                                borderRadius: 'var(--radius-md)', 
+                                border: '1px solid var(--color-border)' 
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                <ShieldCheck size={14} className="text-primary" />
+                                <span>{tpo.name}</span>
+                                <span style={{ color: 'var(--color-border)', margin: '0 0.25rem' }}>|</span>
+                                <span style={{ color: 'var(--color-text-light)', fontWeight: 400 }}>{tpo.email}</span>
+                                {tpo.number && (
+                                  <>
+                                    <span style={{ color: 'var(--color-border)', margin: '0 0.25rem' }}>|</span>
+                                    <span style={{ color: 'var(--color-text-light)', fontWeight: 400 }}>{tpo.number}</span>
+                                  </>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteTpo(tpo.user_id, tpo.name)}
+                                disabled={revokingTpoId === tpo.user_id}
+                                title={`Revoke TPO access for ${tpo.name}`}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  padding: '0.25rem 0.6rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  color: 'var(--color-danger, #ef4444)',
+                                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                                  borderRadius: 'var(--radius-sm, 4px)',
+                                  cursor: revokingTpoId === tpo.user_id ? 'not-allowed' : 'pointer',
+                                  transition: 'all 0.15s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (revokingTpoId !== tpo.user_id) {
+                                    e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.18)';
+                                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (revokingTpoId !== tpo.user_id) {
+                                    e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)';
+                                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+                                  }
+                                }}
+                              >
+                                {revokingTpoId === tpo.user_id ? (
+                                  <Loader2 size={12} className="spin" />
+                                ) : (
+                                  <Trash2 size={12} />
+                                )}
+                                <span>Revoke</span>
+                              </button>
                             </div>
                           ))}
                         </div>

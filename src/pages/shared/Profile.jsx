@@ -145,16 +145,16 @@ const Profile = () => {
       } else {
         const endpoint = `${USER_API}/update_profile`;
         const fd = new FormData();
-        fd.append('user_name', formData.name);
-        fd.append('user_number', formData.number);
-        fd.append('user_dob', formData.dob);
-        fd.append('user_gender', formData.gender);
-        fd.append('user_city', formData.city);
-        fd.append('user_state', formData.state);
-        fd.append('user_college', formData.college);
-        fd.append('user_branch', formData.branch);
-        fd.append('user_degree', formData.degree);
-        fd.append('user_year', formData.year);
+        fd.append('user_name', formData.name || '');
+        if (formData.number) fd.append('user_number', formData.number);
+        if (formData.dob) fd.append('user_dob', formData.dob);
+        if (formData.gender) fd.append('user_gender', formData.gender);
+        if (formData.city) fd.append('user_city', formData.city);
+        if (formData.state) fd.append('user_state', formData.state);
+        if (formData.college) fd.append('user_college', formData.college);
+        if (formData.branch) fd.append('user_branch', formData.branch);
+        if (formData.degree) fd.append('user_degree', formData.degree);
+        if (formData.year) fd.append('user_year', formData.year);
         
         // Include picture if it's a URL or string
         if (formData.pic && typeof formData.pic === 'string') {

@@ -13,8 +13,10 @@ import { ADMIN_API, optimizeImageUrl } from '../../config';
 import { CreateCourseModal } from '../../components/admin/CreateCourseModal';
 import { EditCourseModal } from '../../components/admin/EditCourseModal';
 import AdminCourseCard from '../../components/admin/AdminCourseCard';
+import { useConfirm } from '../../components/shared/ConfirmProvider';
 
 const AdminCourses = () => {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const { user, authFetch } = useAuth();
   const queryClient = useQueryClient();
@@ -99,7 +101,7 @@ const AdminCourses = () => {
   useEffect(() => { fetchTrainers(); }, [fetchTrainers]);
 
   const handlePublish = async (courseId) => {
-    if (!window.confirm('Mobilize live?')) return;
+    if (!(await confirm('Mobilize live?'))) return;
     setIsPublishing(true);
     try {
       const res = await authFetch(`${ADMIN_API}/activate/${courseId}`, { method: 'PUT' });
@@ -114,7 +116,7 @@ const AdminCourses = () => {
   };
 
   const handleDelete = async (courseId) => {
-    if (!window.confirm('Purge asset?')) return;
+    if (!(await confirm('Purge asset?'))) return;
     try {
       const res = await authFetch(`${ADMIN_API}/delete-course/${courseId}`, { method: 'DELETE' });
       if (res.ok) { 

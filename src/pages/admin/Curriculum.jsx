@@ -17,8 +17,10 @@ import { moduleSchema, lessonSchema, liveSessionSchema, notesSchema, assessmentS
 import { ADMIN_API } from '../../config';
 import { SubTab, ContentItem, AMInput, AMTextarea, AMSelect, EmptyPlaceholder } from '../../components/admin/CurriculumComponents';
 import { CurriculumSidebar } from '../../components/admin/CurriculumSidebar';
+import { useConfirm } from '../../components/shared/ConfirmProvider';
 
 const AdminCurriculum = () => {
+  const confirm = useConfirm();
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { user, authFetch } = useAuth();
@@ -226,7 +228,7 @@ const AdminCurriculum = () => {
   };
 
   const deleteModule = async (id) => {
-    if (!window.confirm('Erase this chapter? This cannot be undone.')) return;
+    if (!(await confirm('Erase this chapter? This cannot be undone.'))) return;
     try {
       const res = await authFetch(`${ADMIN_API}/delete-module/${id}`, { method: 'DELETE' });
       if (res.ok) { showToast('Chapter Removed'); fetchCurriculum(); }
@@ -278,7 +280,7 @@ const AdminCurriculum = () => {
   };
 
   const genericDelete = async (type, id) => {
-    if (!window.confirm(`Delete this ${type}?`)) return;
+    if (!(await confirm(`Delete this ${type}?`))) return;
     const endpoints = { video: 'delete-video', live: 'delete-live', notes: 'delete-notes', assessment: 'delete-assessment', question: 'delete-question' };
     try {
       const res = await authFetch(`${ADMIN_API}/${endpoints[type]}/${id}`, { method: 'DELETE' });

@@ -18,9 +18,11 @@ import { CreateCourseModal } from '../../components/admin/CreateCourseModal';
 import { PremiumCategoryCard, PremiumCategoryListRow } from '../../components/admin/CategoryCards';
 import { useSearchFilter } from '../../hooks/useSearchFilter';
 import { useViewMode } from '../../hooks/useViewMode';
+import { useConfirm } from '../../components/shared/ConfirmProvider';
 
 
 const AdminCategories = () => {
+  const confirm = useConfirm();
   const { user, authFetch } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -86,7 +88,7 @@ const AdminCategories = () => {
   }, [fetchTrainers]);
 
   const handleDelete = async (catId) => {
-    if (!window.confirm('Caution: Delete this category and all its associations? This action is permanent.')) return;
+    if (!(await confirm('Caution: Delete this category and all its associations? This action is permanent.'))) return;
     try {
       const res = await authFetch(`${ADMIN_API}/delete-category/${catId}`, { method: 'DELETE' });
       if (res.ok) { 
