@@ -427,9 +427,9 @@ const Profile = () => {
 
       {/* ── Toast Notification ── */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 10000 }}>
+        <div style={{ position: 'fixed', top: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 10000 }}>
           <motion.div 
-            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             style={{ padding: '1.15rem 2.5rem', borderRadius: '1.25rem', backgroundColor: '#111827', color: 'white', fontWeight: 950, display: 'flex', alignItems: 'center', gap: '1rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
           >
             {toast.type === 'success' ? <CheckCircle2 size={20} color="var(--color-primary)" /> : <AlertCircle size={20} color="#ef4444" />}
