@@ -10,32 +10,41 @@ import { USER_API } from '../config';
  */
 const CertificateGenerator = ({ 
   courseId,
-  onDownload 
+  onDownload,
+  onError 
 }) => {
   const { authFetch } = useAuth();
   const [certData, setCertData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(null);
   const certificateRef = useRef(null);
 
-  useEffect(() => {
-    const fetchCertDetails = async () => {
-      if (!courseId) return;
-      try {
-        setLoading(true);
-        const response = await authFetch(`${USER_API}/course/${courseId}/certificate`);
-        if (response.ok) {
-          const data = await response.json();
-          setCertData(data);
-        } else {
-          console.error("Failed to fetch certificate:", response.statusText);
-        }
-      } catch (error) {
-        console.error("Error fetching certificate:", error);
-      } finally {
-        setLoading(false);
+  const fetchCertDetails = async () => {
+    if (!courseId) return;
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      const response = await authFetch(`${USER_API}/course/${courseId}/certificate`);
+      if (response.ok) {
+        const data = await response.json();
+        setCertData(data);
+      } else {
+        const errJson = await response.json().catch(() => ({}));
+        const msg = errJson.detail || errJson.message || `Failed to fetch certificate (${response.status})`;
+        setErrorMessage(msg);
+        if (onError) onError(msg);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching certificate:", error);
+      const msg = error.message || "Network error while loading certificate";
+      setErrorMessage(msg);
+      if (onError) onError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchCertDetails();
   }, [courseId, authFetch]);
 
@@ -105,8 +114,55 @@ const CertificateGenerator = ({
 
   if (!certData) {
     return (
-      <div style={{ padding: '2rem', color: 'white', textAlign: 'center' }}>
-        <p>No certificate data found for this course.</p>
+      <div style={{
+        maxWidth: '520px',
+        margin: '2rem auto',
+        padding: '2.5rem 2rem',
+        background: 'rgba(15, 23, 42, 0.85)',
+        backdropFilter: 'blur(16px)',
+        borderRadius: '24px',
+        border: '1px solid rgba(255,255,255,0.1)',
+        color: 'white',
+        textAlign: 'center',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+      }}>
+        <div style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '50%',
+          background: 'rgba(239, 68, 68, 0.15)',
+          color: '#ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 1.25rem',
+          fontSize: '28px'
+        }}>
+          🔒
+        </div>
+        <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.6rem', color: '#f8fafc' }}>
+          Certificate Locked
+        </h3>
+        <p style={{ color: '#94a3b8', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+          {errorMessage || "You must complete 100% of all lessons and pass all module assessments to unlock your verified certificate."}
+        </p>
+        <button
+          onClick={fetchCertDetails}
+          style={{
+            padding: '0.75rem 1.6rem',
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
+          }}
+        >
+          Check Again
+        </button>
       </div>
     );
   }

@@ -6,7 +6,7 @@ import {
   PlayCircle, ChevronRight, ChevronLeft, Award,
   Layers, Video, Monitor, Loader2, AlertCircle, ArrowLeft,
   ChevronDown, BookOpen, ExternalLink, CheckCircle, Menu, Check, Star, X,
-  FileText, CheckCircle2, ShieldAlert, Clock, RefreshCcw
+  FileText, CheckCircle2, ShieldAlert, Clock, RefreshCcw, Download
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useEnrollment } from '../../shared/EnrollmentContext';
@@ -15,6 +15,7 @@ import { ADMIN_API, USER_API } from '../../config';
 import { norm, buildLessons } from '../../components/course/CourseHelpers';
 import { VideoPlayer, LivePanel, NotePanel } from '../../components/course/CoursePanels';
 import { AssessmentPanel } from '../../components/course/AssessmentPanel';
+import CertificateGenerator from '../../components/CertificateGenerator';
 
 /* ── helpers ─────────────────────────────────── */
 
@@ -79,13 +80,37 @@ const CoursePlayer = ({ isTrainer = false }) => {
   const { user, authFetch } = useAuth(); // <-- Inject Secure Wrapper
   const [isExamInProgress, setIsExamInProgress] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
-  const [currentIdx, setCurrentIdx] = useState(0);
+  const [currentIdx, setCurrentIdx] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`_gt_last_lesson_${id}_${user?.user_id}`);
+      return saved !== null ? Number(saved) : 0;
+    } catch {
+      return 0;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedModules, setExpandedModules] = useState({});
   const [justCompleted, setJustCompleted] = useState(false);
   const enrolled = isTrainer || (id && isEnrolled && isEnrolled(id));
   const [showReview, setShowReview] = useState(false);
+  const [viewingCertificate, setViewingCertificate] = useState(false);
+  const [certDownloadFn, setCertDownloadFn] = useState(null);
+
+  const handleCertDownloadRegister = useCallback((fn) => {
+    setCertDownloadFn(() => fn);
+  }, []);
+
+  // Persist currentIdx to localStorage on lesson change
+  useEffect(() => {
+    if (id && user?.user_id && currentIdx !== undefined) {
+      try {
+        localStorage.setItem(`_gt_last_lesson_${id}_${user.user_id}`, String(currentIdx));
+      } catch (e) {
+        console.error("Failed saving active lesson index:", e);
+      }
+    }
+  }, [id, user?.user_id, currentIdx]);
 
   // Auto-close sidebar on mobile
   useEffect(() => {
@@ -205,11 +230,25 @@ const CoursePlayer = ({ isTrainer = false }) => {
           return (start && end && now >= start && now <= end) || (start && now < start);
         });
         if (liveIdx !== -1) setCurrentIdx(liveIdx);
+      } else {
+        // Restore last visited lesson within valid range
+        try {
+          const saved = localStorage.getItem(`_gt_last_lesson_${id}_${user?.user_id}`);
+          if (saved !== null) {
+            const parsed = Number(saved);
+            if (!isNaN(parsed) && parsed >= 0 && parsed < built.length) {
+              setCurrentIdx(parsed);
+            }
+          }
+        } catch (e) {
+          console.error("Error restoring lesson index:", e);
+        }
       }
 
       // Register total so progress % computes correctly on My Learning page
       if (!isTrainer) {
-        const activeBuilt = built.filter(l => l.type !== 'note' && l.type !== 'resource').length;
+        const nonLiveBuilt = built.filter(l => l.type === 'video' || l.type === 'assessment');
+        const activeBuilt = nonLiveBuilt.length > 0 ? nonLiveBuilt.length : built.filter(l => l.type !== 'note' && l.type !== 'resource').length;
         if (registerLessonCount) registerLessonCount(id, activeBuilt);
       }
       
@@ -240,10 +279,25 @@ const CoursePlayer = ({ isTrainer = false }) => {
   const courseId = id;
   const totalLessons = lessons.length;
 
-  /* Completed count + progress % */
-  const completedCount = getCompletedCount(courseId);
-  const activeTotal = lessons.filter(l => l.type !== 'note' && l.type !== 'resource').length;
-  const progressPct = activeTotal > 0 ? Math.round((completedCount / activeTotal) * 100) : 0;
+  /* Completed count + progress % (Live sessions on Zoom/Meet excluded from completion requirement) */
+  const nonLiveLessons = lessons.filter(l => l.type === 'video' || l.type === 'assessment');
+  const activeLessons = nonLiveLessons.length > 0 ? nonLiveLessons : lessons.filter(l => l.type !== 'note' && l.type !== 'resource');
+  const activeTotal = activeLessons.length;
+  const completedCount = activeLessons.filter(l => isLessonComplete(courseId, l.id)).length;
+  let progressPct = activeTotal > 0 ? Math.round((completedCount / activeTotal) * 100) : 0;
+
+  //  ASSESSMENT GATE: Check for failed or unpassed assessments
+  const courseAssessments = lessons.filter(l => l.type === 'assessment');
+  const hasFailedAssessment = courseAssessments.some(asm => {
+    const stat = assessmentStats[norm(asm.id)?.toLowerCase()];
+    return stat && !stat.passed && stat.attempts_used > 0;
+  });
+  const hasPendingAssessment = courseAssessments.some(asm => !isLessonComplete(courseId, asm.id));
+
+  const isEligibleForCertificate = progressPct === 100 && !hasFailedAssessment && !hasPendingAssessment;
+  if (progressPct >= 100 && (hasFailedAssessment || hasPendingAssessment)) {
+    progressPct = 99;
+  }
 
   /* Check if current lesson is done and synced with backend */
   const currentDone = currentLesson
@@ -368,13 +422,21 @@ const CoursePlayer = ({ isTrainer = false }) => {
           {/* Progress Section */}
           {!isTrainer && (
             <div className="flex flex-1 lg:flex-none items-center justify-end gap-4 md:gap-8 px-4 md:px-10 h-full">
-              {progressPct === 100 && (
-                <button
-                  onClick={() => { setReviewSuccess(false); setShowReview(true); }}
-                  className="hidden md:flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg text-[0.7rem] font-black transition-all shadow-sm active:scale-95"
-                >
-                  <Star size={14} /> RATE
-                </button>
+              {isEligibleForCertificate && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setReviewSuccess(false); setShowReview(true); }}
+                    className="hidden md:flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg text-[0.7rem] font-black transition-all shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    <Star size={14} /> RATE
+                  </button>
+                  <button
+                    onClick={() => setViewingCertificate(true)}
+                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[0.7rem] font-black transition-all shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    <Award size={14} /> CERTIFICATE
+                  </button>
+                </div>
               )}
               <div className="text-right min-w-fit">
                 <div className="hidden sm:block text-[0.6rem] text-slate-500 font-black uppercase tracking-wider mb-0.5">Progress</div>
@@ -661,8 +723,29 @@ const CoursePlayer = ({ isTrainer = false }) => {
                           Next Lesson <ChevronRight size={17} />
                         </button>
                       ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.25rem', borderRadius: '99px', fontWeight: 700, fontSize: '0.875rem', background: (!isTrainer && progressPct === 100) ? 'linear-gradient(135deg,#10b981,#059669)' : '#f1f5f9', color: (!isTrainer && progressPct === 100) ? 'white' : '#94a3b8' }}>
-                          {(!isTrainer && progressPct === 100) ? <><CheckCircle size={16} /> Course Complete! 🎉</> : 'Last Lesson'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          {(!isTrainer && isEligibleForCertificate) ? (
+                            <button
+                              onClick={() => setViewingCertificate(true)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.4rem',
+                                borderRadius: '10px', border: 'none', fontWeight: 800, fontSize: '0.875rem',
+                                background: 'linear-gradient(135deg,#10b981,#059669)', color: 'white',
+                                boxShadow: '0 4px 14px rgba(16,185,129,0.3)', cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              <Award size={18} /> View Certificate 🎓
+                            </button>
+                          ) : hasFailedAssessment ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.25rem', borderRadius: '99px', fontWeight: 700, fontSize: '0.875rem', background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca' }}>
+                              <ShieldAlert size={16} /> Assessment Needs Retake
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.25rem', borderRadius: '99px', fontWeight: 700, fontSize: '0.875rem', background: '#f1f5f9', color: '#94a3b8' }}>
+                              Last Lesson
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -754,6 +837,44 @@ const CoursePlayer = ({ isTrainer = false }) => {
               )}
             </div>
           </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Certificate Modal ────────────────────────────────────────── */}
+      {viewingCertificate && createPortal(
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xl z-[999999] flex items-center justify-center p-4"
+          onClick={() => setViewingCertificate(false)}
+        >
+          <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
+            <button 
+              onClick={(e) => { e.stopPropagation(); certDownloadFn && certDownloadFn(); }}
+              disabled={!certDownloadFn}
+              className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-sm flex items-center gap-2 shadow-2xl active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <Download size={18} /> Download PDF
+            </button>
+            <button 
+              onClick={() => { setViewingCertificate(false); setCertDownloadFn(null); }}
+              className="w-11 h-11 rounded-full bg-white text-slate-900 flex items-center justify-center font-bold text-2xl shadow-2xl active:scale-95 transition-all cursor-pointer"
+            >
+              ×
+            </button>
+          </div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 40 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 40 }}
+            className="relative max-h-[90vh] w-full max-w-4xl flex flex-col items-center overflow-y-auto no-scrollbar"
+            onClick={e => e.stopPropagation()}
+          >
+            <CertificateGenerator 
+              courseId={courseId}
+              onDownload={handleCertDownloadRegister}
+            />
+          </motion.div>
         </div>,
         document.body
       )}

@@ -232,7 +232,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '5rem' }}>
+    <div className="animate-fade-in px-4 md:px-8" style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '5rem' }}>
       
       {/* ── Header Section ── */}
       <div style={{ marginBottom: '3rem' }}>
@@ -243,11 +243,11 @@ const Profile = () => {
         <p style={{ color: 'var(--color-text-muted)', fontWeight: 600, marginTop: '0.5rem' }}>Manage your professional presence and personal data</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '2.5rem', alignItems: 'start' }}>
+      <div className="flex flex-col lg:flex-row gap-10 items-start">
         
         {/* ── Left Column: Avatar & Quick Info ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div style={{ background: 'var(--color-surface)', borderRadius: '2.5rem', padding: '2.5rem', border: '1px solid var(--color-border)', textAlign: 'center', boxShadow: 'var(--shadow-lg)' }}>
+        <div className="w-full lg:w-[320px] shrink-0 flex flex-col gap-6">
+          <div className="p-6 md:p-10" style={{ background: 'var(--color-surface)', borderRadius: '2.5rem', border: '1px solid var(--color-border)', textAlign: 'center', boxShadow: 'var(--shadow-lg)' }}>
             <div style={{ position: 'relative', width: '150px', height: '150px', margin: '0 auto 1.5rem', borderRadius: '2.5rem', overflow: 'hidden', border: '4px solid var(--color-surface-muted)', boxShadow: 'var(--shadow-md)' }}>
               {watchPic ? (
                 <img src={optimizeImageUrl(watchPic)} alt="Avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -283,8 +283,8 @@ const Profile = () => {
         </div>
 
         {/* ── Right Column: Update Form ── */}
-        <form onSubmit={handleFormSubmit(handleUpdate)} style={{ background: 'var(--color-surface)', borderRadius: '2.5rem', padding: '3rem', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-xl)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <form onSubmit={handleFormSubmit(handleUpdate)} className="flex-1 w-full p-6 md:p-12" style={{ background: 'var(--color-surface)', borderRadius: '2.5rem', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-xl)' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             
             <ProfileInput label="Full Display Name" {...register('name')} icon={<User size={18} />} error={errors.name?.message} />
             <ProfileInput label="Contact Number" {...register('number')} icon={<Phone size={18} />} error={errors.number?.message} />

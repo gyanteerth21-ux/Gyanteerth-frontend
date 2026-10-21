@@ -23,14 +23,18 @@ const Certificates = () => {
     const raw = Array.isArray(enrolledCourses) ? enrolledCourses : [];
     return raw
       .filter(c => (c.progress || 0) === 100)
-      .map(c => ({
-        id: `GT-${(c.id || c.course_id).toString().slice(-4).toUpperCase()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
-        courseId: c.id || c.course_id,
-        courseTitle: c.title || c.course_title || 'Professional Certification',
-        earnedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        thumbnail: optimizeImageUrl(c.thumbnail),
-        category: c.category_name || 'Technical'
-      }));
+      .map(c => {
+        const cid = (c.id || c.course_id || '').toString();
+        const shortId = cid.length > 8 ? cid.slice(-6).toUpperCase() : cid.toUpperCase();
+        return {
+          id: c.certificate_id || `GT-CERT-${shortId}`,
+          courseId: c.id || c.course_id,
+          courseTitle: c.title || c.course_title || 'Professional Certification',
+          earnedDate: c.completed_at ? new Date(c.completed_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          thumbnail: optimizeImageUrl(c.thumbnail),
+          category: c.category_name || 'Technical'
+        };
+      });
   }, [enrolledCourses]);
 
   const filteredCerts = (earnedCertificates || []).filter(c => 

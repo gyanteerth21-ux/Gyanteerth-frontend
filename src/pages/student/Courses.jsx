@@ -40,13 +40,18 @@ const StudentCourses = () => {
 
   const dynamicDate = useMemo(() => {
     if (!viewingCertificate) return '';
+    if (viewingCertificate.completed_at) {
+      return new Date(viewingCertificate.completed_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
     return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }, [viewingCertificate]);
 
   const dynamicId = useMemo(() => {
     if (!viewingCertificate) return '';
-    const cid = viewingCertificate.id || viewingCertificate.course_id;
-    return `GT-${cid.toString().slice(-4).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    if (viewingCertificate.certificate_id) return viewingCertificate.certificate_id;
+    const cid = (viewingCertificate.id || viewingCertificate.course_id || '').toString();
+    const shortId = cid.length > 8 ? cid.slice(-6).toUpperCase() : cid.toUpperCase();
+    return `GT-CERT-${shortId}`;
   }, [viewingCertificate]);
 
   // Reset form whenever a new course is selected for feedback

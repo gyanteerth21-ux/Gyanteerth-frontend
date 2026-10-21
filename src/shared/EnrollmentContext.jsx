@@ -12,11 +12,44 @@ export const EnrollmentProvider = ({ children }) => {
   const queryClient = useQueryClient();
   const { user, authFetch } = useAuth();
 
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [completedLessons, setCompletedLessons] = useState({});
-  const [syncedLessons, setSyncedLessons] = useState({}); // 🚀 Backend-confirmed completions
+  const [enrolledCourses, setEnrolledCourses] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`_gt_enrolled_courses_${user?.user_id}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+  const [completedLessons, setCompletedLessons] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`_gt_completed_lessons_${user?.user_id}`);
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  });
+  const [syncedLessons, setSyncedLessons] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`_gt_synced_lessons_${user?.user_id}`);
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  }); // 🚀 Backend-confirmed completions
   const [assessmentStats, setAssessmentStats] = useState({}); 
   const [lessonCounts, setLessonCounts] = useState({});
+
+  // Reload cache whenever user logs in or switches
+  useEffect(() => {
+    if (user?.user_id) {
+      try {
+        const storedCourses = localStorage.getItem(`_gt_enrolled_courses_${user.user_id}`);
+        if (storedCourses) setEnrolledCourses(JSON.parse(storedCourses));
+
+        const storedSync = localStorage.getItem(`_gt_synced_lessons_${user.user_id}`);
+        if (storedSync) setSyncedLessons(JSON.parse(storedSync));
+
+        const storedComp = localStorage.getItem(`_gt_completed_lessons_${user.user_id}`);
+        if (storedComp) setCompletedLessons(JSON.parse(storedComp));
+      } catch (e) {
+        console.error("Error loading persisted enrollment state:", e);
+      }
+    }
+  }, [user?.user_id]);
 
 
 
@@ -114,7 +147,9 @@ export const EnrollmentProvider = ({ children }) => {
           const type = (c.course_type || c.course_Type || c.Course_Type || c.type || c.Type || 'recorded').toLowerCase();
           return {
             ...c, id: cid, course_id: cid, title, course_title: title, type,
-            progress: c.progress_percentage !== undefined ? c.progress_percentage : (c.progress || c.Progress || 0)
+            progress: c.progress_percentage !== undefined ? c.progress_percentage : (c.progress || c.Progress || 0),
+            completed_at: c.completed_at || c.Completed_At,
+            certificate_id: c.certificate_id || c.Certificate_ID
           };
         });
 
@@ -132,7 +167,7 @@ export const EnrollmentProvider = ({ children }) => {
                 return res.json();
               },
               staleTime: 5 * 60 * 1000
-            }),
+            }).catch(() => ({})),
             queryClient.fetchQuery({
               queryKey: ['course_progress', c.id],
               queryFn: async () => {
@@ -164,12 +199,19 @@ export const EnrollmentProvider = ({ children }) => {
             category_name: d.category_name || d.Category || c.category_name,
             progress: prog,
             total_modules: p.total_modules || c.total_modules,
-            completed_modules: p.completed_modules || c.completed_modules
+            completed_modules: p.completed_modules || c.completed_modules,
+            completed_at: c.completed_at || p.completed_at,
+            certificate_id: c.certificate_id || p.certificate_id
           };
         }));
 
         if (isMounted) {
           setEnrolledCourses(enrichedData);
+          if (user?.user_id) {
+            try {
+              localStorage.setItem(`_gt_enrolled_courses_${user.user_id}`, JSON.stringify(enrichedData));
+            } catch (e) {}
+          }
           // Populate syncedLessons for each course via fetchCourseProgress
           enrichedData.forEach(c => {
             if (c.id) fetchCourseProgress(c.id);
@@ -230,7 +272,13 @@ export const EnrollmentProvider = ({ children }) => {
       setSyncedLessons(prev => {
         const current = prev[cid] || [];
         if (current.includes(lid)) return prev;
-        return { ...prev, [cid]: [...current, lid] };
+        const next = { ...prev, [cid]: [...current, lid] };
+        if (user?.user_id) {
+          try {
+            localStorage.setItem(`_gt_synced_lessons_${user.user_id}`, JSON.stringify(next));
+          } catch (e) {}
+        }
+        return next;
       });
     }
 
@@ -241,9 +289,15 @@ export const EnrollmentProvider = ({ children }) => {
     setCompletedLessons(prev => {
       const current = prev[cid] || [];
       if (current.includes(lid)) return prev;
-      return { ...prev, [cid]: [...current, lid] };
+      const next = { ...prev, [cid]: [...current, lid] };
+      if (user?.user_id) {
+        try {
+          localStorage.setItem(`_gt_completed_lessons_${user.user_id}`, JSON.stringify(next));
+        } catch (e) {}
+      }
+      return next;
     });
-  }, []);
+  }, [user?.user_id]);
 
   const registerLessonCount = useCallback((courseId, total) => {
     const sId = norm(courseId);
@@ -328,13 +382,25 @@ export const EnrollmentProvider = ({ children }) => {
       setAssessmentStats(prev => ({ ...prev, ...stats }));
     }
 
-    // B. Videos / Lessons
+    // B. Videos / Lessons / Live Attendance
     const lessonProgress = data.lessons_progress || data.videos_progress || data.videos;
     if (Array.isArray(lessonProgress)) {
       lessonProgress.forEach(l => {
-        const lid = norm(l.video_id || l.lesson_id || l.id);
+        const lid = norm(l.video_id || l.lesson_id || l.id || l.live_class_id);
         if (!lid) return;
-        if (l.status === 'Completed' || l.completed === true) passedLids.push(lid);
+        if (l.status === 'Completed' || l.completed === true || l.is_present === true) passedLids.push(lid);
+      });
+    }
+
+    // C. Live Attendance Sessions
+    const liveAttendance = data.live_attendance || data.live_progress;
+    if (Array.isArray(liveAttendance)) {
+      liveAttendance.forEach(l => {
+        const lid = norm(l.live_class_id || l.live_id || l.id);
+        if (!lid) return;
+        if (l.is_present === true || l.attended_live === true || l.watched_recording === true || l.status === 'Completed') {
+          passedLids.push(lid);
+        }
       });
     }
 
@@ -361,12 +427,28 @@ export const EnrollmentProvider = ({ children }) => {
       : c
     ));
 
-    // 🚀 STRICT OVERWRITE — backend is the single source of truth
-    setSyncedLessons(prev => ({ ...prev, [cid]: passedLids }));
-    setCompletedLessons(prev => ({ ...prev, [cid]: passedLids }));
+    // 🚀 STRICT OVERWRITE — backend is the single source of truth + cache in localStorage
+    setSyncedLessons(prev => {
+      const next = { ...prev, [cid]: passedLids };
+      if (user?.user_id) {
+        try {
+          localStorage.setItem(`_gt_synced_lessons_${user.user_id}`, JSON.stringify(next));
+        } catch (e) {}
+      }
+      return next;
+    });
+    setCompletedLessons(prev => {
+      const next = { ...prev, [cid]: passedLids };
+      if (user?.user_id) {
+        try {
+          localStorage.setItem(`_gt_completed_lessons_${user.user_id}`, JSON.stringify(next));
+        } catch (e) {}
+      }
+      return next;
+    });
 
     return data;
-  }, [authFetch]);
+  }, [authFetch, queryClient, user?.user_id]);
 
   const triggerProgressUpdate = async (endpoint, payload, courseId, fromQueue = false) => {
     try {
