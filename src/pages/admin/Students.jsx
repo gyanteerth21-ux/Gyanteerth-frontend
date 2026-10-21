@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../shared/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, ChevronDown, Globe, Upload, X, CheckCircle2, AlertCircle, Database, FileText, GraduationCap, Calendar } from 'lucide-react';
+import { Search, Mail, BookOpen, TrendingUp, Filter, Users, Loader2, ChevronDown, Globe, Upload, X, CheckCircle2, AlertCircle, Database, FileText, GraduationCap, Calendar, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ADMIN_API, TRAINER_API } from '../../config';
 import ExportExcelButton from '../../components/ExportExcelButton';
 import BulkImportModal from '../../components/shared/BulkImportModal';
 import TableSkeleton from '../../components/shared/TableSkeleton';
+import StudentProgressBreakdownModal from '../../components/admin/StudentProgressBreakdownModal';
 import useStudentFilters from '../../hooks/useStudentFilters';
 import { fetchCollegesAndBranchesMap } from '../../utils/mappingUtils';
 
@@ -18,10 +19,33 @@ const AdminStudents = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [inspectingCourse, setInspectingCourse] = useState(null);
+  const [recalculatingCourseId, setRecalculatingCourseId] = useState(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleInlineRecalculate = async (e, userId, courseId) => {
+    e.stopPropagation();
+    try {
+      setRecalculatingCourseId(`${userId}-${courseId}`);
+      const res = await authFetch(`${ADMIN_API}/student/${userId}/course/${courseId}/recalculate`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok && data.status) {
+        showToast(`Progress updated to ${data.progress_percentage}%!`, 'success');
+        queryClient.invalidateQueries(['admin_students_data']);
+      } else {
+        showToast(data.detail || "Recalculation failed", 'error');
+      }
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setRecalculatingCourseId(null);
+    }
   };
 
 
@@ -51,6 +75,7 @@ const AdminStudents = () => {
             st.enrollments.forEach(enr => {
               allStudents.push({
                 id: `${enr.course_id}-${st.user_id}`,
+                user_id: st.user_id,
                 course_id: enr.course_id,
                 email: st.email || st.user_id,
                 name: st.name || 'Anonymous Student',
@@ -403,19 +428,79 @@ const AdminStudents = () => {
 
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text)' }}><BookOpen size={16} color="var(--color-primary)" /> Registered Courses</h3>
                 <div style={{ display: 'grid', gap: '1rem' }}>
-                  {selectedUser.enrollments.map(enr => (
-                    <div key={enr.course_id} style={{ padding: '1.15rem', borderRadius: '1rem', border: '1px solid var(--color-border)', background: 'var(--color-surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', transition: 'transform 0.2s', cursor: 'default' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-text)', marginBottom: '0.65rem' }}>{enr.course_title}</div>
-                        <div style={{ width: '100%', height: '6px', background: 'var(--color-bg)', borderRadius: '1rem', overflow: 'hidden' }}>
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${enr.progress || 0}%` }} transition={{ duration: 1 }} style={{ width: `${enr.progress}%`, height: '100%', background: enr.progress === 100 ? 'var(--color-primary)' : '#4f46e5' }} />
+                  {selectedUser.enrollments.map(enr => {
+                    const isRecalc = recalculatingCourseId === `${selectedUser.user_id}-${enr.course_id}`;
+                    return (
+                      <div 
+                        key={enr.course_id} 
+                        style={{ 
+                          padding: '1.15rem', 
+                          borderRadius: '1rem', 
+                          border: '1px solid var(--color-border)', 
+                          background: 'var(--color-surface-muted)', 
+                          display: 'flex', 
+                          flexDirection: 'column',
+                          gap: '0.85rem', 
+                          transition: 'all 0.2s', 
+                          cursor: 'pointer' 
+                        }} 
+                        onClick={() => setInspectingCourse({
+                          userId: selectedUser.user_id,
+                          studentName: selectedUser.name,
+                          studentEmail: selectedUser.email,
+                          courseId: enr.course_id,
+                          courseTitle: enr.course_title
+                        })}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; }} 
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.transform = 'none'; }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-text)', marginBottom: '0.4rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {enr.course_title}
+                            </div>
+                            <div style={{ width: '100%', height: '6px', background: 'var(--color-bg)', borderRadius: '1rem', overflow: 'hidden' }}>
+                              <motion.div initial={{ width: 0 }} animate={{ width: `${enr.progress || 0}%` }} transition={{ duration: 1 }} style={{ width: `${enr.progress}%`, height: '100%', background: enr.progress === 100 ? 'var(--color-primary)' : '#4f46e5' }} />
+                            </div>
+                          </div>
+                          <div style={{ width: '60px', textAlign: 'right', fontWeight: 900, color: enr.progress === 100 ? 'var(--color-primary)' : '#4f46e5', fontSize: '1rem', shrink: 0 }}>
+                            {enr.progress || 0}%
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: '0.2rem', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            🔍 Inspect Breakdown & Lessons
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleInlineRecalculate(e, selectedUser.user_id, enr.course_id)}
+                            disabled={isRecalc}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              padding: '0.35rem 0.75rem',
+                              borderRadius: '0.6rem',
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              background: 'var(--color-surface)',
+                              border: '1px solid var(--color-border)',
+                              color: 'var(--color-text)',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s'
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.color = 'var(--color-primary)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text)'; }}
+                            title="Recalculate progress against all modules & quizzes"
+                          >
+                            <RefreshCw size={12} className={isRecalc ? 'animate-spin text-indigo-600' : ''} />
+                            <span>{isRecalc ? 'Recalculating...' : 'Recalculate'}</span>
+                          </button>
                         </div>
                       </div>
-                      <div style={{ width: '60px', textAlign: 'right', fontWeight: 900, color: enr.progress === 100 ? 'var(--color-primary)' : '#4f46e5', fontSize: '1rem' }}>
-                        {enr.progress || 0}%
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </motion.div>
             ) : (
@@ -502,7 +587,19 @@ const AdminStudents = () => {
                             <button onClick={() => window.location.href = `mailto:${st.email}`} style={{ width: '2.75rem', height: '2.75rem', borderRadius: '0.85rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.color = 'var(--color-primary)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}>
                               <Mail size={16} />
                             </button>
-                            <button style={{ width: '2.75rem', height: '2.75rem', borderRadius: '0.85rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.color = 'var(--color-primary)'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}>
+                            <button 
+                              title="Inspect Course Breakdown & Recalculate"
+                              onClick={() => setInspectingCourse({
+                                userId: st.user_id,
+                                studentName: st.name,
+                                studentEmail: st.email,
+                                courseId: st.course_id,
+                                courseTitle: st.course_title
+                              })}
+                              style={{ width: '2.75rem', height: '2.75rem', borderRadius: '0.85rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }} 
+                              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.color = 'var(--color-primary)'; }} 
+                              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+                            >
                               <TrendingUp size={16} />
                             </button>
                           </div>
@@ -521,6 +618,21 @@ const AdminStudents = () => {
           onClose={() => setShowImportModal(false)}
           onImport={handleBulkImport}
           loading={actionLoading}
+        />
+      )}
+
+      {inspectingCourse && (
+        <StudentProgressBreakdownModal
+          isOpen={!!inspectingCourse}
+          onClose={() => setInspectingCourse(null)}
+          userId={inspectingCourse.userId}
+          studentName={inspectingCourse.studentName}
+          studentEmail={inspectingCourse.studentEmail}
+          courseId={inspectingCourse.courseId}
+          courseTitle={inspectingCourse.courseTitle}
+          onProgressUpdated={() => {
+            queryClient.invalidateQueries(['admin_students_data']);
+          }}
         />
       )}
 
