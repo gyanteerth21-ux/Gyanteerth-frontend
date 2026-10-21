@@ -133,6 +133,7 @@ export const EnrollmentProvider = ({ children }) => {
           queryKey: ['enrollments', user.user_id],
           queryFn: async () => {
             const res = await authFetch(`${USER_API}/enrolled_courses`);
+            if (res.status === 403) return [];
             if (!res.ok) throw new Error('Failed to fetch enrollments');
             return res.json();
           },

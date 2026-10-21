@@ -49,6 +49,18 @@ const AdminCurriculum = () => {
     resolver: zodResolver(moduleSchema), defaultValues: { Title: '', Course_Description: '', Position: 1 }
   });
 
+  const setModuleForm = (data) => {
+    if (!data) {
+      resetModule({ Title: '', Course_Description: '', Position: 1 });
+      setEditingModuleId(null);
+      return;
+    }
+    setModuleVal('Title', data.Title || '');
+    setModuleVal('Course_Description', data.Description || data.Course_Description || '');
+    setModuleVal('Position', data.Position || 1);
+    setEditingModuleId(data.editingId || null);
+  };
+
   const { register: regVideo, handleSubmit: submitVideo, reset: resetVideo, setValue: setVideoVal, formState: { errors: errVideo } } = useForm({
     resolver: zodResolver(lessonSchema), defaultValues: { course_description: '', video_url: '' }
   });
